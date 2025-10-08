@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Dumbbell, Play } from "lucide-react";
+import { Dumbbell, Play, Check } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { calculateComplianceScore } from "@/lib/compliance";
 
 interface WorkoutCardProps {
   userId: string;
@@ -30,7 +32,6 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
 
   const startWorkout = async () => {
     if (!workout) {
-      // Create a new workout session
       const { data } = await supabase
         .from('workout_sessions')
         .insert({
@@ -41,7 +42,33 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
         .select()
         .single();
       
-      if (data) setWorkout(data);
+      if (data) {
+        setWorkout(data);
+        toast({
+          title: "Workout started!",
+          description: "Let's get it done!"
+        });
+      }
+    }
+  };
+
+  const completeWorkout = async () => {
+    if (workout && !workout.completed_at) {
+      const { error } = await supabase
+        .from('workout_sessions')
+        .update({ completed_at: new Date().toISOString() })
+        .eq('id', workout.id);
+      
+      if (!error) {
+        // Recalculate compliance score
+        await calculateComplianceScore(userId, today);
+        
+        setWorkout({ ...workout, completed_at: new Date().toISOString() });
+        toast({
+          title: "Workout complete! 💪",
+          description: "Great job today!"
+        });
+      }
     }
   };
 
@@ -76,7 +103,8 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
                 </div>
               ) : workout.completed_at ? (
                 <div className="text-center py-4">
-                  <p className="text-sm font-medium mb-2">🎉 Workout Complete!</p>
+                  <Check className="w-12 h-12 mx-auto mb-2 text-success" />
+                  <p className="text-sm font-medium mb-2">Workout Complete!</p>
                   <p className="text-xs text-muted-foreground">
                     Finished at {new Date(workout.completed_at).toLocaleTimeString()}
                   </p>
@@ -84,9 +112,9 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm">Ready to train? Let's go!</p>
-                  <Button className="w-full">
-                    <Play className="w-4 h-4 mr-2" />
-                    Continue Workout
+                  <Button onClick={completeWorkout} className="w-full">
+                    <Check className="w-4 h-4 mr-2" />
+                    Complete Workout
                   </Button>
                 </div>
               )}

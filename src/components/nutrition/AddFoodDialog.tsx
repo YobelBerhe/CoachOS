@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { calculateComplianceScore } from "@/lib/compliance";
 
 interface AddFoodDialogProps {
   open: boolean;
@@ -30,11 +31,13 @@ export const AddFoodDialog = ({ open, onClose, userId, onSuccess }: AddFoodDialo
 
     try {
       const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
       const { error } = await supabase
         .from('food_logs')
         .insert({
           user_id: userId,
-          date: now.toISOString().split('T')[0],
+          date: today,
           time: now.toTimeString().split(' ')[0],
           food_name: formData.food_name,
           calories: parseInt(formData.calories),
@@ -45,6 +48,9 @@ export const AddFoodDialog = ({ open, onClose, userId, onSuccess }: AddFoodDialo
         });
 
       if (error) throw error;
+
+      // Recalculate compliance score
+      await calculateComplianceScore(userId, today);
 
       toast({
         title: "Food logged!",

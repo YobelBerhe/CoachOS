@@ -1,79 +1,65 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Dumbbell, Moon, Scale } from "lucide-react";
-import { AddFoodDialog } from "@/components/nutrition/AddFoodDialog";
-import { AddSleepDialog } from "@/components/sleep/AddSleepDialog";
-import { AddWeightDialog } from "@/components/weight/AddWeightDialog";
+import { Home, UtensilsCrossed, Dumbbell, BarChart3, Settings } from "lucide-react";
 
 interface QuickActionsProps {
   userId: string;
 }
 
 export const QuickActions = ({ userId }: QuickActionsProps) => {
-  const [showAddFood, setShowAddFood] = useState(false);
-  const [showAddSleep, setShowAddSleep] = useState(false);
-  const [showAddWeight, setShowAddWeight] = useState(false);
+  const navigate = useNavigate();
+  const [currentPath] = useState(window.location.pathname);
 
   return (
-    <>
-      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur border-t border-border p-4">
-        <div className="max-w-4xl mx-auto grid grid-cols-4 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex flex-col h-auto py-3 gap-1"
-            onClick={() => setShowAddFood(true)}
-          >
-            <UtensilsCrossed className="w-5 h-5" />
-            <span className="text-xs">Food</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex flex-col h-auto py-3 gap-1"
-          >
-            <Dumbbell className="w-5 h-5" />
-            <span className="text-xs">Workout</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex flex-col h-auto py-3 gap-1"
-            onClick={() => setShowAddSleep(true)}
-          >
-            <Moon className="w-5 h-5" />
-            <span className="text-xs">Sleep</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex flex-col h-auto py-3 gap-1"
-            onClick={() => setShowAddWeight(true)}
-          >
-            <Scale className="w-5 h-5" />
-            <span className="text-xs">Weight</span>
-          </Button>
-        </div>
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur border-t border-border p-3 safe-area-pb">
+      <div className="max-w-4xl mx-auto grid grid-cols-5 gap-1">
+        <Button
+          variant={currentPath === '/dashboard' ? 'default' : 'ghost'}
+          size="sm"
+          className="flex flex-col h-auto py-2 gap-1"
+          onClick={() => navigate('/dashboard')}
+        >
+          <Home className="w-5 h-5" />
+          <span className="text-xs">Today</span>
+        </Button>
+        <Button
+          variant={currentPath === '/eat' ? 'default' : 'ghost'}
+          size="sm"
+          className="flex flex-col h-auto py-2 gap-1"
+          onClick={() => navigate('/eat')}
+        >
+          <UtensilsCrossed className="w-5 h-5" />
+          <span className="text-xs">Eat</span>
+        </Button>
+        <Button
+          variant={currentPath === '/train' ? 'default' : 'ghost'}
+          size="sm"
+          className="flex flex-col h-auto py-2 gap-1"
+          onClick={() => navigate('/train')}
+        >
+          <Dumbbell className="w-5 h-5" />
+          <span className="text-xs">Train</span>
+        </Button>
+        <Button
+          variant={currentPath === '/reports' ? 'default' : 'ghost'}
+          size="sm"
+          className="flex flex-col h-auto py-2 gap-1"
+          onClick={() => navigate('/reports')}
+        >
+          <BarChart3 className="w-5 h-5" />
+          <span className="text-xs">Reports</span>
+        </Button>
+        <Button
+          variant={currentPath === '/settings' ? 'default' : 'ghost'}
+          size="sm"
+          className="flex flex-col h-auto py-2 gap-1"
+          onClick={() => navigate('/settings')}
+        >
+          <Settings className="w-5 h-5" />
+          <span className="text-xs">Settings</span>
+        </Button>
       </div>
-
-      <AddFoodDialog 
-        open={showAddFood} 
-        onClose={() => setShowAddFood(false)}
-        userId={userId}
-        onSuccess={() => {}}
-      />
-      <AddSleepDialog 
-        open={showAddSleep} 
-        onClose={() => setShowAddSleep(false)}
-        userId={userId}
-        onSuccess={() => {}}
-      />
-      <AddWeightDialog 
-        open={showAddWeight} 
-        onClose={() => setShowAddWeight(false)}
-        userId={userId}
-        onSuccess={() => {}}
-      />
-    </>
+    </div>
   );
 };

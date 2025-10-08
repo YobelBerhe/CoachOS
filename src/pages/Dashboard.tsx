@@ -7,6 +7,7 @@ import { NutritionCard } from "@/components/dashboard/NutritionCard";
 import { WorkoutCard } from "@/components/dashboard/WorkoutCard";
 import { FastingCard } from "@/components/dashboard/FastingCard";
 import { SleepCard } from "@/components/dashboard/SleepCard";
+import { MedsCard } from "@/components/dashboard/MedsCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 
 const Dashboard = () => {
@@ -44,6 +45,7 @@ const Dashboard = () => {
           <WorkoutCard userId={userId!} />
           <FastingCard userId={userId!} />
           <SleepCard userId={userId!} />
+          <MedsCard userId={userId!} />
         </div>
       </div>
       

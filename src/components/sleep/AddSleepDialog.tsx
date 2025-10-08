@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { calculateComplianceScore } from "@/lib/compliance";
 
 interface AddSleepDialogProps {
   open: boolean;
@@ -26,6 +27,8 @@ export const AddSleepDialog = ({ open, onClose, userId, onSuccess }: AddSleepDia
     setLoading(true);
 
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       // Calculate duration in minutes
       const [bedHour, bedMin] = formData.bedtime.split(':').map(Number);
       const [wakeHour, wakeMin] = formData.wake_time.split(':').map(Number);
@@ -37,7 +40,7 @@ export const AddSleepDialog = ({ open, onClose, userId, onSuccess }: AddSleepDia
         .from('sleep_logs')
         .insert({
           user_id: userId,
-          date: new Date().toISOString().split('T')[0],
+          date: today,
           bedtime: formData.bedtime,
           wake_time: formData.wake_time,
           duration_min: durationMin,
@@ -45,6 +48,9 @@ export const AddSleepDialog = ({ open, onClose, userId, onSuccess }: AddSleepDia
         });
 
       if (error) throw error;
+
+      // Recalculate compliance score
+      await calculateComplianceScore(userId, today);
 
       toast({
         title: "Sleep logged!",

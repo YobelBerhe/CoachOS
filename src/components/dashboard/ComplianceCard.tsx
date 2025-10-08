@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { calculateComplianceScore } from "@/lib/compliance";
 
 interface ComplianceCardProps {
   userId: string;
@@ -12,19 +13,26 @@ export const ComplianceCard = ({ userId }: ComplianceCardProps) => {
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    fetchComplianceScore();
+    fetchOrCalculateScore();
   }, [userId]);
 
-  const fetchComplianceScore = async () => {
-    const { data } = await supabase
+  const fetchOrCalculateScore = async () => {
+    // Try to get existing score
+    const { data: existingScore } = await supabase
       .from('compliance_scores')
       .select('overall_score')
       .eq('user_id', userId)
       .eq('date', today)
       .single();
     
-    if (data) {
-      setScore(data.overall_score);
+    if (existingScore) {
+      setScore(existingScore.overall_score);
+    } else {
+      // Calculate new score
+      const newScore = await calculateComplianceScore(userId, today);
+      if (newScore) {
+        setScore(newScore.overall_score);
+      }
     }
   };
 
