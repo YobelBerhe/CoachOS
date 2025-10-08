@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 
 interface FastingCardProps {
@@ -9,6 +11,7 @@ interface FastingCardProps {
 }
 
 export const FastingCard = ({ userId }: FastingCardProps) => {
+  const navigate = useNavigate();
   const [fastingPlan, setFastingPlan] = useState<any>(null);
   const [status, setStatus] = useState<string>("");
 
@@ -91,6 +94,13 @@ export const FastingCard = ({ userId }: FastingCardProps) => {
                   </span>
                 </div>
               </div>
+              <Button 
+                size="sm" 
+                className="w-full"
+                onClick={() => navigate("/fasting")}
+              >
+                View Fasting Timer
+              </Button>
             </CardContent>
           </AccordionContent>
         </Card>
