@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, Timer } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Timer, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { calculateComplianceScore } from "@/lib/compliance";
+import { AddExerciseToWorkoutDialog } from "@/components/train/AddExerciseToWorkoutDialog";
 
 interface Exercise {
   id: string;
@@ -33,13 +34,15 @@ const WorkoutInProgress = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
-  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+  const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>([]);
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>([]);
   const [currentSet, setCurrentSet] = useState(1);
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [restTimer, setRestTimer] = useState(0);
   const [isResting, setIsResting] = useState(false);
+  const [showAddExercise, setShowAddExercise] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -71,25 +74,15 @@ const WorkoutInProgress = () => {
   const fetchExercises = async () => {
     setLoading(true);
     try {
-      // For MVP, fetch 5 random exercises
       const { data, error } = await supabase
         .from('exercises')
         .select('*')
-        .limit(5);
+        .order('name');
 
       if (error) throw error;
 
       if (data) {
-        setExercises(data);
-        // Initialize exercise logs
-        const logs: ExerciseLog[] = data.map(ex => ({
-          exercise_id: ex.id,
-          exercise_name: ex.name,
-          sets: [],
-          target_sets: 3,
-          target_reps: 10
-        }));
-        setExerciseLogs(logs);
+        setAllExercises(data);
       }
     } catch (error: any) {
       console.error('Error fetching exercises:', error);
@@ -100,6 +93,43 @@ const WorkoutInProgress = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addExerciseToWorkout = (exercise: Exercise) => {
+    if (workoutExercises.find(ex => ex.id === exercise.id)) {
+      toast({
+        title: "Already added",
+        description: "This exercise is already in your workout",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setWorkoutExercises([...workoutExercises, exercise]);
+    setExerciseLogs([...exerciseLogs, {
+      exercise_id: exercise.id,
+      exercise_name: exercise.name,
+      sets: [],
+      target_sets: 3,
+      target_reps: 10
+    }]);
+
+    toast({
+      title: "Exercise added",
+      description: `${exercise.name} added to workout`
+    });
+  };
+
+  const removeExercise = (idx: number) => {
+    const updatedExercises = workoutExercises.filter((_, i) => i !== idx);
+    const updatedLogs = exerciseLogs.filter((_, i) => i !== idx);
+    
+    setWorkoutExercises(updatedExercises);
+    setExerciseLogs(updatedLogs);
+    
+    if (currentExerciseIdx >= updatedExercises.length && updatedExercises.length > 0) {
+      setCurrentExerciseIdx(updatedExercises.length - 1);
     }
   };
 
@@ -135,9 +165,20 @@ const WorkoutInProgress = () => {
     setIsResting(true);
   };
 
-  const skipExercise = () => {
-    if (currentExerciseIdx < exercises.length - 1) {
+  const nextExercise = () => {
+    if (currentExerciseIdx < workoutExercises.length - 1) {
       setCurrentExerciseIdx(currentExerciseIdx + 1);
+      setCurrentSet(1);
+      setWeight("");
+      setReps("");
+      setIsResting(false);
+      setRestTimer(0);
+    }
+  };
+
+  const previousExercise = () => {
+    if (currentExerciseIdx > 0) {
+      setCurrentExerciseIdx(currentExerciseIdx - 1);
       setCurrentSet(1);
       setWeight("");
       setReps("");
@@ -153,14 +194,10 @@ const WorkoutInProgress = () => {
       // Save exercise logs
       const logsToInsert = exerciseLogs
         .filter(log => log.sets.length > 0)
-        .map((log, idx) => ({
+        .map(log => ({
           workout_session_id: sessionId,
           exercise_id: log.exercise_id,
-          exercise_name: log.exercise_name,
-          order_index: idx,
-          sets: JSON.stringify(log.sets),
-          target_sets: log.target_sets,
-          target_reps: log.target_reps
+          sets: log.sets
         }));
 
       if (logsToInsert.length > 0) {
@@ -171,7 +208,7 @@ const WorkoutInProgress = () => {
         if (logsError) throw logsError;
       }
 
-      // Calculate total volume
+      // Calculate stats for summary
       const totalVolume = exerciseLogs.reduce((sum, log) => {
         return sum + log.sets.reduce((setSum, set) => setSum + (set.weight * set.reps), 0);
       }, 0);
@@ -186,9 +223,7 @@ const WorkoutInProgress = () => {
         .from('workout_sessions')
         .update({
           completed_at: new Date().toISOString(),
-          total_volume_lbs: totalVolume,
-          total_sets: totalSets,
-          total_reps: totalReps
+          notes: `${totalSets} sets, ${totalReps} reps, ${Math.round(totalVolume)} lbs volume`
         })
         .eq('id', sessionId);
 
@@ -221,20 +256,7 @@ const WorkoutInProgress = () => {
     );
   }
 
-  if (exercises.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground mb-4">No exercises available</p>
-            <Button onClick={() => navigate("/train")}>Back to Train</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentExercise = exercises[currentExerciseIdx];
+  const currentExercise = workoutExercises[currentExerciseIdx];
   const currentLog = exerciseLogs[currentExerciseIdx];
 
   return (
@@ -247,43 +269,74 @@ const WorkoutInProgress = () => {
             </Button>
             <div>
               <h1 className="text-xl font-bold">Workout in Progress</h1>
-              <p className="text-sm text-muted-foreground">
-                Exercise {currentExerciseIdx + 1} of {exercises.length}
-              </p>
+              {workoutExercises.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Exercise {currentExerciseIdx + 1} of {workoutExercises.length}
+                </p>
+              )}
             </div>
           </div>
-          <Button variant="outline" onClick={finishWorkout}>
-            Finish Workout
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowAddExercise(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Exercise
+            </Button>
+            <Button variant="outline" onClick={finishWorkout}>
+              Finish Workout
+            </Button>
+          </div>
         </div>
 
-        {isResting && (
-          <Card className="border-primary">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-center gap-3">
-                <Timer className="h-6 w-6 text-primary animate-pulse" />
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Rest Timer</p>
-                  <p className="text-3xl font-bold text-primary">{restTimer}s</p>
-                </div>
-              </div>
+        {workoutExercises.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6 text-center py-12">
+              <Plus className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-muted-foreground mb-4">No exercises in workout yet</p>
+              <Button onClick={() => setShowAddExercise(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Exercise
+              </Button>
             </CardContent>
           </Card>
-        )}
+        ) : (
+          <>
+            {isResting && (
+              <Card className="border-primary">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-center gap-3">
+                    <Timer className="h-6 w-6 text-primary animate-pulse" />
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Rest Timer</p>
+                      <p className="text-3xl font-bold text-primary">{restTimer}s</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-        <Card>
-          <CardHeader>
-            <div className="space-y-2">
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-2xl">{currentExercise.name}</CardTitle>
-                <Badge variant="outline">{currentExercise.difficulty}</Badge>
-              </div>
-              <div className="flex gap-2">
-                <Badge variant="secondary">{currentExercise.muscle_group}</Badge>
-                <Badge variant="secondary">{currentExercise.equipment}</Badge>
-              </div>
-            </div>
-          </CardHeader>
+            <Card>
+              <CardHeader>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-2xl">{currentExercise.name}</CardTitle>
+                    <div className="flex gap-2">
+                      <Badge variant="outline">{currentExercise.difficulty}</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeExercise(currentExerciseIdx)}
+                        className="h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{currentExercise.muscle_group}</Badge>
+                    <Badge variant="secondary">{currentExercise.equipment}</Badge>
+                  </div>
+                </div>
+              </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium mb-2">Target: {currentLog.target_sets} sets × {currentLog.target_reps} reps</p>
@@ -325,22 +378,37 @@ const WorkoutInProgress = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={skipExercise}
-                className="flex-1"
-                disabled={currentExerciseIdx >= exercises.length - 1}
-              >
-                Skip Exercise
-              </Button>
-              <Button onClick={logSet} className="flex-1">
-                Log Set
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={previousExercise}
+                    disabled={currentExerciseIdx === 0}
+                  >
+                    Previous
+                  </Button>
+                  <Button onClick={logSet} className="flex-1">
+                    Log Set
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={nextExercise}
+                    disabled={currentExerciseIdx >= workoutExercises.length - 1}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
+
+      <AddExerciseToWorkoutDialog
+        open={showAddExercise}
+        onClose={() => setShowAddExercise(false)}
+        exercises={allExercises}
+        onSelectExercise={addExerciseToWorkout}
+      />
     </div>
   );
 };
