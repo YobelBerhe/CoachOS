@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import NutritionCard from '@/components/dashboard/NutritionCard';
-import WorkoutCard from '@/components/dashboard/WorkoutCard';
-import SleepCard from '@/components/dashboard/SleepCard';
-import MedsCard from '@/components/dashboard/MedsCard';
-import FastingCard from '@/components/dashboard/FastingCard';
-import QuickActions from '@/components/dashboard/QuickActions';
+import { WorkoutCard } from '@/components/dashboard/WorkoutCard';
+import { SleepCard } from '@/components/dashboard/SleepCard';
+import { MedsCard } from '@/components/dashboard/MedsCard';
+import { FastingCard } from '@/components/dashboard/FastingCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -64,11 +64,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <DashboardHeader
-          date={new Date()}
-          streak={7} // TODO: Calculate from database
-          complianceScore={complianceScore?.overall_score || 0}
-        />
+        <DashboardHeader userId={userId!} />
 
         <div className="space-y-4 mt-6">
           <NutritionCard
@@ -77,32 +73,16 @@ export default function Dashboard() {
             fastingPlan={fastingPlan}
           />
 
-          <WorkoutCard
-            workout={workout}
-            userId={userId}
-            date={today}
-          />
+          <WorkoutCard userId={userId!} />
 
-          <SleepCard
-            sleepLog={sleepLog}
-            userId={userId}
-            date={today}
-          />
+          <SleepCard userId={userId!} />
 
-          <MedsCard
-            medications={medications}
-            medicationLogs={medicationLogs}
-            userId={userId}
-            date={today}
-          />
+          <MedsCard userId={userId!} />
 
-          <FastingCard
-            fastingPlan={fastingPlan}
-            userId={userId}
-          />
+          <FastingCard userId={userId!} />
         </div>
 
-        <QuickActions />
+        <QuickActions userId={userId!} />
       </div>
     </div>
   );

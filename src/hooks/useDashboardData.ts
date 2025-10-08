@@ -1,8 +1,22 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+
+interface DashboardData {
+  profile: any;
+  targets: any;
+  foodLogs: any[];
+  workout: any;
+  sleepLog: any;
+  fastingPlan: any;
+  medications: any[];
+  medicationLogs: any[];
+  complianceScore: any;
+  loading: boolean;
+  error: string | null;
+}
 
 export function useDashboardData(userId: string | undefined) {
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardData>({
     profile: null,
     targets: null,
     foodLogs: [],
@@ -29,17 +43,8 @@ export function useDashboardData(userId: string | undefined) {
         setData(prev => ({ ...prev, loading: true, error: null }));
 
         // Fetch all data in parallel
-        const [
-          profileRes,
-          targetsRes,
-          foodLogsRes,
-          workoutRes,
-          sleepRes,
-          fastingRes,
-          medsRes,
-          medLogsRes,
-          scoreRes
-        ] = await Promise.allSettled([
+        // @ts-ignore - Type instantiation issue with Supabase types
+        const results: any = await Promise.allSettled([
           // Profile
           supabase
             .from('profiles')
@@ -110,6 +115,18 @@ export function useDashboardData(userId: string | undefined) {
             .eq('date', today)
             .single()
         ]);
+
+        const [
+          profileRes,
+          targetsRes,
+          foodLogsRes,
+          workoutRes,
+          sleepRes,
+          fastingRes,
+          medsRes,
+          medLogsRes,
+          scoreRes
+        ] = results;
 
         setData({
           profile: profileRes.status === 'fulfilled' ? profileRes.value.data : null,
