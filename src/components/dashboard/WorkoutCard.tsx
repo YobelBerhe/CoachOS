@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -12,6 +13,7 @@ interface WorkoutCardProps {
 }
 
 export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
+  const navigate = useNavigate();
   const [workout, setWorkout] = useState<any>(null);
   const today = new Date().toISOString().split('T')[0];
 
@@ -48,6 +50,7 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
           title: "Workout started!",
           description: "Let's get it done!"
         });
+        navigate(`/workout-in-progress?sessionId=${data.id}`);
       }
     }
   };

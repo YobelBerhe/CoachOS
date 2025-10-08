@@ -12,6 +12,8 @@ import Train from "./pages/Train";
 import Sleep from "./pages/Sleep";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Medications from "./pages/Medications";
+import WorkoutInProgress from "./pages/WorkoutInProgress";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/sleep" element={<Sleep />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/medications" element={<Medications />} />
+          <Route path="/workout-in-progress" element={<WorkoutInProgress />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

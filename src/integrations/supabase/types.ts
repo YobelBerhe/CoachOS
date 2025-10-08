@@ -321,6 +321,95 @@ export type Database = {
           },
         ]
       }
+      medication_logs: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          medication_id: string
+          scheduled_time: string
+          skip_reason: string | null
+          skipped: boolean | null
+          taken_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          medication_id: string
+          scheduled_time: string
+          skip_reason?: string | null
+          skipped?: boolean | null
+          taken_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          medication_id?: string
+          scheduled_time?: string
+          skip_reason?: string | null
+          skipped?: boolean | null
+          taken_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          created_at: string | null
+          current_pills: number | null
+          dosage: string
+          frequency: string
+          id: string
+          is_active: boolean | null
+          name: string
+          pills_per_bottle: number | null
+          take_with_food: boolean | null
+          times: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_pills?: number | null
+          dosage: string
+          frequency: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          pills_per_bottle?: number | null
+          take_with_food?: boolean | null
+          times?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_pills?: number | null
+          dosage?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          pills_per_bottle?: number | null
+          take_with_food?: boolean | null
+          times?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           activity_level: string
