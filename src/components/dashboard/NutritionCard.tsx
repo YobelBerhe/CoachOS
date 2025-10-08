@@ -1,199 +1,177 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Plus } from "lucide-react";
-import { AddFoodDialog } from "@/components/nutrition/AddFoodDialog";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Apple, Plus, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface NutritionCardProps {
-  userId: string;
+  targets: any;
+  foodLogs: any[];
+  fastingPlan: any;
 }
 
-export const NutritionCard = ({ userId }: NutritionCardProps) => {
+export default function NutritionCard({ targets, foodLogs, fastingPlan }: NutritionCardProps) {
   const navigate = useNavigate();
-  const [targets, setTargets] = useState<any>(null);
-  const [logged, setLogged] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 });
-  const [meals, setMeals] = useState<any[]>([]);
-  const [showAddFood, setShowAddFood] = useState(false);
-  const today = new Date().toISOString().split('T')[0];
 
-  useEffect(() => {
-    fetchData();
-  }, [userId]);
+  // Calculate totals
+  const totalCalories = foodLogs.reduce((sum, log) => sum + (log.calories || 0), 0);
+  const totalProtein = foodLogs.reduce((sum, log) => sum + (log.protein_g || 0), 0);
+  const totalCarbs = foodLogs.reduce((sum, log) => sum + (log.carbs_g || 0), 0);
+  const totalFats = foodLogs.reduce((sum, log) => sum + (log.fats_g || 0), 0);
 
-  const fetchData = async () => {
-    // Fetch targets
-    const { data: targetData } = await supabase
-      .from('daily_targets')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .single();
-    
-    if (targetData) setTargets(targetData);
+  const calorieTarget = targets?.calories || 2000;
+  const proteinTarget = targets?.protein_g || 150;
+  const carbsTarget = targets?.carbs_g || 200;
+  const fatsTarget = targets?.fats_g || 60;
 
-    // Fetch food logs
-    const { data: foodData } = await supabase
-      .from('food_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .order('time', { ascending: true });
-    
-    if (foodData) {
-      setMeals(foodData);
-      const totals = foodData.reduce((acc, meal) => ({
-        calories: acc.calories + meal.calories,
-        protein: acc.protein + Number(meal.protein_g),
-        carbs: acc.carbs + Number(meal.carbs_g),
-        fats: acc.fats + Number(meal.fats_g)
-      }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
-      setLogged(totals);
-    }
+  const caloriePercentage = Math.min((totalCalories / calorieTarget) * 100, 100);
+  const proteinPercentage = Math.min((totalProtein / proteinTarget) * 100, 100);
+  const carbsPercentage = Math.min((totalCarbs / carbsTarget) * 100, 100);
+  const fatsPercentage = Math.min((totalFats / fatsTarget) * 100, 100);
+
+  // Check if within eating window
+  const isInEatingWindow = () => {
+    if (!fastingPlan) return true;
+    const now = new Date();
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    return currentTime >= fastingPlan.eating_window_start && currentTime <= fastingPlan.eating_window_end;
   };
 
-  if (!targets) return null;
-
-  const caloriePercent = (logged.calories / targets.calories) * 100;
-  const remaining = Math.max(0, targets.calories - logged.calories);
-
-  const calorieData = [
-    { name: 'Consumed', value: logged.calories, color: 'hsl(var(--primary))' },
-    { name: 'Remaining', value: remaining, color: 'hsl(var(--muted))' }
-  ];
-
-  const macroData = [
-    { name: 'Protein', value: logged.protein, target: targets.protein_g, color: 'hsl(145, 65%, 45%)' },
-    { name: 'Carbs', value: logged.carbs, target: targets.carbs_g, color: 'hsl(195, 85%, 45%)' },
-    { name: 'Fats', value: logged.fats, target: targets.fats_g, color: 'hsl(38, 92%, 50%)' }
-  ];
-
   return (
-    <>
-      <Accordion type="single" collapsible>
-        <AccordionItem value="nutrition" className="border-none">
-          <Card className="border-border/50 bg-card/50 backdrop-blur">
-            <AccordionTrigger className="px-6 py-4 hover:no-underline">
-              <div className="flex items-center justify-between w-full pr-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <UtensilsCrossed className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <CardTitle className="text-base">Eat 🍽️</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {logged.calories} / {targets.calories} cal ({Math.round(caloriePercent)}%)
-                    </p>
-                  </div>
-                </div>
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value="nutrition" className="border rounded-lg bg-card shadow-sm">
+        <AccordionTrigger className="px-6 hover:no-underline hover:bg-secondary/50 rounded-t-lg transition-colors">
+          <div className="flex items-center justify-between w-full pr-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <Apple className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <CardContent className="pt-0 space-y-4">
-                {/* Circular Progress Charts */}
-                <div className="grid grid-cols-4 gap-2">
-                  {/* Main Calorie Ring */}
-                  <div className="flex flex-col items-center">
-                    <ResponsiveContainer width={80} height={80}>
-                      <PieChart>
-                        <Pie
-                          data={calorieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={25}
-                          outerRadius={35}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {calorieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <p className="text-xs font-medium mt-1">Calories</p>
-                    <p className="text-xs text-muted-foreground">{Math.round(caloriePercent)}%</p>
-                  </div>
+              <div className="text-left">
+                <p className="font-semibold">Nutrition</p>
+                <p className="text-sm text-muted-foreground">
+                  {Math.round(totalCalories)} / {calorieTarget} cal ({Math.round(caloriePercentage)}%)
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <div className={`w-2 h-2 rounded-full ${proteinPercentage >= 80 ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${carbsPercentage >= 80 ? 'bg-blue-500' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${fatsPercentage >= 80 ? 'bg-yellow-500' : 'bg-gray-300'}`} />
+            </div>
+          </div>
+        </AccordionTrigger>
 
-                  {/* Macro Rings */}
-                  {macroData.map((macro, idx) => {
-                    const macroPercent = (macro.value / macro.target) * 100;
-                    const macroRemaining = Math.max(0, macro.target - macro.value);
-                    const data = [
-                      { value: macro.value, color: macro.color },
-                      { value: macroRemaining, color: 'hsl(var(--muted))' }
-                    ];
-                    return (
-                      <div key={idx} className="flex flex-col items-center">
-                        <ResponsiveContainer width={70} height={70}>
-                          <PieChart>
-                            <Pie
-                              data={data}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={20}
-                              outerRadius={30}
-                              paddingAngle={2}
-                              dataKey="value"
-                            >
-                              {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <p className="text-xs font-medium mt-1">{macro.name}</p>
-                        <p className="text-xs text-muted-foreground">{Math.round(macroPercent)}%</p>
+        <AccordionContent>
+          <CardContent className="space-y-4 pt-4">
+            {/* Fasting Status */}
+            {fastingPlan && (
+              <div className={`flex items-center gap-2 p-3 rounded-lg ${isInEatingWindow() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-orange-100 dark:bg-orange-900/20'}`}>
+                <Clock className={`w-4 h-4 ${isInEatingWindow() ? 'text-green-600' : 'text-orange-600'}`} />
+                <span className="text-sm font-medium">
+                  {isInEatingWindow() ? '🍽️ Eating window open' : '🔒 Fasting'}
+                </span>
+              </div>
+            )}
+
+            {/* Calorie Progress */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Calories</span>
+                <span className="text-muted-foreground">
+                  {Math.round(totalCalories)} / {calorieTarget} cal
+                </span>
+              </div>
+              <Progress value={caloriePercentage} className="h-3" />
+            </div>
+
+            {/* Macros Grid */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Protein</p>
+                  <p className="text-lg font-bold text-green-600">{Math.round(totalProtein)}g</p>
+                  <p className="text-xs text-muted-foreground">/ {proteinTarget}g</p>
+                </div>
+                <Progress value={proteinPercentage} className="h-2" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Carbs</p>
+                  <p className="text-lg font-bold text-blue-600">{Math.round(totalCarbs)}g</p>
+                  <p className="text-xs text-muted-foreground">/ {carbsTarget}g</p>
+                </div>
+                <Progress value={carbsPercentage} className="h-2" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Fats</p>
+                  <p className="text-lg font-bold text-yellow-600">{Math.round(totalFats)}g</p>
+                  <p className="text-xs text-muted-foreground">/ {fatsTarget}g</p>
+                </div>
+                <Progress value={fatsPercentage} className="h-2" />
+              </div>
+            </div>
+
+            {/* Meal Timeline */}
+            <div className="space-y-3 pt-2">
+              <p className="text-sm font-medium">Today's Meals</p>
+              {foodLogs.length === 0 ? (
+                <div className="text-center py-8 bg-secondary/20 rounded-lg">
+                  <Apple className="w-12 h-12 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-sm text-muted-foreground">No meals logged yet</p>
+                  <p className="text-xs text-muted-foreground">Start tracking your nutrition!</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {foodLogs.map((log) => (
+                    <div 
+                      key={log.id} 
+                      className="flex justify-between items-center p-3 bg-secondary/30 hover:bg-secondary/50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => navigate('/eat')}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{log.food_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.time} • {log.meal_type}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* Meal Timeline */}
-                <div className="border-t pt-4 space-y-2">
-                  <p className="text-sm font-medium">Today's Meals ({meals.length})</p>
-                  {meals.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No meals logged yet</p>
-                  ) : (
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {meals.map((meal) => (
-                        <div key={meal.id} className="flex justify-between text-sm p-2 rounded bg-muted/50">
-                          <div>
-                            <p className="font-medium">{meal.food_name}</p>
-                            <p className="text-xs text-muted-foreground">{meal.time}</p>
-                          </div>
-                          <span className="font-medium">{meal.calories} cal</span>
-                        </div>
-                      ))}
+                      <div className="text-right">
+                        <p className="font-semibold text-sm">{Math.round(log.calories)} cal</p>
+                        <p className="text-xs text-muted-foreground">
+                          P:{Math.round(log.protein_g)} C:{Math.round(log.carbs_g)} F:{Math.round(log.fats_g)}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={() => setShowAddFood(true)} variant="default">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Log Food
-                  </Button>
-                  <Button onClick={() => navigate('/recipes')} variant="outline">
-                    Browse Recipes
-                  </Button>
-                </div>
-              </CardContent>
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
-      </Accordion>
-
-      <AddFoodDialog 
-        open={showAddFood} 
-        onClose={() => setShowAddFood(false)}
-        userId={userId}
-        onSuccess={fetchData}
-      />
-    </>
+            {/* Quick Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={() => navigate('/eat')}
+                className="flex-1"
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Log Food
+              </Button>
+              <Button
+                onClick={() => navigate('/recipes')}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Recipes
+              </Button>
+            </div>
+          </CardContent>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
-};
+}
