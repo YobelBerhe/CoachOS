@@ -1,12 +1,28 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, Settings as SettingsIcon, User, LogOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
+import { UpdateGoalsDialog } from "@/components/settings/UpdateGoalsDialog";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const [userId, setUserId] = useState<string>("");
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [updateGoalsOpen, setUpdateGoalsOpen] = useState(false);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -41,10 +57,10 @@ const Settings = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={() => setEditProfileOpen(true)}>
               Edit Profile
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={() => setUpdateGoalsOpen(true)}>
               Update Goals
             </Button>
             <Button variant="outline" className="w-full justify-start text-destructive" onClick={handleSignOut}>
@@ -71,6 +87,21 @@ const Settings = () => {
           </CardContent>
         </Card>
       </div>
+
+      {userId && (
+        <>
+          <EditProfileDialog 
+            open={editProfileOpen} 
+            onClose={() => setEditProfileOpen(false)}
+            userId={userId}
+          />
+          <UpdateGoalsDialog 
+            open={updateGoalsOpen} 
+            onClose={() => setUpdateGoalsOpen(false)}
+            userId={userId}
+          />
+        </>
+      )}
     </div>
   );
 };
