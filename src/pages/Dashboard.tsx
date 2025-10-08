@@ -1,53 +1,109 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { NutritionCard } from "@/components/dashboard/NutritionCard";
-import { WorkoutCard } from "@/components/dashboard/WorkoutCard";
-import { SleepCard } from "@/components/dashboard/SleepCard";
-import { MedsCard } from "@/components/dashboard/MedsCard";
-import { QuickActions } from "@/components/dashboard/QuickActions";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import NutritionCard from '@/components/dashboard/NutritionCard';
+import WorkoutCard from '@/components/dashboard/WorkoutCard';
+import SleepCard from '@/components/dashboard/SleepCard';
+import MedsCard from '@/components/dashboard/MedsCard';
+import FastingCard from '@/components/dashboard/FastingCard';
+import QuickActions from '@/components/dashboard/QuickActions';
+import { Loader2 } from 'lucide-react';
 
-const Dashboard = () => {
+export default function Dashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | undefined>();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUserId(session.user.id);
-        setLoading(false);
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
       }
-    });
+      setUserId(user.id);
+    }
+    checkUser();
   }, [navigate]);
+
+  const {
+    targets,
+    foodLogs,
+    workout,
+    sleepLog,
+    fastingPlan,
+    medications,
+    medicationLogs,
+    complianceScore,
+    loading,
+    error
+  } = useDashboardData(userId);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background pb-24">
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
-        <DashboardHeader userId={userId!} />
-        
-        <div className="space-y-3">
-          <NutritionCard userId={userId!} />
-          <WorkoutCard userId={userId!} />
-          <SleepCard userId={userId!} />
-          <MedsCard userId={userId!} />
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Error loading dashboard</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </div>
-      
-      <QuickActions userId={userId!} />
+    );
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <DashboardHeader
+          date={new Date()}
+          streak={7} // TODO: Calculate from database
+          complianceScore={complianceScore?.overall_score || 0}
+        />
+
+        <div className="space-y-4 mt-6">
+          <NutritionCard
+            targets={targets}
+            foodLogs={foodLogs}
+            fastingPlan={fastingPlan}
+          />
+
+          <WorkoutCard
+            workout={workout}
+            userId={userId}
+            date={today}
+          />
+
+          <SleepCard
+            sleepLog={sleepLog}
+            userId={userId}
+            date={today}
+          />
+
+          <MedsCard
+            medications={medications}
+            medicationLogs={medicationLogs}
+            userId={userId}
+            date={today}
+          />
+
+          <FastingCard
+            fastingPlan={fastingPlan}
+            userId={userId}
+          />
+        </div>
+
+        <QuickActions />
+      </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
