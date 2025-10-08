@@ -19,6 +19,7 @@ export type Database = {
           created_at: string | null
           date: string
           fasting_score: number
+          hydration_score: number | null
           id: string
           nutrition_score: number
           overall_score: number
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string | null
           date: string
           fasting_score: number
+          hydration_score?: number | null
           id?: string
           nutrition_score: number
           overall_score: number
@@ -43,6 +45,7 @@ export type Database = {
           created_at?: string | null
           date?: string
           fasting_score?: number
+          hydration_score?: number | null
           id?: string
           nutrition_score?: number
           overall_score?: number
@@ -647,6 +650,33 @@ export type Database = {
           last_updated?: string
           longest_streak?: number
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_logs: {
+        Row: {
+          amount_oz: number
+          created_at: string | null
+          date: string
+          id: string
+          time: string
+          user_id: string
+        }
+        Insert: {
+          amount_oz: number
+          created_at?: string | null
+          date: string
+          id?: string
+          time: string
+          user_id: string
+        }
+        Update: {
+          amount_oz?: number
+          created_at?: string | null
+          date?: string
+          id?: string
+          time?: string
           user_id?: string
         }
         Relationships: []

@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Droplets, Plus, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateComplianceScore } from '@/lib/compliance';
 import { useToast } from '@/hooks/use-toast';
 
 interface HydrationCardProps {
@@ -86,6 +87,11 @@ export default function HydrationCard({ userId, date }: HydrationCardProps) {
       });
 
       await fetchWaterLogs();
+      
+      // Recalculate compliance score
+      if (userId) {
+        await calculateComplianceScore(userId, date);
+      }
     } catch (error: any) {
       console.error('Error logging water:', error);
       toast({

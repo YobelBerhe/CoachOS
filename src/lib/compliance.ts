@@ -10,6 +10,7 @@ interface DailyData {
   fastingPlan: any;
   medications: any[];
   medicationLogs: any[];
+  waterLogs: any[];
 }
 
 /**
@@ -26,14 +27,16 @@ export async function calculateComplianceScore(userId: string, date: string) {
     const fastingScore = calculateFastingScore(data);
     const sleepScore = calculateSleepScore(data);
     const medsScore = calculateMedsScore(data);
+    const hydrationScore = calculateHydrationScore(data);
 
     // Calculate overall score (weighted average)
     const overallScore = Math.round(
-      nutritionScore * 0.25 +
-      workoutScore * 0.25 +
-      fastingScore * 0.20 +
+      nutritionScore * 0.20 +
+      workoutScore * 0.20 +
+      fastingScore * 0.15 +
       sleepScore * 0.15 +
-      medsScore * 0.15
+      medsScore * 0.15 +
+      hydrationScore * 0.15
     );
 
     // Save to database
@@ -46,7 +49,8 @@ export async function calculateComplianceScore(userId: string, date: string) {
         nutrition_score: nutritionScore,
         workout_score: workoutScore,
         fasting_score: fastingScore,
-        sleep_score: sleepScore
+        sleep_score: sleepScore,
+        hydration_score: hydrationScore
       }, {
         onConflict: 'user_id,date'
       })
@@ -78,6 +82,7 @@ async function fetchDailyData(userId: string, date: string): Promise<DailyData> 
   const medLogsRes = await supabase.from('medication_logs').select('*').eq('user_id', userId)
     .gte('scheduled_time', `${date}T00:00:00`)
     .lte('scheduled_time', `${date}T23:59:59`);
+  const waterLogsRes = await supabase.from('water_logs').select('*').eq('user_id', userId).eq('date', date);
 
   return {
     userId,
@@ -88,7 +93,8 @@ async function fetchDailyData(userId: string, date: string): Promise<DailyData> 
     sleepLog: sleepRes.data,
     fastingPlan: fastingRes.data,
     medications: medsRes.data || [],
-    medicationLogs: medLogsRes.data || []
+    medicationLogs: medLogsRes.data || [],
+    waterLogs: waterLogsRes.data || []
   };
 }
 
@@ -165,6 +171,17 @@ function calculateMedsScore(data: DailyData): number {
 
   const taken = data.medicationLogs.filter(log => log.taken_at && !log.skipped).length;
   return Math.round((taken / data.medicationLogs.length) * 100);
+}
+
+/**
+ * HYDRATION SCORE (0-100)
+ * 100 if >= 64 oz (daily goal)
+ * Proportional if less
+ */
+function calculateHydrationScore(data: DailyData): number {
+  const DAILY_GOAL = 64;
+  const totalOz = data.waterLogs.reduce((sum, log) => sum + log.amount_oz, 0);
+  return Math.min(Math.round((totalOz / DAILY_GOAL) * 100), 100);
 }
 
 /**

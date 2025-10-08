@@ -23,6 +23,7 @@ export default function ComplianceCard({ score }: ComplianceCardProps) {
   const categories = [
     { name: 'Nutrition', score: score.nutrition_score, icon: '🍎' },
     { name: 'Workout', score: score.workout_score, icon: '💪' },
+    { name: 'Hydration', score: score.hydration_score || 100, icon: '💧' },
     { name: 'Fasting', score: score.fasting_score, icon: '⏰' },
     { name: 'Sleep', score: score.sleep_score, icon: '😴' }
   ];

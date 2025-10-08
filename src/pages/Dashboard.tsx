@@ -10,6 +10,7 @@ import MedsCard from '@/components/dashboard/MedsCard';
 import { FastingCard } from '@/components/dashboard/FastingCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import ComplianceCard from '@/components/dashboard/ComplianceCard';
+import HydrationCard from '@/components/dashboard/HydrationCard';
 import { calculateComplianceScore, getCurrentStreak } from '@/lib/compliance';
 import { Loader2 } from 'lucide-react';
 
@@ -106,6 +107,8 @@ export default function Dashboard() {
           <MedsCard medications={medications} medicationLogs={medicationLogs} userId={userId!} date={today} />
 
           <FastingCard userId={userId!} />
+
+          <HydrationCard userId={userId!} date={today} />
 
           {complianceScore && <ComplianceCard score={complianceScore} />}
         </div>
