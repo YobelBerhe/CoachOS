@@ -111,6 +111,16 @@ const Eat = () => {
                 <p className="text-xs text-muted-foreground mt-1">{targets.fats_g}g goal</p>
               </div>
             </div>
+            
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" onClick={() => navigate("/recipes")}>
+                Browse Recipes
+              </Button>
+              <Button size="sm" onClick={() => setShowAddFood(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Log Food
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

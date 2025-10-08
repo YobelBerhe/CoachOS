@@ -224,6 +224,35 @@ export type Database = {
           },
         ]
       }
+      favorite_recipes: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipe_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipe_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipe_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_logs: {
         Row: {
           calories: number
@@ -320,6 +349,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      grocery_lists: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          updated_at: string | null
+          user_id: string
+          week_of: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          updated_at?: string | null
+          user_id: string
+          week_of: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          updated_at?: string | null
+          user_id?: string
+          week_of?: string
+        }
+        Relationships: []
       }
       medication_logs: {
         Row: {
@@ -452,6 +508,78 @@ export type Database = {
         }
         Relationships: []
       }
+      recipes: {
+        Row: {
+          calories_per_serving: number | null
+          carbs_g_per_serving: number | null
+          category: string
+          cook_time_min: number | null
+          created_at: string | null
+          cuisine: string | null
+          description: string | null
+          difficulty: string | null
+          fats_g_per_serving: number | null
+          id: string
+          image_url: string | null
+          ingredients: Json
+          instructions: Json
+          is_public: boolean | null
+          name: string
+          prep_time_min: number | null
+          protein_g_per_serving: number | null
+          servings: number
+          tags: string[] | null
+          total_time_min: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          calories_per_serving?: number | null
+          carbs_g_per_serving?: number | null
+          category: string
+          cook_time_min?: number | null
+          created_at?: string | null
+          cuisine?: string | null
+          description?: string | null
+          difficulty?: string | null
+          fats_g_per_serving?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: Json
+          is_public?: boolean | null
+          name: string
+          prep_time_min?: number | null
+          protein_g_per_serving?: number | null
+          servings?: number
+          tags?: string[] | null
+          total_time_min?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          calories_per_serving?: number | null
+          carbs_g_per_serving?: number | null
+          category?: string
+          cook_time_min?: number | null
+          created_at?: string | null
+          cuisine?: string | null
+          description?: string | null
+          difficulty?: string | null
+          fats_g_per_serving?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: Json
+          is_public?: boolean | null
+          name?: string
+          prep_time_min?: number | null
+          protein_g_per_serving?: number | null
+          servings?: number
+          tags?: string[] | null
+          total_time_min?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sleep_logs: {
         Row: {
           bedtime: string
@@ -492,6 +620,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_updated: string
+          longest_streak: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_updated: string
+          longest_streak?: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_updated?: string
+          longest_streak?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       weight_logs: {
         Row: {
