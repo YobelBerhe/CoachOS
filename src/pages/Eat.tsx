@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,7 +21,7 @@ interface FoodLog {
   meal_type: string;
   time: string;
   serving_size?: string;
-  quantity: number;
+  quantity?: number;
 }
 
 export default function Eat() {

@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import NutritionCard from '@/components/dashboard/NutritionCard';
-import { WorkoutCard } from '@/components/dashboard/WorkoutCard';
-import { SleepCard } from '@/components/dashboard/SleepCard';
-import { MedsCard } from '@/components/dashboard/MedsCard';
+import WorkoutCard from '@/components/dashboard/WorkoutCard';
+import SleepCard from '@/components/dashboard/SleepCard';
+import MedsCard from '@/components/dashboard/MedsCard';
 import { FastingCard } from '@/components/dashboard/FastingCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { Loader2 } from 'lucide-react';
@@ -73,11 +73,11 @@ export default function Dashboard() {
             fastingPlan={fastingPlan}
           />
 
-          <WorkoutCard userId={userId!} />
+          <WorkoutCard workout={workout} userId={userId!} date={today} />
 
-          <SleepCard userId={userId!} />
+          <SleepCard sleepLog={sleepLog} userId={userId!} date={today} />
 
-          <MedsCard userId={userId!} />
+          <MedsCard medications={medications} medicationLogs={medicationLogs} userId={userId!} date={today} />
 
           <FastingCard userId={userId!} />
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,7 +19,7 @@ interface SleepLog {
   bedtime: string;
   wake_time: string;
   duration_min: number;
-  quality_rating: number;
+  quality: number;
   notes?: string;
   deep_sleep_min?: number;
   rem_sleep_min?: number;
@@ -137,7 +137,7 @@ export default function Sleep() {
         bedtime: bedtimeDate.toISOString(),
         wake_time: wakeTimeDate.toISOString(),
         duration_min: durationMin,
-        quality_rating: formData.quality_rating,
+        quality: formData.quality_rating,
         notes: formData.notes || null,
         source: 'Manual'
       };
@@ -191,7 +191,7 @@ export default function Sleep() {
       date: log.date,
       bedtime: `${bedtime.getHours().toString().padStart(2, '0')}:${bedtime.getMinutes().toString().padStart(2, '0')}`,
       wake_time: `${wakeTime.getHours().toString().padStart(2, '0')}:${wakeTime.getMinutes().toString().padStart(2, '0')}`,
-      quality_rating: log.quality_rating,
+      quality_rating: log.quality,
       notes: log.notes || ''
     });
     setDialogOpen(true);
@@ -229,7 +229,7 @@ export default function Sleep() {
     ? last7Days.reduce((sum, log) => sum + log.duration_min, 0) / last7Days.length
     : 0;
   const avgQuality = last7Days.length > 0
-    ? last7Days.reduce((sum, log) => sum + log.quality_rating, 0) / last7Days.length
+    ? last7Days.reduce((sum, log) => sum + log.quality, 0) / last7Days.length
     : 0;
 
   const bestNight = [...sleepLogs].sort((a, b) => b.duration_min - a.duration_min)[0];
@@ -242,7 +242,7 @@ export default function Sleep() {
     .map(log => ({
       date: new Date(log.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       hours: parseFloat((log.duration_min / 60).toFixed(1)),
-      quality: log.quality_rating
+      quality: log.quality
     }));
 
   const getSleepQualityLabel = (hours: number) => {
@@ -556,7 +556,7 @@ export default function Sleep() {
                               <Star
                                 key={i}
                                 className={`w-3 h-3 ${
-                                  i < log.quality_rating
+                                  i < log.quality
                                     ? 'fill-yellow-400 text-yellow-400'
                                     : 'text-gray-300'
                                 }`}

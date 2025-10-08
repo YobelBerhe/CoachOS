@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pill, Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface MedsCardProps {
@@ -72,6 +72,7 @@ export default function MedsCard({ medications, medicationLogs, userId, date }: 
         .insert({
           user_id: userId,
           medication_id: medId,
+          date: date,
           scheduled_time: scheduledDateTime.toISOString(),
           taken_at: new Date().toISOString(),
           skipped: false
