@@ -86,9 +86,13 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
                   <Dumbbell className="w-5 h-5 text-primary" />
                 </div>
                 <div className="text-left">
-                  <CardTitle className="text-base">Workout</CardTitle>
+                  <CardTitle className="text-base">Train 💪</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {workout?.completed_at ? "Completed ✓" : "Not started"}
+                    {workout?.completed_at 
+                      ? "Completed ✓" 
+                      : workout 
+                        ? `${workout.name} - ${workout.scheduled_time || "No time set"}`
+                        : "Not started"}
                   </p>
                 </div>
               </div>
@@ -115,10 +119,15 @@ export const WorkoutCard = ({ userId }: WorkoutCardProps) => {
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm">Ready to train? Let's go!</p>
-                  <Button onClick={completeWorkout} className="w-full">
-                    <Check className="w-4 h-4 mr-2" />
-                    Complete Workout
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button onClick={() => navigate(`/workout-in-progress?sessionId=${workout.id}`)} variant="default">
+                      <Play className="w-4 h-4 mr-2" />
+                      Start Workout
+                    </Button>
+                    <Button onClick={() => navigate('/train')} variant="outline">
+                      Reschedule
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -58,9 +58,9 @@ export const MedsCard = ({ userId }: MedsCardProps) => {
                   <Pill className="w-5 h-5 text-primary" />
                 </div>
                 <div className="text-left">
-                  <CardTitle className="text-base">Medications</CardTitle>
+                  <CardTitle className="text-base">Meds 💊</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {adherence.total === 0 ? "No medications" : `${adherence.taken}/${adherence.total} taken`}
+                    {adherence.total === 0 ? "No medications" : `${adherence.taken}/${adherence.total} taken today`}
                   </p>
                 </div>
               </div>

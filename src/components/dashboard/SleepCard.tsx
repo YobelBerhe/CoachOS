@@ -44,19 +44,29 @@ export const SleepCard = ({ userId }: SleepCardProps) => {
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Moon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="text-left">
-                    <CardTitle className="text-base">Sleep</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {sleepLog ? `${hours}h ${minutes}m` : "Not logged"}
-                    </p>
-                  </div>
+                <div className="text-left">
+                  <CardTitle className="text-base">Sleep 😴</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {sleepLog ? `${hours}h ${minutes}m (Last night)` : "Not logged"}
+                  </p>
+                </div>
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent>
               <CardContent className="pt-0 space-y-4">
                 {sleepLog ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Quality</span>
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={i < (sleepLog.quality || 0) / 2 ? "text-warning" : "text-muted"}>
+                            ⭐
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Bedtime</span>
                       <span className="font-medium">{sleepLog.bedtime}</span>
@@ -65,12 +75,9 @@ export const SleepCard = ({ userId }: SleepCardProps) => {
                       <span className="text-muted-foreground">Wake time</span>
                       <span className="font-medium">{sleepLog.wake_time}</span>
                     </div>
-                    {sleepLog.quality && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Quality</span>
-                        <span className="font-medium">{sleepLog.quality}/10</span>
-                      </div>
-                    )}
+                    <Button onClick={() => setShowAddSleep(true)} variant="outline" className="w-full">
+                      Update Sleep
+                    </Button>
                   </div>
                 ) : (
                   <div className="text-center py-4">

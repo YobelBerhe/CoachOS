@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Flame } from "lucide-react";
 import { format } from "date-fns";
+import { calculateComplianceScore } from "@/lib/compliance";
 
 interface DashboardHeaderProps {
   userId: string;
@@ -13,11 +14,14 @@ export const DashboardHeader = ({ userId }: DashboardHeaderProps) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("User");
   const [streak, setStreak] = useState(0);
-  const today = format(new Date(), "EEEE, MMMM d");
+  const [score, setScore] = useState(0);
+  const today = format(new Date(), "EEEE, MMMM d, yyyy");
+  const todayDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     fetchUserProfile();
     fetchStreak();
+    fetchOrCalculateScore();
   }, [userId]);
 
   const fetchUserProfile = async () => {
@@ -45,16 +49,36 @@ export const DashboardHeader = ({ userId }: DashboardHeaderProps) => {
     }
   };
 
+  const fetchOrCalculateScore = async () => {
+    const { data: existingScore } = await supabase
+      .from('compliance_scores')
+      .select('overall_score')
+      .eq('user_id', userId)
+      .eq('date', todayDate)
+      .single();
+    
+    if (existingScore) {
+      setScore(existingScore.overall_score);
+    } else {
+      const newScore = await calculateComplianceScore(userId, todayDate);
+      if (newScore) {
+        setScore(newScore.overall_score);
+      }
+    }
+  };
+
+  const getScoreBadgeClasses = () => {
+    if (score >= 80) return "bg-success text-success-foreground";
+    if (score >= 60) return "bg-warning text-warning-foreground";
+    return "bg-destructive text-destructive-foreground";
+  };
+
   return (
-    <header className="flex justify-between items-start mb-6">
-      <div>
-        <h1 className="text-2xl font-bold">Welcome back, {userName}! 👋</h1>
-        <p className="text-sm text-muted-foreground">{today}</p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-full">
-          <Flame className="h-4 w-4 text-primary" />
-          <span className="font-semibold">{streak} day streak</span>
+    <header className="space-y-4 mb-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold">Welcome back, {userName}! 👋</h1>
+          <p className="text-sm text-muted-foreground">{today}</p>
         </div>
         <Button
           variant="ghost"
@@ -66,6 +90,16 @@ export const DashboardHeader = ({ userId }: DashboardHeaderProps) => {
         >
           <LogOut className="w-5 h-5" />
         </Button>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+          <Flame className="h-5 w-5 text-primary" />
+          <span className="font-semibold">{streak} day streak</span>
+        </div>
+        <div className={`px-4 py-2 rounded-full font-semibold ${getScoreBadgeClasses()}`}>
+          {score}% Compliance
+        </div>
       </div>
     </header>
   );
