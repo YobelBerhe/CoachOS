@@ -1,12 +1,18 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AddMedicationDialog } from "@/components/medications/AddMedicationDialog";
-import { ArrowLeft, Plus, Clock, CheckCircle2, AlertCircle, Utensils } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Plus, Pill, ArrowLeft, Edit, Trash2, CheckCircle2, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Medication {
   id: string;
@@ -15,96 +21,199 @@ interface Medication {
   frequency: string;
   times: string[];
   take_with_food: boolean;
-  pills_per_bottle: number | null;
-  current_pills: number | null;
+  pills_per_bottle?: number;
+  current_pills?: number;
+  notes?: string;
+  is_active: boolean;
 }
 
 interface MedicationLog {
   id: string;
   medication_id: string;
   scheduled_time: string;
-  taken_at: string | null;
+  taken_at?: string;
   skipped: boolean;
 }
 
-const Medications = () => {
+export default function Medications() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [userId, setUserId] = useState<string | undefined>();
   const [medications, setMedications] = useState<Medication[]>([]);
-  const [todayLogs, setTodayLogs] = useState<MedicationLog[]>([]);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingMed, setEditingMed] = useState<Medication | null>(null);
+
   const today = new Date().toISOString().split('T')[0];
 
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    dosage: '',
+    frequency: 'Daily',
+    times: ['08:00'],
+    take_with_food: false,
+    pills_per_bottle: '',
+    current_pills: '',
+    notes: ''
+  });
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        setUserId(session.user.id);
-        fetchData(session.user.id);
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
       }
-    });
+      setUserId(user.id);
+      await fetchData(user.id);
+    }
+    init();
   }, [navigate]);
 
-  const fetchData = async (uid: string) => {
-    setLoading(true);
+  async function fetchData(uid: string) {
     try {
-      const [medsResult, logsResult] = await Promise.all([
-        supabase
-          .from('medications')
-          .select('*')
-          .eq('user_id', uid)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('medication_logs')
-          .select('*')
-          .eq('user_id', uid)
-          .eq('date', today)
-      ]);
+      setLoading(true);
 
-      if (medsResult.data) {
-        const parsedMeds = medsResult.data.map(med => ({
-          ...med,
-          times: typeof med.times === 'string' ? JSON.parse(med.times) : med.times
-        }));
-        setMedications(parsedMeds);
-      }
+      // Fetch medications
+      const { data: medsData, error: medsError } = await supabase
+        .from('medications')
+        .select('*')
+        .eq('user_id', uid)
+        .order('name', { ascending: true });
 
-      if (logsResult.data) {
-        setTodayLogs(logsResult.data);
-      }
+      if (medsError) throw medsError;
+      setMedications(medsData || []);
+
+      // Fetch last 7 days of logs for adherence calculation
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data: logsData, error: logsError } = await supabase
+        .from('medication_logs')
+        .select('*')
+        .eq('user_id', uid)
+        .gte('scheduled_time', sevenDaysAgo.toISOString());
+
+      if (logsError) throw logsError;
+      setMedicationLogs(logsData || []);
+
     } catch (error: any) {
-      console.error('Error fetching medications:', error);
+      console.error('Error fetching data:', error);
+      toast({
+        title: "Error loading medications",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      dosage: '',
+      frequency: 'Daily',
+      times: ['08:00'],
+      take_with_food: false,
+      pills_per_bottle: '',
+      current_pills: '',
+      notes: ''
+    });
+    setEditingMed(null);
   };
 
-  const markAsTaken = async (medicationId: string, scheduledTime: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!userId) return;
 
     try {
-      const { error } = await supabase
-        .from('medication_logs')
-        .insert({
-          user_id: userId,
-          medication_id: medicationId,
-          scheduled_time: new Date(`${today}T${scheduledTime}`).toISOString(),
-          taken_at: new Date().toISOString(),
-          date: today,
-          skipped: false
+      const medData = {
+        user_id: userId,
+        name: formData.name,
+        dosage: formData.dosage,
+        frequency: formData.frequency,
+        times: formData.times,
+        take_with_food: formData.take_with_food,
+        pills_per_bottle: formData.pills_per_bottle ? parseInt(formData.pills_per_bottle) : null,
+        current_pills: formData.current_pills ? parseInt(formData.current_pills) : null,
+        notes: formData.notes || null,
+        is_active: true
+      };
+
+      if (editingMed) {
+        const { error } = await supabase
+          .from('medications')
+          .update(medData)
+          .eq('id', editingMed.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Medication updated",
+          description: `${formData.name} has been updated`
         });
+      } else {
+        const { error } = await supabase
+          .from('medications')
+          .insert(medData);
+
+        if (error) throw error;
+
+        toast({
+          title: "Medication added",
+          description: `${formData.name} has been added to your list`
+        });
+      }
+
+      await fetchData(userId);
+      setDialogOpen(false);
+      resetForm();
+
+    } catch (error: any) {
+      console.error('Error saving medication:', error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEdit = (med: Medication) => {
+    setEditingMed(med);
+    setFormData({
+      name: med.name,
+      dosage: med.dosage,
+      frequency: med.frequency,
+      times: med.times,
+      take_with_food: med.take_with_food,
+      pills_per_bottle: med.pills_per_bottle?.toString() || '',
+      current_pills: med.current_pills?.toString() || '',
+      notes: med.notes || ''
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete ${name}? This will also remove all associated logs.`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('medications')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
 
       toast({
-        title: "Marked as taken",
-        description: "Medication logged successfully"
+        title: "Medication deleted",
+        description: `${name} has been removed`
       });
 
-      fetchData(userId);
+      await fetchData(userId!);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -114,142 +223,393 @@ const Medications = () => {
     }
   };
 
-  const getMedicationStatus = (medId: string, time: string) => {
-    const log = todayLogs.find(
-      l => l.medication_id === medId && l.scheduled_time.includes(time)
-    );
-    
-    if (log?.taken_at) return 'taken';
-    
-    const now = new Date();
-    const scheduledDateTime = new Date(`${today}T${time}`);
-    
-    if (now > scheduledDateTime) return 'overdue';
-    return 'upcoming';
+  const handleToggleActive = async (id: string, name: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('medications')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: `Medication ${!currentStatus ? 'activated' : 'deactivated'}`,
+        description: name
+      });
+
+      await fetchData(userId!);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
-  const calculateAdherence = () => {
-    const totalDoses = medications.reduce((sum, med) => sum + med.times.length, 0);
-    const takenDoses = todayLogs.filter(log => log.taken_at).length;
-    return totalDoses > 0 ? Math.round((takenDoses / totalDoses) * 100) : 0;
+  const addTimeSlot = () => {
+    setFormData({
+      ...formData,
+      times: [...formData.times, '12:00']
+    });
   };
+
+  const removeTimeSlot = (index: number) => {
+    setFormData({
+      ...formData,
+      times: formData.times.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateTimeSlot = (index: number, value: string) => {
+    const newTimes = [...formData.times];
+    newTimes[index] = value;
+    setFormData({ ...formData, times: newTimes });
+  };
+
+  // Calculate adherence
+  const calculateAdherence = (medId: string) => {
+    const medLogs = medicationLogs.filter(log => log.medication_id === medId);
+    if (medLogs.length === 0) return 100;
+
+    const taken = medLogs.filter(log => log.taken_at && !log.skipped).length;
+    return Math.round((taken / medLogs.length) * 100);
+  };
+
+  const activeMeds = medications.filter(m => m.is_active);
+  const inactiveMeds = medications.filter(m => !m.is_active);
+
+  // Overall adherence
+  const overallAdherence = medications.length > 0
+    ? Math.round(medications.reduce((sum, med) => sum + calculateAdherence(med.id), 0) / medications.length)
+    : 100;
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <Pill className="w-12 h-12 animate-pulse mx-auto mb-4 text-primary" />
+          <p>Loading medications...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-background pb-20">
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Medications</h1>
-        </div>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Today's Adherence</p>
-                <p className="text-3xl font-bold text-primary">{calculateAdherence()}%</p>
-              </div>
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Medications</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your medication schedule
+              </p>
+            </div>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
                 Add Medication
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingMed ? 'Edit Medication' : 'Add Medication'}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="name">Medication Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Metformin"
+                    required
+                  />
+                </div>
 
-        {medications.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <p className="text-muted-foreground mb-4">No medications yet</p>
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Medication
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {medications.map((med) => (
-              <Card key={med.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{med.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{med.dosage}</p>
-                    </div>
-                    <Badge variant="outline">{med.frequency}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {med.take_with_food && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Utensils className="h-4 w-4" />
-                      <span>Take with food</span>
-                    </div>
-                  )}
-                  
-                  {med.times.map((time, idx) => {
-                    const status = getMedicationStatus(med.id, time);
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          {status === 'taken' ? (
-                            <CheckCircle2 className="h-5 w-5 text-success" />
-                          ) : status === 'overdue' ? (
-                            <AlertCircle className="h-5 w-5 text-destructive" />
-                          ) : (
-                            <Clock className="h-5 w-5 text-muted-foreground" />
-                          )}
-                          <div>
-                            <p className="font-medium">{time}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{status}</p>
-                          </div>
-                        </div>
-                        {status !== 'taken' && (
+                <div>
+                  <Label htmlFor="dosage">Dosage *</Label>
+                  <Input
+                    id="dosage"
+                    value={formData.dosage}
+                    onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                    placeholder="e.g., 500mg or 1 tablet"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="frequency">Frequency *</Label>
+                  <Select
+                    value={formData.frequency}
+                    onValueChange={(value) => setFormData({ ...formData, frequency: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Daily">Daily</SelectItem>
+                      <SelectItem value="Twice daily">Twice daily</SelectItem>
+                      <SelectItem value="Three times daily">Three times daily</SelectItem>
+                      <SelectItem value="As needed">As needed</SelectItem>
+                      <SelectItem value="Weekly">Weekly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Times *</Label>
+                  <div className="space-y-2">
+                    {formData.times.map((time, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          type="time"
+                          value={time}
+                          onChange={(e) => updateTimeSlot(index, e.target.value)}
+                          required
+                        />
+                        {formData.times.length > 1 && (
                           <Button
-                            size="sm"
-                            onClick={() => markAsTaken(med.id, time)}
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => removeTimeSlot(index)}
                           >
-                            Mark Taken
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         )}
                       </div>
-                    );
-                  })}
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTimeSlot}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Time
+                    </Button>
+                  </div>
+                </div>
 
-                  {med.current_pills !== null && med.pills_per_bottle && (
-                    <div className="text-sm text-muted-foreground pt-2 border-t">
-                      Pills remaining: {med.current_pills} / {med.pills_per_bottle}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="take_with_food">Take with food</Label>
+                  <Switch
+                    id="take_with_food"
+                    checked={formData.take_with_food}
+                    onCheckedChange={(checked) => setFormData({ ...formData, take_with_food: checked })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="pills_per_bottle">Pills per bottle</Label>
+                    <Input
+                      id="pills_per_bottle"
+                      type="number"
+                      value={formData.pills_per_bottle}
+                      onChange={(e) => setFormData({ ...formData, pills_per_bottle: e.target.value })}
+                      placeholder="e.g., 30"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="current_pills">Current pills</Label>
+                    <Input
+                      id="current_pills"
+                      type="number"
+                      value={formData.current_pills}
+                      onChange={(e) => setFormData({ ...formData, current_pills: e.target.value })}
+                      placeholder="e.g., 15"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Any special instructions..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" className="flex-1">
+                    {editingMed ? 'Update' : 'Add Medication'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setDialogOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Overall Adherence Card */}
+        {activeMeds.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                7-Day Adherence
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Overall Adherence</span>
+                  <span className="text-3xl font-bold">{overallAdherence}%</span>
+                </div>
+                <Progress value={overallAdherence} className="h-3" />
+                <p className="text-xs text-muted-foreground">
+                  {overallAdherence >= 80 ? '✅ Great job staying on track!' : '⚠️ Try to improve your adherence'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Active Medications */}
+        <div className="space-y-4 mb-6">
+          <h2 className="text-lg font-semibold">Active Medications</h2>
+          {activeMeds.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Pill className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground mb-2">No active medications</p>
+                <p className="text-sm text-muted-foreground">Add your first medication to get started</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {activeMeds.map(med => {
+                const adherence = calculateAdherence(med.id);
+                const daysRemaining = med.current_pills && med.times.length > 0
+                  ? Math.floor(med.current_pills / med.times.length)
+                  : null;
+
+                return (
+                  <Card key={med.id}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold text-lg">{med.name}</h3>
+                            {med.take_with_food && (
+                              <Badge variant="outline" className="text-xs">With food</Badge>
+                            )}
+                            <Badge variant={adherence >= 80 ? 'default' : 'destructive'}>
+                              {adherence}% adherence
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <p>Dosage: {med.dosage}</p>
+                            <p>Frequency: {med.frequency}</p>
+                            <p>Times: {med.times.join(', ')}</p>
+                            {med.notes && <p className="italic">"{med.notes}"</p>}
+                            {daysRemaining !== null && (
+                              <p className={daysRemaining <= 7 ? 'text-orange-600 font-medium' : ''}>
+                                {daysRemaining <= 0 ? '⚠️ Refill needed!' : `💊 ${daysRemaining} days remaining`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(med)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleActive(med.id, med.name, med.is_active)}
+                          >
+                            <Clock className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(med.id, med.name)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Inactive Medications */}
+        {inactiveMeds.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-muted-foreground">Inactive Medications</h2>
+            <div className="space-y-3">
+              {inactiveMeds.map(med => (
+                <Card key={med.id} className="opacity-60">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-semibold">{med.name}</h3>
+                        <p className="text-sm text-muted-foreground">{med.dosage}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(med.id, med.name, med.is_active)}
+                        >
+                          Reactivate
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(med.id, med.name)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </div>
-
-      <AddMedicationDialog
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-        userId={userId!}
-        onSuccess={() => fetchData(userId!)}
-      />
     </div>
   );
-};
-
-export default Medications;
+}
