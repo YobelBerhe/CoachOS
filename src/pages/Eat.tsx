@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateComplianceScore } from '@/lib/compliance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -149,7 +150,7 @@ export default function Eat() {
           description: `${formData.food_name} has been updated`
         });
       } else {
-        // Insert new
+        // Create new
         const { error } = await supabase
           .from('food_logs')
           .insert(foodData);
@@ -157,12 +158,16 @@ export default function Eat() {
         if (error) throw error;
 
         toast({
-          title: "Food logged",
-          description: `${formData.food_name} added to your diary`
+          title: "Food logged!",
+          description: `${formData.food_name} (${formData.calories} cal)`
         });
       }
 
       await fetchData(userId);
+      
+      // Recalculate compliance
+      await calculateComplianceScore(userId, today);
+      
       setDialogOpen(false);
       resetForm();
 

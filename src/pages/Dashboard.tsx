@@ -9,11 +9,15 @@ import SleepCard from '@/components/dashboard/SleepCard';
 import MedsCard from '@/components/dashboard/MedsCard';
 import { FastingCard } from '@/components/dashboard/FastingCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import ComplianceCard from '@/components/dashboard/ComplianceCard';
+import { calculateComplianceScore, getCurrentStreak } from '@/lib/compliance';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | undefined>();
+  const [streak, setStreak] = useState(0);
+  const [calculatingScore, setCalculatingScore] = useState(false);
 
   useEffect(() => {
     async function checkUser() {
@@ -40,6 +44,30 @@ export default function Dashboard() {
     error
   } = useDashboardData(userId);
 
+  const today = new Date().toISOString().split('T')[0];
+
+  // Calculate compliance and get streak
+  useEffect(() => {
+    async function calculateTodayScore() {
+      if (!userId) return;
+      
+      try {
+        setCalculatingScore(true);
+        await calculateComplianceScore(userId, today);
+        const currentStreak = await getCurrentStreak(userId);
+        setStreak(currentStreak);
+      } catch (error) {
+        console.error('Error calculating compliance:', error);
+      } finally {
+        setCalculatingScore(false);
+      }
+    }
+
+    if (userId) {
+      calculateTodayScore();
+    }
+  }, [userId, today]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -58,8 +86,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
@@ -80,6 +106,8 @@ export default function Dashboard() {
           <MedsCard medications={medications} medicationLogs={medicationLogs} userId={userId!} date={today} />
 
           <FastingCard userId={userId!} />
+
+          {complianceScore && <ComplianceCard score={complianceScore} />}
         </div>
 
         <QuickActions userId={userId!} />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateComplianceScore } from '@/lib/compliance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -84,7 +85,10 @@ export default function Medications() {
         .order('name', { ascending: true });
 
       if (medsError) throw medsError;
-      setMedications(medsData || []);
+      setMedications((medsData || []).map(med => ({
+        ...med,
+        times: med.times as any as string[]
+      })));
 
       // Fetch last 7 days of logs for adherence calculation
       const sevenDaysAgo = new Date();

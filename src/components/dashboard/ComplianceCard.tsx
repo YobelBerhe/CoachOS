@@ -1,66 +1,69 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { calculateComplianceScore } from "@/lib/compliance";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 interface ComplianceCardProps {
-  userId: string;
+  score: any;
 }
 
-export const ComplianceCard = ({ userId }: ComplianceCardProps) => {
-  const [score, setScore] = useState(0);
-  const today = new Date().toISOString().split('T')[0];
+export default function ComplianceCard({ score }: ComplianceCardProps) {
+  if (!score) return null;
 
-  useEffect(() => {
-    fetchOrCalculateScore();
-  }, [userId]);
-
-  const fetchOrCalculateScore = async () => {
-    // Try to get existing score
-    const { data: existingScore } = await supabase
-      .from('compliance_scores')
-      .select('overall_score')
-      .eq('user_id', userId)
-      .eq('date', today)
-      .single();
-    
-    if (existingScore) {
-      setScore(existingScore.overall_score);
-    } else {
-      // Calculate new score
-      const newScore = await calculateComplianceScore(userId, today);
-      if (newScore) {
-        setScore(newScore.overall_score);
-      }
-    }
+  const getScoreColor = (value: number) => {
+    if (value >= 80) return 'text-success';
+    if (value >= 60) return 'text-warning';
+    return 'text-destructive';
   };
 
-  const getScoreColor = () => {
-    if (score >= 80) return "text-success";
-    if (score >= 60) return "text-warning";
-    return "text-destructive";
+  const getScoreBg = (value: number) => {
+    if (value >= 80) return 'bg-success/10';
+    if (value >= 60) return 'bg-warning/10';
+    return 'bg-destructive/10';
   };
 
-  const getScoreLabel = () => {
-    if (score >= 80) return "Crushing it!";
-    if (score >= 60) return "Good effort";
-    if (score > 0) return "Keep going";
-    return "Let's get started";
-  };
+  const categories = [
+    { name: 'Nutrition', score: score.nutrition_score, icon: '🍎' },
+    { name: 'Workout', score: score.workout_score, icon: '💪' },
+    { name: 'Fasting', score: score.fasting_score, icon: '⏰' },
+    { name: 'Sleep', score: score.sleep_score, icon: '😴' }
+  ];
 
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Today's Compliance</span>
-          <span className={`text-2xl font-bold ${getScoreColor()}`}>
-            {score}%
-          </span>
+      <CardHeader>
+        <CardTitle>Today's Breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {categories.map(cat => (
+          <div key={cat.name}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium flex items-center gap-2">
+                <span>{cat.icon}</span>
+                {cat.name}
+              </span>
+              <span className={`text-sm font-bold ${getScoreColor(cat.score)}`}>
+                {cat.score}%
+              </span>
+            </div>
+            <Progress value={cat.score} className="h-2" />
+          </div>
+        ))}
+
+        <div className="pt-4 border-t border-border/50">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold">Overall Score</span>
+            <span className={`text-2xl font-bold ${getScoreColor(score.overall_score)}`}>
+              {score.overall_score}%
+            </span>
+          </div>
+          <div className={`p-3 rounded-lg ${getScoreBg(score.overall_score)}`}>
+            <p className="text-sm text-center">
+              {score.overall_score >= 80 && '🎉 Crushing it today!'}
+              {score.overall_score >= 60 && score.overall_score < 80 && '💪 Good progress, keep going!'}
+              {score.overall_score < 60 && '⚠️ Let\'s improve tomorrow!'}
+            </p>
+          </div>
         </div>
-        <Progress value={score} className="h-2 mb-2" />
-        <p className="text-xs text-muted-foreground">{getScoreLabel()}</p>
       </CardContent>
     </Card>
   );
-};
+}

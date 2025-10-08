@@ -1,93 +1,33 @@
 import { supabase } from "@/integrations/supabase/client";
 
+interface DailyData {
+  userId: string;
+  date: string;
+  dailyTargets: any;
+  foodLogs: any[];
+  workout: any;
+  sleepLog: any;
+  fastingPlan: any;
+  medications: any[];
+  medicationLogs: any[];
+}
+
 /**
- * Calculate daily compliance score (0-100)
- * Nutrition: 25%, Workout: 25%, Fasting: 20%, Sleep: 15%, Meds: 15%
+ * Calculate compliance score for a specific date
  */
 export async function calculateComplianceScore(userId: string, date: string) {
   try {
-    // Get daily targets
-    const { data: target } = await supabase
-      .from('daily_targets')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .single();
+    // Fetch all data for the day
+    const data = await fetchDailyData(userId, date);
 
-    if (!target) {
-      return null;
-    }
+    // Calculate individual scores
+    const nutritionScore = calculateNutritionScore(data);
+    const workoutScore = calculateWorkoutScore(data);
+    const fastingScore = calculateFastingScore(data);
+    const sleepScore = calculateSleepScore(data);
+    const medsScore = calculateMedsScore(data);
 
-    // 1. NUTRITION SCORE (25%)
-    const { data: foodLogs } = await supabase
-      .from('food_logs')
-      .select('calories')
-      .eq('user_id', userId)
-      .eq('date', date);
-
-    const totalCalories = foodLogs?.reduce((sum, log) => sum + log.calories, 0) || 0;
-    const calorieVariance = Math.abs(totalCalories - target.calories);
-    
-    let nutritionScore = 0;
-    if (calorieVariance <= 150) {
-      nutritionScore = 100;
-    } else if (calorieVariance <= 300) {
-      nutritionScore = 50;
-    }
-
-    // 2. WORKOUT SCORE (25%)
-    const { data: workout } = await supabase
-      .from('workout_sessions')
-      .select('completed_at')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .single();
-
-    const workoutScore = workout?.completed_at ? 100 : 0;
-
-    // 3. FASTING SCORE (20%)
-    const { data: fastingPlan } = await supabase
-      .from('fasting_plans')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single();
-
-    let fastingScore = 100; // Default if no fasting plan
-    if (fastingPlan && foodLogs) {
-      const windowStart = fastingPlan.eating_window_start;
-      const windowEnd = fastingPlan.eating_window_end;
-
-      const outsideWindow = foodLogs.some((log: any) => {
-        const logTime = log.time;
-        return logTime < windowStart || logTime > windowEnd;
-      });
-
-      fastingScore = outsideWindow ? 0 : 100;
-    }
-
-    // 4. SLEEP SCORE (15%)
-    const { data: sleepLog } = await supabase
-      .from('sleep_logs')
-      .select('duration_min')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .single();
-
-    let sleepScore = 0;
-    if (sleepLog) {
-      const hours = sleepLog.duration_min / 60;
-      if (hours >= 7 && hours <= 9) {
-        sleepScore = 100;
-      } else if ((hours >= 6 && hours < 7) || (hours > 9 && hours <= 10)) {
-        sleepScore = 50;
-      }
-    }
-
-    // 5. MEDS SCORE (15%) - Placeholder
-    const medsScore = 100; // Will implement when medications table is ready
-
-    // OVERALL SCORE (weighted average)
+    // Calculate overall score (weighted average)
     const overallScore = Math.round(
       nutritionScore * 0.25 +
       workoutScore * 0.25 +
@@ -96,8 +36,8 @@ export async function calculateComplianceScore(userId: string, date: string) {
       medsScore * 0.15
     );
 
-    // Save compliance score
-    const { data, error } = await supabase
+    // Save to database
+    const { data: savedScore, error } = await supabase
       .from('compliance_scores')
       .upsert({
         user_id: userId,
@@ -114,10 +54,289 @@ export async function calculateComplianceScore(userId: string, date: string) {
       .single();
 
     if (error) throw error;
-    return data;
+
+    // Update streak if score >= 80
+    await updateStreak(userId, date, overallScore);
+
+    return savedScore;
   } catch (error) {
     console.error('Error calculating compliance:', error);
     return null;
+  }
+}
+
+/**
+ * Fetch all data needed for compliance calculation
+ */
+async function fetchDailyData(userId: string, date: string): Promise<DailyData> {
+  const dailyTargetsRes = await supabase.from('daily_targets').select('*').eq('user_id', userId).eq('date', date).maybeSingle();
+  const foodLogsRes = await supabase.from('food_logs').select('*').eq('user_id', userId).eq('date', date);
+  const workoutRes = await supabase.from('workout_sessions').select('*').eq('user_id', userId).eq('date', date).maybeSingle();
+  const sleepRes = await supabase.from('sleep_logs').select('*').eq('user_id', userId).eq('date', date).maybeSingle();
+  const fastingRes = await supabase.from('fasting_plans').select('*').eq('user_id', userId).eq('is_active', true).maybeSingle();
+  const medsRes = await supabase.from('medications').select('*').eq('user_id', userId).eq('is_active', true);
+  const medLogsRes = await supabase.from('medication_logs').select('*').eq('user_id', userId)
+    .gte('scheduled_time', `${date}T00:00:00`)
+    .lte('scheduled_time', `${date}T23:59:59`);
+
+  return {
+    userId,
+    date,
+    dailyTargets: dailyTargetsRes.data,
+    foodLogs: foodLogsRes.data || [],
+    workout: workoutRes.data,
+    sleepLog: sleepRes.data,
+    fastingPlan: fastingRes.data,
+    medications: medsRes.data || [],
+    medicationLogs: medLogsRes.data || []
+  };
+}
+
+/**
+ * NUTRITION SCORE (0-100)
+ * 100 if within ±150 cal of target
+ * 50 if within ±300 cal
+ * 0 otherwise
+ */
+function calculateNutritionScore(data: DailyData): number {
+  if (!data.dailyTargets) return 0;
+
+  const totalCalories = data.foodLogs.reduce((sum, log) => sum + (log.calories || 0), 0);
+  const target = data.dailyTargets.calories;
+  const variance = Math.abs(totalCalories - target);
+
+  if (variance <= 150) return 100;
+  if (variance <= 300) return 50;
+  return 0;
+}
+
+/**
+ * WORKOUT SCORE (0-100)
+ * 100 if workout completed
+ * 0 if not completed
+ */
+function calculateWorkoutScore(data: DailyData): number {
+  if (!data.workout) return 100; // No workout scheduled = perfect score
+  return data.workout.completed_at ? 100 : 0;
+}
+
+/**
+ * FASTING SCORE (0-100)
+ * 100 if all meals within eating window (or no fasting plan)
+ * 0 if any meal outside window
+ */
+function calculateFastingScore(data: DailyData): number {
+  if (!data.fastingPlan || !data.fastingPlan.is_active) return 100;
+
+  const windowStart = data.fastingPlan.eating_window_start;
+  const windowEnd = data.fastingPlan.eating_window_end;
+
+  const outsideWindow = data.foodLogs.some(log => {
+    const logTime = log.time;
+    return logTime < windowStart || logTime > windowEnd;
+  });
+
+  return outsideWindow ? 0 : 100;
+}
+
+/**
+ * SLEEP SCORE (0-100)
+ * 100 if 7-9 hours
+ * 50 if 6-7 or 9-10 hours
+ * 0 otherwise
+ */
+function calculateSleepScore(data: DailyData): number {
+  if (!data.sleepLog) return 0;
+
+  const hours = data.sleepLog.duration_min / 60;
+
+  if (hours >= 7 && hours <= 9) return 100;
+  if ((hours >= 6 && hours < 7) || (hours > 9 && hours <= 10)) return 50;
+  return 0;
+}
+
+/**
+ * MEDS SCORE (0-100)
+ * Percentage of medications taken
+ * 100 if no medications
+ */
+function calculateMedsScore(data: DailyData): number {
+  if (data.medicationLogs.length === 0) return 100;
+
+  const taken = data.medicationLogs.filter(log => log.taken_at && !log.skipped).length;
+  return Math.round((taken / data.medicationLogs.length) * 100);
+}
+
+/**
+ * Update streak based on compliance score
+ */
+async function updateStreak(userId: string, date: string, score: number) {
+  try {
+    const isGoodDay = score >= 80;
+
+    // Fetch current streak
+    const { data: currentStreak } = await supabase
+      .from('streaks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'Overall Compliance')
+      .maybeSingle();
+
+    if (isGoodDay) {
+      const newCurrent = (currentStreak?.current_streak || 0) + 1;
+      const newLongest = Math.max(newCurrent, currentStreak?.longest_streak || 0);
+
+      await supabase.from('streaks').upsert({
+        user_id: userId,
+        type: 'Overall Compliance',
+        current_streak: newCurrent,
+        longest_streak: newLongest,
+        last_updated: date
+      }, {
+        onConflict: 'user_id,type'
+      });
+    } else {
+      // Reset streak
+      await supabase.from('streaks').upsert({
+        user_id: userId,
+        type: 'Overall Compliance',
+        current_streak: 0,
+        longest_streak: currentStreak?.longest_streak || 0,
+        last_updated: date
+      }, {
+        onConflict: 'user_id,type'
+      });
+    }
+  } catch (error) {
+    console.error('Error updating streak:', error);
+  }
+}
+
+/**
+ * Get current streak for user
+ */
+export async function getCurrentStreak(userId: string): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('streaks')
+      .select('current_streak')
+      .eq('user_id', userId)
+      .eq('type', 'Overall Compliance')
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.current_streak || 0;
+  } catch (error) {
+    console.error('Error getting streak:', error);
+    return 0;
+  }
+}
+
+/**
+ * Calculate compliance for last 7 days (useful for weekly reports)
+ */
+export async function calculateWeeklyCompliance(userId: string) {
+  const today = new Date();
+  const scores = [];
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    try {
+      const score = await calculateComplianceScore(userId, dateStr);
+      scores.push(score);
+    } catch (error) {
+      console.error(`Error calculating score for ${dateStr}:`, error);
+    }
+  }
+
+  return scores;
+}
+
+/**
+ * Get weekly insights and recommendations
+ */
+export async function getWeeklyInsights(userId: string) {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: scores, error } = await supabase
+      .from('compliance_scores')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    if (!scores || scores.length === 0) {
+      return {
+        avgOverall: 0,
+        recommendations: ['Start tracking to get personalized insights!']
+      };
+    }
+
+    const avgOverall = Math.round(scores.reduce((sum, s) => sum + s.overall_score, 0) / scores.length);
+    const avgNutrition = Math.round(scores.reduce((sum, s) => sum + s.nutrition_score, 0) / scores.length);
+    const avgWorkout = Math.round(scores.reduce((sum, s) => sum + s.workout_score, 0) / scores.length);
+    const avgFasting = Math.round(scores.reduce((sum, s) => sum + s.fasting_score, 0) / scores.length);
+    const avgSleep = Math.round(scores.reduce((sum, s) => sum + s.sleep_score, 0) / scores.length);
+
+    const recommendations: string[] = [];
+
+    // Overall
+    if (avgOverall >= 80) {
+      recommendations.push('🎉 Crushing it! Keep up the excellent consistency.');
+    } else if (avgOverall >= 60) {
+      recommendations.push('💪 Good effort this week. Focus on your weakest area below.');
+    } else {
+      recommendations.push('⚠️ Tough week. Reset tomorrow - you\'ve got this!');
+    }
+
+    // Find weakest area
+    const areas = [
+      { name: 'Nutrition', score: avgNutrition },
+      { name: 'Workouts', score: avgWorkout },
+      { name: 'Fasting', score: avgFasting },
+      { name: 'Sleep', score: avgSleep }
+    ];
+
+    const weakest = areas.sort((a, b) => a.score - b.score)[0];
+
+    if (weakest.score < 60) {
+      switch (weakest.name) {
+        case 'Nutrition':
+          recommendations.push('🍽️ Pre-log meals in the morning to stay on track.');
+          break;
+        case 'Workouts':
+          recommendations.push('💪 Schedule workouts like meetings - non-negotiable!');
+          break;
+        case 'Fasting':
+          recommendations.push('⏰ Set alarms for eating window open/close times.');
+          break;
+        case 'Sleep':
+          recommendations.push('😴 Set a bedtime alarm 30min earlier. Sleep affects everything!');
+          break;
+      }
+    }
+
+    return {
+      avgOverall,
+      avgNutrition,
+      avgWorkout,
+      avgFasting,
+      avgSleep,
+      recommendations
+    };
+
+  } catch (error) {
+    console.error('Error getting weekly insights:', error);
+    return {
+      avgOverall: 0,
+      recommendations: ['Error loading insights']
+    };
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateComplianceScore } from '@/lib/compliance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -116,27 +117,27 @@ export default function WorkoutInProgress() {
       const exercises: Exercise[] = (logsData || []).map(log => ({
         id: log.id,
         exercise_id: log.exercise_id,
-        exercise_name: log.exercise_name,
-        order_index: log.order_index,
-        target_sets: log.target_sets || 3,
-        target_reps: log.target_reps || '8-10',
-        sets: log.sets || [],
-        previous_best_weight: log.previous_best_weight,
-        previous_best_reps: log.previous_best_reps
+        exercise_name: (log as any).exercise_name || 'Unknown Exercise',
+        order_index: (log as any).order_index || 0,
+        target_sets: (log as any).target_sets || 3,
+        target_reps: (log as any).target_reps || '8-10',
+        sets: (log.sets as any) || [],
+        previous_best_weight: (log as any).previous_best_weight,
+        previous_best_reps: (log as any).previous_best_reps
       }));
 
       setWorkout({
         id: sessionData.id,
         name: sessionData.name,
-        started_at: sessionData.started_at,
+        started_at: (sessionData as any).started_at || new Date().toISOString(),
         exercises
       });
 
       // If workout hasn't started, start it now
-      if (!sessionData.started_at) {
+      if (!(sessionData as any).started_at) {
         await supabase
           .from('workout_sessions')
-          .update({ started_at: new Date().toISOString() })
+          .update({ started_at: new Date().toISOString() } as any)
           .eq('id', wId);
       }
 
@@ -301,6 +302,10 @@ export default function WorkoutInProgress() {
         .eq('id', workout.id);
 
       if (error) throw error;
+
+      // Recalculate compliance
+      const today = new Date().toISOString().split('T')[0];
+      await calculateComplianceScore(userId, today);
 
       toast({
         title: "Workout complete! 🎉",
