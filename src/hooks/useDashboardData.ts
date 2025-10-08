@@ -42,102 +42,86 @@ export function useDashboardData(userId: string | undefined) {
       try {
         setData(prev => ({ ...prev, loading: true, error: null }));
 
-        // Fetch all data in parallel
-        // @ts-ignore - Type instantiation issue with Supabase types
-        const results: any = await Promise.allSettled([
-          // Profile
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .single(),
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
 
-          // Daily targets
-          supabase
-            .from('daily_targets')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('date', today)
-            .single(),
+        // Fetch daily targets
+        const { data: targets } = await supabase
+          .from('daily_targets')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle();
 
-          // Food logs
-          supabase
-            .from('food_logs')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('date', today)
-            .order('time', { ascending: true }),
+        // Fetch food logs
+        const { data: foodLogs } = await supabase
+          .from('food_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .order('time', { ascending: true });
 
-          // Workout session
-          supabase
-            .from('workout_sessions')
-            .select('*, exercise_logs(*)')
-            .eq('user_id', userId)
-            .eq('date', today)
-            .single(),
+        // Fetch workout session
+        const { data: workout } = await supabase
+          .from('workout_sessions')
+          .select('*, exercise_logs(*)')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle();
 
-          // Sleep log
-          supabase
-            .from('sleep_logs')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('date', today)
-            .single(),
+        // Fetch sleep log
+        const { data: sleepLog } = await supabase
+          .from('sleep_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle();
 
-          // Fasting plan
-          supabase
-            .from('fasting_plans')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .single(),
+        // Fetch fasting plan
+        const { data: fastingPlan } = await supabase
+          .from('fasting_plans')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .maybeSingle();
 
-          // Medications
-          supabase
-            .from('medications')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('is_active', true),
+        // Fetch medications
+        const { data: medications } = await supabase
+          .from('medications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_active', true);
 
-          // Medication logs
-          supabase
-            .from('medication_logs')
-            .select('*')
-            .eq('user_id', userId)
-            .gte('scheduled_time', `${today}T00:00:00`)
-            .lte('scheduled_time', `${today}T23:59:59`),
+        // Fetch medication logs
+        const { data: medicationLogs } = await supabase
+          .from('medication_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('scheduled_time', `${today}T00:00:00`)
+          .lte('scheduled_time', `${today}T23:59:59`);
 
-          // Compliance score
-          supabase
-            .from('compliance_scores')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('date', today)
-            .single()
-        ]);
-
-        const [
-          profileRes,
-          targetsRes,
-          foodLogsRes,
-          workoutRes,
-          sleepRes,
-          fastingRes,
-          medsRes,
-          medLogsRes,
-          scoreRes
-        ] = results;
+        // Fetch compliance score
+        const { data: complianceScore } = await supabase
+          .from('compliance_scores')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .maybeSingle();
 
         setData({
-          profile: profileRes.status === 'fulfilled' ? profileRes.value.data : null,
-          targets: targetsRes.status === 'fulfilled' ? targetsRes.value.data : null,
-          foodLogs: foodLogsRes.status === 'fulfilled' ? (foodLogsRes.value.data || []) : [],
-          workout: workoutRes.status === 'fulfilled' ? workoutRes.value.data : null,
-          sleepLog: sleepRes.status === 'fulfilled' ? sleepRes.value.data : null,
-          fastingPlan: fastingRes.status === 'fulfilled' ? fastingRes.value.data : null,
-          medications: medsRes.status === 'fulfilled' ? (medsRes.value.data || []) : [],
-          medicationLogs: medLogsRes.status === 'fulfilled' ? (medLogsRes.value.data || []) : [],
-          complianceScore: scoreRes.status === 'fulfilled' ? scoreRes.value.data : null,
+          profile,
+          targets,
+          foodLogs: foodLogs || [],
+          workout,
+          sleepLog,
+          fastingPlan,
+          medications: medications || [],
+          medicationLogs: medicationLogs || [],
+          complianceScore,
           loading: false,
           error: null
         });
