@@ -552,73 +552,112 @@ export type Database = {
       }
       recipes: {
         Row: {
+          average_rating: number | null
           calories_per_serving: number | null
-          carbs_g_per_serving: number | null
+          carbs_g: number | null
           category: string
           cook_time_min: number | null
           created_at: string | null
           cuisine: string | null
+          cuisine_types: string[] | null
           description: string | null
           difficulty: string | null
-          fats_g_per_serving: number | null
+          equipment: Json | null
+          fats_g: number | null
           id: string
           image_url: string | null
+          images: string[] | null
           ingredients: Json
           instructions: Json
+          is_paid: boolean | null
           is_public: boolean | null
+          meal_types: string[] | null
           name: string
           prep_time_min: number | null
-          protein_g_per_serving: number | null
+          price: number | null
+          protein_g: number | null
           servings: number
+          status: string | null
+          stripe_account_id: string | null
           tags: string[] | null
+          thumbnail_index: number | null
+          total_reviews: number | null
           total_time_min: number | null
           updated_at: string | null
+          user_id: string | null
+          youtube_url: string | null
         }
         Insert: {
+          average_rating?: number | null
           calories_per_serving?: number | null
-          carbs_g_per_serving?: number | null
+          carbs_g?: number | null
           category: string
           cook_time_min?: number | null
           created_at?: string | null
           cuisine?: string | null
+          cuisine_types?: string[] | null
           description?: string | null
           difficulty?: string | null
-          fats_g_per_serving?: number | null
+          equipment?: Json | null
+          fats_g?: number | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           ingredients?: Json
           instructions?: Json
+          is_paid?: boolean | null
           is_public?: boolean | null
+          meal_types?: string[] | null
           name: string
           prep_time_min?: number | null
-          protein_g_per_serving?: number | null
+          price?: number | null
+          protein_g?: number | null
           servings?: number
+          status?: string | null
+          stripe_account_id?: string | null
           tags?: string[] | null
+          thumbnail_index?: number | null
+          total_reviews?: number | null
           total_time_min?: number | null
           updated_at?: string | null
+          user_id?: string | null
+          youtube_url?: string | null
         }
         Update: {
+          average_rating?: number | null
           calories_per_serving?: number | null
-          carbs_g_per_serving?: number | null
+          carbs_g?: number | null
           category?: string
           cook_time_min?: number | null
           created_at?: string | null
           cuisine?: string | null
+          cuisine_types?: string[] | null
           description?: string | null
           difficulty?: string | null
-          fats_g_per_serving?: number | null
+          equipment?: Json | null
+          fats_g?: number | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           ingredients?: Json
           instructions?: Json
+          is_paid?: boolean | null
           is_public?: boolean | null
+          meal_types?: string[] | null
           name?: string
           prep_time_min?: number | null
-          protein_g_per_serving?: number | null
+          price?: number | null
+          protein_g?: number | null
           servings?: number
+          status?: string | null
+          stripe_account_id?: string | null
           tags?: string[] | null
+          thumbnail_index?: number | null
+          total_reviews?: number | null
           total_time_min?: number | null
           updated_at?: string | null
+          user_id?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }

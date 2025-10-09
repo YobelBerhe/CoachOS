@@ -380,12 +380,13 @@ export default function CreateRecipe() {
           is_paid: formData.is_paid,
           price: formData.is_paid ? parseFloat(formData.price) : null,
           status: 'published',
+          category: formData.meal_types[0] || 'Other',
           // Nutrition will be calculated by Edge Function
           calories_per_serving: 0,
           protein_g: 0,
           carbs_g: 0,
           fats_g: 0
-        })
+        } as any)
         .select()
         .single();
 

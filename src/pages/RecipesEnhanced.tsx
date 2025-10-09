@@ -158,13 +158,13 @@ export default function RecipesEnhanced() {
     try {
       const { data, error } = await supabase
         .from('goals')
-        .select('goal_type')
+        .select('type')
         .eq('user_id', uid)
         .eq('is_active', true)
         .maybeSingle();
 
       if (error) throw error;
-      if (data) setUserGoal(data.goal_type);
+      if (data) setUserGoal(data.type);
     } catch (error) {
       console.error('Error loading user goal:', error);
     }
@@ -178,8 +178,8 @@ export default function RecipesEnhanced() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRecipes(data || []);
-      setFilteredRecipes(data || []);
+      setRecipes((data as any) || []);
+      setFilteredRecipes((data as any) || []);
     } catch (error: any) {
       toast({
         title: "Error loading recipes",
@@ -359,12 +359,13 @@ export default function RecipesEnhanced() {
           equipment,
           is_paid: recipeForm.is_paid,
           price: recipeForm.is_paid ? recipeForm.price : null,
+          category: recipeForm.meal_types[0] || 'Other',
           // Nutrition will be calculated by AI/backend
           calories_per_serving: 0,
           protein_g: 0,
           carbs_g: 0,
           fats_g: 0
-        })
+        } as any)
         .select()
         .single();
 
