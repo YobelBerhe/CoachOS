@@ -1,205 +1,104 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateComplianceScore } from '@/lib/compliance';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Plus, Trash2, Edit, Apple, ArrowLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AddFoodDialog } from '@/components/nutrition/AddFoodDialog';
+import { 
+  ArrowLeft, 
+  Plus, 
+  Search,
+  Flame,
+  TrendingUp,
+  Scan,
+  Sparkles,
+  Apple,
+  Clock,
+  Trash2,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface FoodLog {
-  id: string;
-  food_name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fats_g: number;
-  meal_type: string;
-  time: string;
-  serving_size?: string;
-  quantity?: number;
-}
 
 export default function Eat() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [userId, setUserId] = useState<string | undefined>();
-  const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
-  const [targets, setTargets] = useState<any>(null);
+  const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingFood, setEditingFood] = useState<FoodLog | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Stats
+  const [targets, setTargets] = useState({ calories: 2000, protein: 150, carbs: 200, fats: 60 });
+  const [consumed, setConsumed] = useState({ calories: 0, protein: 0, carbs: 0, fats: 0 });
+  const [foodLogs, setFoodLogs] = useState<any[]>([]);
 
   const today = new Date().toISOString().split('T')[0];
-  const currentTime = new Date().toTimeString().slice(0, 5);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    food_name: '',
-    calories: '',
-    protein_g: '',
-    carbs_g: '',
-    fats_g: '',
-    meal_type: 'Breakfast',
-    time: currentTime,
-    serving_size: '',
-    quantity: '1'
-  });
 
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-      setUserId(user.id);
-      await fetchData(user.id);
-    }
     init();
-  }, [navigate]);
+  }, []);
 
-  async function fetchData(uid: string) {
+  async function init() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setUserId(user.id);
+    await loadData(user.id);
+  }
+
+  async function loadData(uid: string) {
     try {
-      setLoading(true);
-
-      // Fetch daily targets
-      const { data: targetsData } = await supabase
+      // Load targets
+      const { data: targetData } = await supabase
         .from('daily_targets')
         .select('*')
         .eq('user_id', uid)
         .eq('date', today)
         .maybeSingle();
 
-      setTargets(targetsData);
+      if (targetData) {
+        setTargets({
+          calories: targetData.calories,
+          protein: targetData.protein_g,
+          carbs: targetData.carbs_g,
+          fats: targetData.fats_g
+        });
+      }
 
-      // Fetch food logs
-      const { data: logsData, error: logsError } = await supabase
+      // Load food logs
+      const { data: logs } = await supabase
         .from('food_logs')
         .select('*')
         .eq('user_id', uid)
         .eq('date', today)
-        .order('time', { ascending: true });
+        .order('time', { ascending: false });
 
-      if (logsError) throw logsError;
-      setFoodLogs(logsData || []);
-
-    } catch (error: any) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: "Error loading data",
-        description: error.message,
-        variant: "destructive"
-      });
+      if (logs) {
+        setFoodLogs(logs);
+        
+        // Calculate consumed
+        const totals = logs.reduce((acc, log) => ({
+          calories: acc.calories + (log.calories || 0),
+          protein: acc.protein + (log.protein_g || 0),
+          carbs: acc.carbs + (log.carbs_g || 0),
+          fats: acc.fats + (log.fats_g || 0)
+        }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
+        
+        setConsumed(totals);
+      }
+    } catch (error) {
+      console.error('Error loading food data:', error);
     } finally {
       setLoading(false);
     }
   }
 
-  const resetForm = () => {
-    setFormData({
-      food_name: '',
-      calories: '',
-      protein_g: '',
-      carbs_g: '',
-      fats_g: '',
-      meal_type: 'Breakfast',
-      time: new Date().toTimeString().slice(0, 5),
-      serving_size: '',
-      quantity: '1'
-    });
-    setEditingFood(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) return;
-
-    try {
-      const foodData = {
-        user_id: userId,
-        date: today,
-        food_name: formData.food_name,
-        calories: parseFloat(formData.calories),
-        protein_g: parseFloat(formData.protein_g),
-        carbs_g: parseFloat(formData.carbs_g),
-        fats_g: parseFloat(formData.fats_g),
-        meal_type: formData.meal_type,
-        time: formData.time,
-        serving_size: formData.serving_size || null,
-        quantity: parseFloat(formData.quantity),
-        source: 'Manual'
-      };
-
-      if (editingFood) {
-        // Update existing
-        const { error } = await supabase
-          .from('food_logs')
-          .update(foodData)
-          .eq('id', editingFood.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Food updated",
-          description: `${formData.food_name} has been updated`
-        });
-      } else {
-        // Create new
-        const { error } = await supabase
-          .from('food_logs')
-          .insert(foodData);
-
-        if (error) throw error;
-
-        toast({
-          title: "Food logged!",
-          description: `${formData.food_name} (${formData.calories} cal)`
-        });
-      }
-
-      await fetchData(userId);
-      
-      // Recalculate compliance
-      await calculateComplianceScore(userId, today);
-      
-      setDialogOpen(false);
-      resetForm();
-
-    } catch (error: any) {
-      console.error('Error saving food:', error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleEdit = (food: FoodLog) => {
-    setEditingFood(food);
-    setFormData({
-      food_name: food.food_name,
-      calories: food.calories.toString(),
-      protein_g: food.protein_g.toString(),
-      carbs_g: food.carbs_g.toString(),
-      fats_g: food.fats_g.toString(),
-      meal_type: food.meal_type,
-      time: food.time,
-      serving_size: food.serving_size || '',
-      quantity: food.quantity.toString()
-    });
-    setDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete ${name}?`)) return;
-
+  async function deleteFood(id: string) {
     try {
       const { error } = await supabase
         .from('food_logs')
@@ -210,10 +109,10 @@ export default function Eat() {
 
       toast({
         title: "Food deleted",
-        description: `${name} removed from your diary`
+        description: "Removed from your diary"
       });
 
-      await fetchData(userId!);
+      await loadData(userId);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -221,334 +120,361 @@ export default function Eat() {
         variant: "destructive"
       });
     }
+  }
+
+  const MacroRing = ({ label, consumed, target, color, icon: Icon }: any) => {
+    const percentage = Math.min((consumed / target) * 100, 100);
+    const remaining = Math.max(target - consumed, 0);
+
+    return (
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.05 }}
+        className="relative"
+      >
+        <div className="text-center">
+          <div className="relative inline-block">
+            <svg width="100" height="100" className="transform -rotate-90">
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+                className="text-secondary"
+              />
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="45"
+                stroke={color}
+                strokeWidth="8"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={283}
+                initial={{ strokeDashoffset: 283 }}
+                animate={{ strokeDashoffset: 283 - (283 * percentage) / 100 }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <Icon className="w-5 h-5 mb-1" style={{ color }} />
+              <span className="text-lg font-bold">{Math.round(consumed)}</span>
+              <span className="text-xs text-muted-foreground">of {target}g</span>
+            </div>
+          </div>
+          <p className="text-sm font-medium mt-2">{label}</p>
+          <p className="text-xs text-muted-foreground">{Math.round(remaining)}g left</p>
+        </div>
+      </motion.div>
+    );
   };
-
-  // Calculate totals
-  const totals = foodLogs.reduce(
-    (acc, log) => ({
-      calories: acc.calories + log.calories,
-      protein: acc.protein + log.protein_g,
-      carbs: acc.carbs + log.carbs_g,
-      fats: acc.fats + log.fats_g
-    }),
-    { calories: 0, protein: 0, carbs: 0, fats: 0 }
-  );
-
-  const calorieTarget = targets?.calories || 2000;
-  const proteinTarget = targets?.protein_g || 150;
-  const carbsTarget = targets?.carbs_g || 200;
-  const fatsTarget = targets?.fats_g || 60;
-
-  const caloriePercentage = Math.min((totals.calories / calorieTarget) * 100, 100);
-  const proteinPercentage = Math.min((totals.protein / proteinTarget) * 100, 100);
-  const carbsPercentage = Math.min((totals.carbs / carbsTarget) * 100, 100);
-  const fatsPercentage = Math.min((totals.fats / fatsTarget) * 100, 100);
-
-  // Group by meal type
-  const groupedLogs = foodLogs.reduce((acc, log) => {
-    if (!acc[log.meal_type]) acc[log.meal_type] = [];
-    acc[log.meal_type].push(log);
-    return acc;
-  }, {} as Record<string, FoodLog[]>);
-
-  const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Apple className="w-12 h-12 animate-bounce mx-auto mb-4 text-primary" />
-          <p>Loading...</p>
-        </div>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+          <Apple className="w-12 h-12 text-primary" />
+        </motion.div>
       </div>
     );
   }
 
+  const caloriePercentage = Math.min((consumed.calories / targets.calories) * 100, 100);
+  const remaining = Math.max(targets.calories - consumed.calories, 0);
+  const isOverTarget = consumed.calories > targets.calories;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/dashboard')}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Food Diary</h1>
-              <p className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-            </div>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Food
+    <div className="min-h-screen bg-gradient-to-br from-background via-green-500/5 to-background pb-24">
+      {/* Premium Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b border-border/50"
+      >
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/dashboard')}
+                className="rounded-full"
+              >
+                <ArrowLeft className="w-5 h-5" />
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingFood ? 'Edit Food' : 'Add Food'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                <div>
-                  <Label htmlFor="food_name">Food Name *</Label>
-                  <Input
-                    id="food_name"
-                    value={formData.food_name}
-                    onChange={(e) => setFormData({ ...formData, food_name: e.target.value })}
-                    placeholder="e.g., Chicken Breast"
-                    required
-                  />
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold">Nutrition</h1>
+                <p className="text-sm text-muted-foreground">Track your meals</p>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="serving_size">Serving Size</Label>
-                    <Input
-                      id="serving_size"
-                      value={formData.serving_size}
-                      onChange={(e) => setFormData({ ...formData, serving_size: e.target.value })}
-                      placeholder="e.g., 100g"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="quantity">Quantity *</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step="0.1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              className="rounded-full h-12 w-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg"
+              size="icon"
+            >
+              <Plus className="w-6 h-6" />
+            </Button>
+          </div>
 
-                <div>
-                  <Label htmlFor="calories">Calories *</Label>
-                  <Input
-                    id="calories"
-                    type="number"
-                    step="1"
-                    value={formData.calories}
-                    onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
-                    placeholder="e.g., 165"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="protein_g">Protein (g) *</Label>
-                    <Input
-                      id="protein_g"
-                      type="number"
-                      step="0.1"
-                      value={formData.protein_g}
-                      onChange={(e) => setFormData({ ...formData, protein_g: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="carbs_g">Carbs (g) *</Label>
-                    <Input
-                      id="carbs_g"
-                      type="number"
-                      step="0.1"
-                      value={formData.carbs_g}
-                      onChange={(e) => setFormData({ ...formData, carbs_g: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="fats_g">Fats (g) *</Label>
-                    <Input
-                      id="fats_g"
-                      type="number"
-                      step="0.1"
-                      value={formData.fats_g}
-                      onChange={(e) => setFormData({ ...formData, fats_g: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="meal_type">Meal Type *</Label>
-                    <Select
-                      value={formData.meal_type}
-                      onValueChange={(value) => setFormData({ ...formData, meal_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Breakfast">Breakfast</SelectItem>
-                        <SelectItem value="Lunch">Lunch</SelectItem>
-                        <SelectItem value="Dinner">Dinner</SelectItem>
-                        <SelectItem value="Snacks">Snacks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="time">Time *</Label>
-                    <Input
-                      id="time"
-                      type="time"
-                      value={formData.time}
-                      onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">
-                    {editingFood ? 'Update' : 'Add Food'}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setDialogOpen(false);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search foods or meals..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12 rounded-xl bg-secondary/50 border-0"
+            />
+          </div>
         </div>
+      </motion.div>
 
-        {/* Daily Summary */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Daily Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">Calories</span>
-                <span className="text-muted-foreground">
-                  {Math.round(totals.calories)} / {calorieTarget} cal
-                </span>
-              </div>
-              <Progress value={caloriePercentage} className="h-3" />
-            </div>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Hero Calorie Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="overflow-hidden border-0 shadow-2xl">
+            <div className={`h-2 bg-gradient-to-r ${isOverTarget ? 'from-red-500 to-orange-500' : 'from-green-500 to-emerald-500'}`} />
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.4 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 mb-4"
+                >
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="font-semibold">Daily Calories</span>
+                </motion.div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Protein</p>
-                  <p className="text-lg font-bold text-green-600">{Math.round(totals.protein)}g</p>
-                  <p className="text-xs text-muted-foreground">/ {proteinTarget}g</p>
-                </div>
-                <Progress value={proteinPercentage} className="h-2" />
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Carbs</p>
-                  <p className="text-lg font-bold text-blue-600">{Math.round(totals.carbs)}g</p>
-                  <p className="text-xs text-muted-foreground">/ {carbsTarget}g</p>
-                </div>
-                <Progress value={carbsPercentage} className="h-2" />
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">Fats</p>
-                  <p className="text-lg font-bold text-yellow-600">{Math.round(totals.fats)}g</p>
-                  <p className="text-xs text-muted-foreground">/ {fatsTarget}g</p>
-                </div>
-                <Progress value={fatsPercentage} className="h-2" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Meal Sections */}
-        <div className="space-y-4">
-          {mealTypes.map(mealType => {
-            const meals = groupedLogs[mealType] || [];
-            const mealCalories = meals.reduce((sum, m) => sum + m.calories, 0);
-
-            return (
-              <Card key={mealType}>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg">{mealType}</CardTitle>
-                    <span className="text-sm text-muted-foreground">
-                      {Math.round(mealCalories)} cal
-                    </span>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-6xl font-bold">{Math.round(consumed.calories)}</span>
+                    <span className="text-2xl text-muted-foreground">/ {targets.calories}</span>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  {meals.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No foods logged for {mealType.toLowerCase()}
-                    </p>
+                  
+                  {isOverTarget ? (
+                    <Badge variant="destructive" className="text-sm">
+                      {consumed.calories - targets.calories} over goal
+                    </Badge>
                   ) : (
-                    <div className="space-y-2">
-                      {meals.map(food => (
-                        <div 
-                          key={food.id}
-                          className="flex justify-between items-center p-3 bg-secondary/20 rounded-lg hover:bg-secondary/40 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium">{food.food_name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {food.time} • {food.quantity} {food.serving_size || 'serving'}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              P: {Math.round(food.protein_g)}g • C: {Math.round(food.carbs_g)}g • F: {Math.round(food.fats_g)}g
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-right mr-2">
-                              <p className="font-semibold">{Math.round(food.calories)} cal</p>
+                    <Badge className="bg-green-500 text-sm">
+                      {remaining} remaining
+                    </Badge>
+                  )}
+                </motion.div>
+              </div>
+
+              <Progress 
+                value={caloriePercentage} 
+                className={`h-4 ${isOverTarget ? '[&>div]:bg-red-500' : '[&>div]:bg-green-500'}`}
+              />
+
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                {Math.round(caloriePercentage)}% of daily goal
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Macro Rings - Instagram Style */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="overflow-hidden border-0 shadow-lg">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-6 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Macronutrients
+              </h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <MacroRing
+                  label="Protein"
+                  consumed={consumed.protein}
+                  target={targets.protein}
+                  color="#10b981"
+                  icon={() => <span className="text-green-500">P</span>}
+                />
+                <MacroRing
+                  label="Carbs"
+                  consumed={consumed.carbs}
+                  target={targets.carbs}
+                  color="#3b82f6"
+                  icon={() => <span className="text-blue-500">C</span>}
+                />
+                <MacroRing
+                  label="Fats"
+                  consumed={consumed.fats}
+                  target={targets.fats}
+                  color="#f59e0b"
+                  icon={() => <span className="text-yellow-500">F</span>}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="grid grid-cols-3 gap-3"
+        >
+          <Button
+            variant="outline"
+            className="h-20 flex-col gap-2 hover:bg-primary/5"
+            onClick={() => setShowAddDialog(true)}
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-xs">Add Food</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-20 flex-col gap-2 hover:bg-primary/5"
+            onClick={() => toast({ title: "Coming soon!", description: "Barcode scanner feature" })}
+          >
+            <Scan className="w-5 h-5" />
+            <span className="text-xs">Scan</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-20 flex-col gap-2 hover:bg-primary/5"
+            onClick={() => navigate('/recipes')}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-xs">Recipes</span>
+          </Button>
+        </motion.div>
+
+        {/* Food Log Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Today's Meals
+            </h3>
+            <Badge variant="secondary">{foodLogs.length} items</Badge>
+          </div>
+
+          {foodLogs.length === 0 ? (
+            <Card className="border-2 border-dashed border-border">
+              <CardContent className="py-12 text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring' }}
+                >
+                  <Apple className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                </motion.div>
+                <p className="text-muted-foreground mb-2">No meals logged yet</p>
+                <p className="text-sm text-muted-foreground/70 mb-4">Start tracking your nutrition!</p>
+                <Button onClick={() => setShowAddDialog(true)} className="rounded-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Log Your First Meal
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <AnimatePresence>
+              <div className="space-y-3">
+                {foodLogs.map((log, index) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <motion.div
+                            whileHover={{ scale: 1.1, rotate: 360 }}
+                            transition={{ duration: 0.3 }}
+                            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center flex-shrink-0"
+                          >
+                            <Apple className="w-8 h-8 text-green-500" />
+                          </motion.div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold">{log.food_name}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {log.meal_type || 'Meal'}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {log.time}
+                                  </span>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => deleteFood(log.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(food)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(food.id, food.food_name)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
+
+                            <div className="grid grid-cols-4 gap-2 mt-3">
+                              <div className="text-center p-2 bg-orange-500/10 rounded-lg">
+                                <p className="text-sm font-bold">{log.calories}</p>
+                                <p className="text-xs text-muted-foreground">cal</p>
+                              </div>
+                              <div className="text-center p-2 bg-green-500/10 rounded-lg">
+                                <p className="text-sm font-bold text-green-600">{log.protein_g}g</p>
+                                <p className="text-xs text-muted-foreground">protein</p>
+                              </div>
+                              <div className="text-center p-2 bg-blue-500/10 rounded-lg">
+                                <p className="text-sm font-bold text-blue-600">{log.carbs_g}g</p>
+                                <p className="text-xs text-muted-foreground">carbs</p>
+                              </div>
+                              <div className="text-center p-2 bg-yellow-500/10 rounded-lg">
+                                <p className="text-sm font-bold text-yellow-600">{log.fats_g}g</p>
+                                <p className="text-xs text-muted-foreground">fats</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </AnimatePresence>
+          )}
+        </motion.div>
       </div>
+
+      <AddFoodDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        userId={userId}
+        onSuccess={() => loadData(userId)}
+      />
     </div>
   );
 }
