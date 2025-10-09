@@ -227,6 +227,45 @@ export type Database = {
           },
         ]
       }
+      fasting_sessions: {
+        Row: {
+          actual_duration_hours: number | null
+          broken_early: boolean | null
+          completed: boolean | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          notes: string | null
+          start_time: string
+          target_duration_hours: number
+          user_id: string
+        }
+        Insert: {
+          actual_duration_hours?: number | null
+          broken_early?: boolean | null
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          start_time: string
+          target_duration_hours: number
+          user_id: string
+        }
+        Update: {
+          actual_duration_hours?: number | null
+          broken_early?: boolean | null
+          completed?: boolean | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          start_time?: string
+          target_duration_hours?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorite_recipes: {
         Row: {
           created_at: string | null
