@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import NutritionPanel from '@/components/recipes/NutritionPanel';
 import ReviewsSection from '@/components/recipes/ReviewsSection';
+import PaymentCheckout from '@/components/payments/PaymentCheckout';
 import type { Database } from '@/integrations/supabase/types';
 
 type DbRecipe = Database['public']['Tables']['recipes']['Row'];
@@ -769,91 +770,26 @@ export default function RecipeDetail() {
         </div>
       </div>
 
-      {/* Unlock Modal */}
+      {/* Unlock Modal with Payment Checkout */}
       <Dialog open={showUnlockModal} onOpenChange={setShowUnlockModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl">Unlock Recipe</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
-            {/* Recipe Preview */}
-            <div className="flex gap-4">
-              <img
-                src={recipe.images[0]}
-                alt={recipe.name}
-                className="w-24 h-24 rounded-lg object-cover"
-              />
-              <div>
-                <h3 className="font-bold">{recipe.name}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {recipe.description}
-                </p>
-              </div>
-            </div>
-
-            {/* Price Breakdown */}
-            <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span>Recipe Price</span>
-                <span className="font-bold">${recipe.price?.toFixed(2)}</span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                One-time purchase • Lifetime access
-              </div>
-            </div>
-
-            {/* What's Included */}
-            <div>
-              <h4 className="font-semibold mb-3">What's Included:</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>Full ingredients list with measurements</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>Step-by-step cooking instructions</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>Equipment recommendations</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>Add to food diary feature</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-600" />
-                  <span>Lifetime access to recipe</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Unlock Button */}
-            <Button
-              onClick={handleUnlockRecipe}
-              disabled={unlocking}
-              className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-              size="lg"
-            >
-              {unlocking ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Unlock className="w-5 h-5 mr-2" />
-                  Unlock Now for ${recipe.price?.toFixed(2)}
-                </>
-              )}
-            </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              Secure payment powered by Stripe • Your card will be charged ${recipe.price?.toFixed(2)}
-            </p>
-          </div>
+          <PaymentCheckout
+            recipeId={recipe.id}
+            recipeName={recipe.name}
+            price={recipe.price || 0}
+            onSuccess={async () => {
+              setShowUnlockModal(false);
+              await loadRecipe(userId);
+              toast({
+                title: "Recipe unlocked! 🎉",
+                description: "You now have full access to this recipe"
+              });
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

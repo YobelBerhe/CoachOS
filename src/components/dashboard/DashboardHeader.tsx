@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Flame } from "lucide-react";
+import { LogOut, Flame, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { calculateComplianceScore } from "@/lib/compliance";
 
@@ -80,16 +80,27 @@ export const DashboardHeader = ({ userId }: DashboardHeaderProps) => {
           <h1 className="text-2xl font-bold">Welcome back, {userName}! 👋</h1>
           <p className="text-sm text-muted-foreground">{today}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate("/auth");
-          }}
-        >
-          <LogOut className="w-5 h-5" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/creator-dashboard")}
+            className="gap-2"
+          >
+            <DollarSign className="w-4 h-4" />
+            Creator
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/auth");
+            }}
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
       
       <div className="flex items-center gap-3">
