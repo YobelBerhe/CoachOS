@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,12 +42,12 @@ interface ComplianceScore {
   hydration_score: number;
   fasting_score: number;
   sleep_score: number;
-  meds_score: number;
+  meds_score?: number;
 }
 
 interface WeightLog {
   date: string;
-  weight_lbs: number;
+  weight_kg: number;
 }
 
 interface WorkoutStats {
@@ -144,7 +144,7 @@ export default function Reports() {
   async function fetchWorkoutStats(uid: string, startDate: string) {
     const { data, error } = await supabase
       .from('workout_sessions')
-      .select('*')
+      .select('*, exercise_logs(*)')
       .eq('user_id', uid)
       .gte('date', startDate)
       .not('completed_at', 'is', null);
@@ -152,14 +152,30 @@ export default function Reports() {
     if (error) throw error;
 
     if (data && data.length > 0) {
+      let totalSets = 0;
+      let totalReps = 0;
+      let totalVolume = 0;
+      
+      data.forEach((workout: any) => {
+        if (workout.exercise_logs) {
+          workout.exercise_logs.forEach((log: any) => {
+            if (Array.isArray(log.sets)) {
+              totalSets += log.sets.length;
+              log.sets.forEach((set: any) => {
+                totalReps += set.reps || 0;
+                totalVolume += (set.weight || 0) * (set.reps || 0);
+              });
+            }
+          });
+        }
+      });
+
       const stats: WorkoutStats = {
         totalWorkouts: data.length,
-        totalSets: data.reduce((sum, w) => sum + (w.total_sets || 0), 0),
-        totalReps: data.reduce((sum, w) => sum + (w.total_reps || 0), 0),
-        totalVolume: data.reduce((sum, w) => sum + (w.total_volume_lbs || 0), 0),
-        avgDuration: Math.round(
-          data.reduce((sum, w) => sum + (w.duration_min || 0), 0) / data.length
-        )
+        totalSets,
+        totalReps,
+        totalVolume,
+        avgDuration: 0 // Not tracking duration currently
       };
       setWorkoutStats(stats);
     }
@@ -209,7 +225,7 @@ export default function Reports() {
 
     if (data && data.length > 0) {
       const avgDuration = data.reduce((sum, log) => sum + log.duration_min, 0) / data.length;
-      const avgQuality = data.reduce((sum, log) => sum + log.quality_rating, 0) / data.length;
+      const avgQuality = data.reduce((sum, log) => sum + (log.quality || 0), 0) / data.length;
 
       setSleepStats({
         avgHours: Math.floor(avgDuration / 60),
@@ -245,7 +261,7 @@ export default function Reports() {
     : 0;
 
   const weightChange = weightData.length >= 2
-    ? parseFloat((weightData[weightData.length - 1].weight_lbs - weightData[0].weight_lbs).toFixed(1))
+    ? parseFloat(((weightData[weightData.length - 1].weight_kg - weightData[0].weight_kg) * 2.20462).toFixed(1))
     : 0;
 
   // Chart data
@@ -259,7 +275,7 @@ export default function Reports() {
 
   const weightChartData = weightData.map(w => ({
     date: new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    weight: w.weight_lbs
+    weight: parseFloat((w.weight_kg * 2.20462).toFixed(1))
   }));
 
   const categoryAverages = complianceData.length > 0 ? [
