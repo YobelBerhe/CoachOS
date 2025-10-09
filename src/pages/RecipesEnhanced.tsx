@@ -33,6 +33,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import FeaturedSections from '@/components/recipes/FeaturedSections';
 
 interface Recipe {
   id: string;
@@ -617,6 +618,11 @@ export default function RecipesEnhanced() {
             </Card>
           )}
         </div>
+
+        {/* Featured Sections - Show when no filters are active */}
+        {!searchQuery && !showFilters && activeFiltersCount === 0 && userId && (
+          <FeaturedSections userId={userId} />
+        )}
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-4">

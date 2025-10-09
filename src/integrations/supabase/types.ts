@@ -719,6 +719,39 @@ export type Database = {
         }
         Relationships: []
       }
+      personalized_recommendations: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          recipe_count: number | null
+          recipe_ids: string[]
+          score_threshold: number | null
+          strategy: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          recipe_count?: number | null
+          recipe_ids: string[]
+          score_threshold?: number | null
+          strategy: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          recipe_count?: number | null
+          recipe_ids?: string[]
+          score_threshold?: number | null
+          strategy?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           activity_level: string
@@ -760,6 +793,68 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      recipe_interactions: {
+        Row: {
+          created_at: string | null
+          favorited: boolean | null
+          favorited_at: string | null
+          first_viewed_at: string | null
+          id: string
+          last_viewed_at: string | null
+          logged_to_diary: boolean | null
+          recipe_id: string
+          reviewed: boolean | null
+          shared: boolean | null
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+          view_duration_seconds: number | null
+          viewed: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          favorited?: boolean | null
+          favorited_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          logged_to_diary?: boolean | null
+          recipe_id: string
+          reviewed?: boolean | null
+          shared?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+          view_duration_seconds?: number | null
+          viewed?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          favorited?: boolean | null
+          favorited_at?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          logged_to_diary?: boolean | null
+          recipe_id?: string
+          reviewed?: boolean | null
+          shared?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+          view_duration_seconds?: number | null
+          viewed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_interactions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recipe_reviews: {
         Row: {
@@ -809,6 +904,116 @@ export type Database = {
             foreignKeyName: "recipe_reviews_recipe_id_fkey"
             columns: ["recipe_id"]
             isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_similarities: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipe_id: string
+          similar_by_cuisine: boolean | null
+          similar_by_ingredients: boolean | null
+          similar_by_nutrition: boolean | null
+          similar_by_tags: boolean | null
+          similar_recipe_id: string
+          similarity_score: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipe_id: string
+          similar_by_cuisine?: boolean | null
+          similar_by_ingredients?: boolean | null
+          similar_by_nutrition?: boolean | null
+          similar_by_tags?: boolean | null
+          similar_recipe_id: string
+          similarity_score: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipe_id?: string
+          similar_by_cuisine?: boolean | null
+          similar_by_ingredients?: boolean | null
+          similar_by_nutrition?: boolean | null
+          similar_by_tags?: boolean | null
+          similar_recipe_id?: string
+          similarity_score?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_similarities_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_similarities_similar_recipe_id_fkey"
+            columns: ["similar_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_trending_scores: {
+        Row: {
+          calculated_at: string | null
+          favorite_score: number | null
+          last_24h_views: number | null
+          last_30d_views: number | null
+          last_7d_views: number | null
+          recency_score: number | null
+          recipe_id: string
+          review_score: number | null
+          score_velocity: number | null
+          trending_score: number
+          unlock_score: number | null
+          updated_at: string | null
+          view_score: number | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          favorite_score?: number | null
+          last_24h_views?: number | null
+          last_30d_views?: number | null
+          last_7d_views?: number | null
+          recency_score?: number | null
+          recipe_id: string
+          review_score?: number | null
+          score_velocity?: number | null
+          trending_score?: number
+          unlock_score?: number | null
+          updated_at?: string | null
+          view_score?: number | null
+        }
+        Update: {
+          calculated_at?: string | null
+          favorite_score?: number | null
+          last_24h_views?: number | null
+          last_30d_views?: number | null
+          last_7d_views?: number | null
+          recency_score?: number | null
+          recipe_id?: string
+          review_score?: number | null
+          score_velocity?: number | null
+          trending_score?: number
+          unlock_score?: number | null
+          updated_at?: string | null
+          view_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_trending_scores_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: true
             referencedRelation: "recipes"
             referencedColumns: ["id"]
           },
@@ -864,6 +1069,9 @@ export type Database = {
           id: string
           ip_address: unknown | null
           recipe_id: string
+          scrolled_to_ingredients: boolean | null
+          scrolled_to_instructions: boolean | null
+          time_spent_seconds: number | null
           user_agent: string | null
           user_id: string | null
         }
@@ -872,6 +1080,9 @@ export type Database = {
           id?: string
           ip_address?: unknown | null
           recipe_id: string
+          scrolled_to_ingredients?: boolean | null
+          scrolled_to_instructions?: boolean | null
+          time_spent_seconds?: number | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -880,6 +1091,9 @@ export type Database = {
           id?: string
           ip_address?: unknown | null
           recipe_id?: string
+          scrolled_to_ingredients?: boolean | null
+          scrolled_to_instructions?: boolean | null
+          time_spent_seconds?: number | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1162,6 +1376,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_taste_profiles: {
+        Row: {
+          avg_calories_preferred: number | null
+          avg_prep_time_preferred: number | null
+          created_at: string | null
+          id: string
+          preferred_cuisines: string[] | null
+          preferred_difficulty: string | null
+          preferred_meal_times: string[] | null
+          preferred_tags: string[] | null
+          prefers_high_protein: boolean | null
+          prefers_low_carb: boolean | null
+          prefers_quick_meals: boolean | null
+          prefers_vegetarian: boolean | null
+          taste_vector: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_calories_preferred?: number | null
+          avg_prep_time_preferred?: number | null
+          created_at?: string | null
+          id?: string
+          preferred_cuisines?: string[] | null
+          preferred_difficulty?: string | null
+          preferred_meal_times?: string[] | null
+          preferred_tags?: string[] | null
+          prefers_high_protein?: boolean | null
+          prefers_low_carb?: boolean | null
+          prefers_quick_meals?: boolean | null
+          prefers_vegetarian?: boolean | null
+          taste_vector?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_calories_preferred?: number | null
+          avg_prep_time_preferred?: number | null
+          created_at?: string | null
+          id?: string
+          preferred_cuisines?: string[] | null
+          preferred_difficulty?: string | null
+          preferred_meal_times?: string[] | null
+          preferred_tags?: string[] | null
+          prefers_high_protein?: boolean | null
+          prefers_low_carb?: boolean | null
+          prefers_quick_meals?: boolean | null
+          prefers_vegetarian?: boolean | null
+          taste_vector?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       water_logs: {
         Row: {
           amount_oz: number
@@ -1270,8 +1538,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_recipe_similarity: {
+        Args: { p_compare_recipe_id: string; p_recipe_id: string }
+        Returns: number
+      }
+      calculate_trending_score: {
+        Args: { p_recipe_id: string }
+        Returns: number
+      }
       increment_recipe_logs: {
         Args: { recipe_id: string }
+        Returns: undefined
+      }
+      update_user_taste_profile: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
     }

@@ -36,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import NutritionPanel from '@/components/recipes/NutritionPanel';
 import ReviewsSection from '@/components/recipes/ReviewsSection';
 import PaymentCheckout from '@/components/payments/PaymentCheckout';
+import { trackInteraction } from '@/lib/recommendations/recommendationEngine';
 import type { Database } from '@/integrations/supabase/types';
 
 type DbRecipe = Database['public']['Tables']['recipes']['Row'];
@@ -136,7 +137,10 @@ export default function RecipeDetail() {
 
       setIsFavorite(!!favData);
 
-      // Track view
+      // Track view with recommendation engine
+      await trackInteraction(uid, id!, 'view');
+      
+      // Also track in recipe_views for legacy support
       await supabase.from('recipe_views').insert({
         recipe_id: id,
         user_id: uid
@@ -165,6 +169,7 @@ export default function RecipeDetail() {
           .eq('user_id', userId)
           .eq('recipe_id', recipe.id);
 
+        await trackInteraction(userId, recipe.id, 'unfavorite');
         setIsFavorite(false);
         toast({ title: "Removed from favorites" });
       } else {
@@ -172,6 +177,7 @@ export default function RecipeDetail() {
           .from('favorite_recipes')
           .insert({ user_id: userId, recipe_id: recipe.id });
 
+        await trackInteraction(userId, recipe.id, 'favorite');
         setIsFavorite(true);
         toast({ title: "Added to favorites! ❤️" });
       }
