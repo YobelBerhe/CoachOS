@@ -37,12 +37,13 @@ interface FastingSession {
 
 interface FastingPlan {
   id: string;
-  name: string;
-  fasting_hours: number;
-  eating_hours: number;
+  type: string;
   eating_window_start: string;
   eating_window_end: string;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 const FASTING_PROTOCOLS = [
@@ -269,9 +270,7 @@ export default function Fasting() {
     try {
       const planData = {
         user_id: userId,
-        name: selectedProtocol.name,
-        fasting_hours: selectedProtocol.fast,
-        eating_hours: selectedProtocol.eat,
+        type: selectedProtocol.name,
         eating_window_start: windowStart,
         eating_window_end: windowEnd,
         is_active: true
@@ -313,12 +312,15 @@ export default function Fasting() {
     if (!userId || !activePlan) return;
 
     try {
+      // Calculate fasting hours from the protocol
+      const protocol = FASTING_PROTOCOLS.find(p => p.name === activePlan.type) || FASTING_PROTOCOLS[0];
+      
       const { data, error } = await supabase
         .from('fasting_sessions')
         .insert({
           user_id: userId,
           start_time: new Date().toISOString(),
-          target_duration_hours: activePlan.fasting_hours,
+          target_duration_hours: protocol.fast,
           completed: false,
           broken_early: false
         })
@@ -331,7 +333,7 @@ export default function Fasting() {
 
       toast({
         title: "Fast started! 💪",
-        description: `Your ${activePlan.fasting_hours}hr fast has begun`
+        description: `Your ${protocol.fast}hr fast has begun`
       });
 
     } catch (error: any) {
@@ -407,6 +409,11 @@ export default function Fasting() {
         .filter(s => s.actual_duration_hours)
         .reduce((sum, s) => sum + (s.actual_duration_hours || 0), 0) / fastingHistory.filter(s => s.actual_duration_hours).length
     : 0;
+
+  // Get protocol details for active plan
+  const activeProtocol = activePlan 
+    ? FASTING_PROTOCOLS.find(p => p.name === activePlan.type) || FASTING_PROTOCOLS[0]
+    : FASTING_PROTOCOLS[0];
 
   if (loading) {
     return (
@@ -721,7 +728,7 @@ export default function Fasting() {
                         <>
                           <Clock className="w-16 h-16 text-muted-foreground mb-4" />
                           <p className="text-lg font-medium">Ready to fast</p>
-                          <p className="text-sm text-muted-foreground">{activePlan.fasting_hours} hour goal</p>
+                          <p className="text-sm text-muted-foreground">{activeProtocol.fast} hour goal</p>
                         </>
                       )}
                     </div>
@@ -797,7 +804,7 @@ export default function Fasting() {
                         size="lg"
                       >
                         <Play className="w-5 h-5 mr-2" />
-                        Start {activePlan.fasting_hours}hr Fast
+                        Start {activeProtocol.fast}hr Fast
                       </Button>
                     )}
                   </div>
@@ -805,13 +812,13 @@ export default function Fasting() {
                   {/* Protocol Info */}
                   <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold">{activePlan.name}</span>
+                      <span className="font-semibold">{activePlan.type}</span>
                       <Badge variant="outline">
-                        {activePlan.fasting_hours}:{activePlan.eating_hours}
+                        {activeProtocol.fast}:{activeProtocol.eat}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Fast for {activePlan.fasting_hours} hours, eat within {activePlan.eating_hours} hours
+                      Fast for {activeProtocol.fast} hours, eat within {activeProtocol.eat} hours
                     </p>
                   </div>
                 </div>
