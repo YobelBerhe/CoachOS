@@ -8,18 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Star, MessageSquare, Camera, ThumbsUp, Image as ImageIcon, X, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Review {
-  id: string;
-  user_id: string;
-  rating: number;
-  title: string;
-  comment: string;
-  photos: string[];
-  helpful_count: number;
-  verified_purchase: boolean;
-  created_at: string;
-}
+type Review = Database['public']['Tables']['recipe_reviews']['Row'];
 
 interface ReviewsSectionProps {
   recipeId: string;

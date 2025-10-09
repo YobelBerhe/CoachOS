@@ -35,43 +35,14 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import NutritionPanel from '@/components/recipes/NutritionPanel';
 import ReviewsSection from '@/components/recipes/ReviewsSection';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Recipe {
-  id: string;
-  user_id: string;
-  name: string;
-  description: string;
-  images: string[];
-  thumbnail_index: number;
-  youtube_url?: string;
-  prep_time_min: number;
-  cook_time_min: number;
-  servings: number;
-  difficulty: string;
-  meal_types: string[];
-  cuisine_types: string[];
-  tags: string[];
-  calories_per_serving: number;
-  protein_g: number;
-  carbs_g: number;
-  fats_g: number;
-  fiber_g: number;
-  sugar_g: number;
-  sodium_mg: number;
+type DbRecipe = Database['public']['Tables']['recipes']['Row'];
+
+interface Recipe extends Omit<DbRecipe, 'ingredients' | 'equipment' | 'instructions'> {
   ingredients: Array<{ item: string; amount: string; unit: string }>;
-  instructions: string[];
   equipment: Array<{ name: string; amazon_link?: string }>;
-  is_paid: boolean;
-  price?: number;
-  average_rating: number;
-  total_reviews: number;
-  created_at: string;
-  good_for_weight_loss?: boolean;
-  good_for_muscle_gain?: boolean;
-  good_for_heart_health?: boolean;
-  good_for_energy?: boolean;
-  good_for_late_night?: boolean;
-  good_for_fasting?: boolean;
+  instructions: string[];
 }
 
 export default function RecipeDetail() {
@@ -138,7 +109,7 @@ export default function RecipeDetail() {
         .single();
 
       if (recipeError) throw recipeError;
-      setRecipe(recipeData);
+      setRecipe(recipeData as Recipe);
 
       // Check if unlocked (if paid)
       if (recipeData.is_paid) {
