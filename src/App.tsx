@@ -56,7 +56,7 @@ function AppRoutes() {
           <Route path="/medications" element={<Medications />} />
           <Route path="/workout-in-progress" element={<WorkoutInProgress />} />
           <Route path="/recipes" element={<Recipes />} />
-          <Route path="/recipe/:id" element={<RecipeDetail />} />
+          <Route path="/recipe/:recipeId" element={<RecipeDetail />} />
           <Route path="/fasting" element={<Fasting />} />
           <Route path="/creator-dashboard" element={<CreatorDashboard />} />
           <Route path="/compliance" element={<ComplianceDashboard />} />
