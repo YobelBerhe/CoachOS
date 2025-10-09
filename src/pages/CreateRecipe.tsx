@@ -82,6 +82,10 @@ interface RecipeFormData {
   is_paid: boolean;
   price: string;
   stripe_email: string;
+  is_on_deal: boolean;
+  deal_percentage: number;
+  deal_duration_days: number;
+  deal_description: string;
 }
 
 export default function CreateRecipe() {
@@ -108,7 +112,11 @@ export default function CreateRecipe() {
     thumbnail_index: 0,
     is_paid: false,
     price: '',
-    stripe_email: ''
+    stripe_email: '',
+    is_on_deal: false,
+    deal_percentage: 20,
+    deal_duration_days: 7,
+    deal_description: ''
   });
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -357,6 +365,20 @@ export default function CreateRecipe() {
           amazon_link: e.amazon_link.trim() || null
         }));
 
+      // Prepare deal dates if deal is active
+      let dealStartDate = null;
+      let dealEndDate = null;
+      let dealPrice = null;
+
+      if (formData.is_on_deal && formData.is_paid && formData.price) {
+        const originalPrice = parseFloat(formData.price);
+        dealPrice = originalPrice * (1 - formData.deal_percentage / 100);
+        dealStartDate = new Date().toISOString();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + formData.deal_duration_days);
+        dealEndDate = endDate.toISOString();
+      }
+
       // Create recipe in database
       const { data: recipe, error: recipeError } = await supabase
         .from('recipes')
@@ -379,6 +401,13 @@ export default function CreateRecipe() {
           equipment: validEquipment,
           is_paid: formData.is_paid,
           price: formData.is_paid ? parseFloat(formData.price) : null,
+          is_on_deal: formData.is_on_deal && formData.is_paid,
+          original_price: formData.is_on_deal && formData.is_paid ? parseFloat(formData.price) : null,
+          deal_price: dealPrice,
+          deal_percentage: formData.is_on_deal ? formData.deal_percentage : null,
+          deal_start_date: dealStartDate,
+          deal_end_date: dealEndDate,
+          deal_description: formData.is_on_deal ? formData.deal_description || `Limited time ${formData.deal_percentage}% off!` : null,
           status: 'published',
           category: formData.meal_types[0] || 'Other',
           // Nutrition will be calculated by Edge Function
@@ -1051,6 +1080,127 @@ export default function CreateRecipe() {
               )}
             </CardContent>
           </Card>
+
+          {/* SECTION 9: DEALS & PROMOTIONS */}
+          {formData.is_paid && (
+            <Card className="border-2 border-red-200 dark:border-red-900">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-red-600" />
+                  Deals & Promotions
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Create a limited-time deal to boost sales! 🔥
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Enable Deal toggle */}
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-lg">
+                  <div>
+                    <p className="font-semibold">Put this recipe on deal?</p>
+                    <p className="text-sm text-muted-foreground">
+                      Offer a discount for limited time
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.is_on_deal}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_on_deal: checked })}
+                  />
+                </div>
+
+                {/* Deal configuration */}
+                {formData.is_on_deal && (
+                  <div className="space-y-4 p-4 border-2 border-red-200 dark:border-red-900 rounded-lg">
+                    {/* Discount Percentage Slider */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <Label>Discount Percentage</Label>
+                        <Badge className="bg-red-600 text-white text-lg px-3">
+                          {formData.deal_percentage}% OFF
+                        </Badge>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        step="5"
+                        value={formData.deal_percentage}
+                        onChange={(e) => setFormData({ ...formData, deal_percentage: Number(e.target.value) })}
+                        className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-red-600"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>10%</span>
+                        <span>50%</span>
+                        <span>90%</span>
+                      </div>
+                    </div>
+
+                    {/* Deal Duration */}
+                    <div>
+                      <Label htmlFor="deal_duration">Deal Duration (days)</Label>
+                      <Input
+                        id="deal_duration"
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={formData.deal_duration_days}
+                        onChange={(e) => setFormData({ ...formData, deal_duration_days: Number(e.target.value) })}
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Deal will expire in {formData.deal_duration_days} days
+                      </p>
+                    </div>
+
+                    {/* Deal Description */}
+                    <div>
+                      <Label htmlFor="deal_description">Deal Description (Optional)</Label>
+                      <Textarea
+                        id="deal_description"
+                        value={formData.deal_description}
+                        onChange={(e) => setFormData({ ...formData, deal_description: e.target.value })}
+                        placeholder={`Limited time ${formData.deal_percentage}% off!`}
+                        className="mt-2"
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Deal Preview */}
+                    <div className="p-4 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-lg border-2 border-red-200 dark:border-red-900">
+                      <h4 className="font-bold mb-3 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Deal Preview
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Original Price:</span>
+                          <span className="line-through">${parseFloat(formData.price || '0').toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Deal Price:</span>
+                          <span className="text-green-600 font-bold text-lg">
+                            ${(parseFloat(formData.price || '0') * (1 - formData.deal_percentage / 100)).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Customers Save:</span>
+                          <span className="text-red-600 font-bold">
+                            ${(parseFloat(formData.price || '0') * (formData.deal_percentage / 100)).toFixed(2)} ({formData.deal_percentage}%)
+                          </span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t border-red-200">
+                          <span>You Earn (85%):</span>
+                          <span className="text-green-600 font-bold">
+                            ${(parseFloat(formData.price || '0') * (1 - formData.deal_percentage / 100) * 0.85).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* SUBMIT BUTTON */}
           <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pt-6 pb-4">
