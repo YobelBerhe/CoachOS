@@ -256,11 +256,21 @@ export default function Settings() {
 
       // Update goal if exists
       if (settings.goal_type && settings.target_weight_kg) {
+        // Get current weight from most recent weight log
+        const { data: weightLog } = await supabase
+          .from('weight_logs')
+          .select('weight_kg')
+          .eq('user_id', userId)
+          .order('date', { ascending: false })
+          .limit(1)
+          .single();
+
         const { error: goalError } = await supabase
           .from('goals')
           .upsert({
             user_id: userId,
             type: settings.goal_type,
+            current_weight_kg: weightLog?.weight_kg || parseFloat(settings.target_weight_kg),
             target_weight_kg: parseFloat(settings.target_weight_kg),
             aggression: settings.goal_aggression,
             is_active: true

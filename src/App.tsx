@@ -29,6 +29,7 @@ import Fasting from "./pages/Fasting";
 import CreatorDashboard from "./pages/CreatorDashboard";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function AppRoutes() {
           <Route path="/creator-dashboard" element={<CreatorDashboard />} />
           <Route path="/compliance" element={<ComplianceDashboard />} />
           <Route path="/analytics" element={<AdvancedAnalytics />} />
+          <Route path="/achievements" element={<Achievements />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
