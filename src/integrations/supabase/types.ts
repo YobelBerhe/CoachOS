@@ -64,6 +64,42 @@ export type Database = {
           },
         ]
       }
+      creator_earnings: {
+        Row: {
+          created_at: string | null
+          id: string
+          paid_out_cents: number | null
+          pending_payout_cents: number | null
+          total_earnings_cents: number | null
+          total_sales: number | null
+          total_unlocks: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          paid_out_cents?: number | null
+          pending_payout_cents?: number | null
+          total_earnings_cents?: number | null
+          total_sales?: number | null
+          total_unlocks?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          paid_out_cents?: number | null
+          pending_payout_cents?: number | null
+          total_earnings_cents?: number | null
+          total_sales?: number | null
+          total_unlocks?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_targets: {
         Row: {
           bmr: number
@@ -419,6 +455,62 @@ export type Database = {
         }
         Relationships: []
       }
+      individual_payouts: {
+        Row: {
+          amount_cents: number
+          batch_id: string | null
+          created_at: string | null
+          currency: string | null
+          failure_reason: string | null
+          id: string
+          paid_at: string | null
+          status: string | null
+          stripe_account_id: string
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
+          transaction_count: number | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          batch_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string | null
+          stripe_account_id: string
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          transaction_count?: number | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          batch_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          status?: string | null
+          stripe_account_id?: string
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+          transaction_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "individual_payouts_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "payout_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medication_logs: {
         Row: {
           created_at: string | null
@@ -505,6 +597,125 @@ export type Database = {
           times?: Json
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount_creator_payout: number
+          amount_platform_fee: number
+          amount_total: number
+          buyer_id: string
+          completed_at: string | null
+          created_at: string | null
+          currency: string | null
+          customer_email: string | null
+          failure_reason: string | null
+          id: string
+          payment_method: string | null
+          payout_date: string | null
+          payout_status: string | null
+          recipe_id: string
+          seller_id: string
+          status: string | null
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_creator_payout: number
+          amount_platform_fee: number
+          amount_total: number
+          buyer_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string | null
+          failure_reason?: string | null
+          id?: string
+          payment_method?: string | null
+          payout_date?: string | null
+          payout_status?: string | null
+          recipe_id: string
+          seller_id: string
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_creator_payout?: number
+          amount_platform_fee?: number
+          amount_total?: number
+          buyer_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string | null
+          failure_reason?: string | null
+          id?: string
+          payment_method?: string | null
+          payout_date?: string | null
+          payout_status?: string | null
+          recipe_id?: string
+          seller_id?: string
+          status?: string | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_batches: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          period_end: string
+          period_start: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string | null
+          total_amount_cents: number | null
+          total_creators: number | null
+          total_transactions: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          period_end: string
+          period_start: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_amount_cents?: number | null
+          total_creators?: number | null
+          total_transactions?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string | null
+          total_amount_cents?: number | null
+          total_creators?: number | null
+          total_transactions?: number | null
         }
         Relationships: []
       }
@@ -723,8 +934,10 @@ export type Database = {
           sugar_g: number | null
           tags: string[] | null
           thumbnail_index: number | null
+          total_revenue: number | null
           total_reviews: number | null
           total_time_min: number | null
+          total_unlocks: number | null
           updated_at: string | null
           user_id: string | null
           youtube_url: string | null
@@ -769,8 +982,10 @@ export type Database = {
           sugar_g?: number | null
           tags?: string[] | null
           thumbnail_index?: number | null
+          total_revenue?: number | null
           total_reviews?: number | null
           total_time_min?: number | null
+          total_unlocks?: number | null
           updated_at?: string | null
           user_id?: string | null
           youtube_url?: string | null
@@ -815,8 +1030,10 @@ export type Database = {
           sugar_g?: number | null
           tags?: string[] | null
           thumbnail_index?: number | null
+          total_revenue?: number | null
           total_reviews?: number | null
           total_time_min?: number | null
+          total_unlocks?: number | null
           updated_at?: string | null
           user_id?: string | null
           youtube_url?: string | null
@@ -890,6 +1107,57 @@ export type Database = {
           last_updated?: string
           longest_streak?: number
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stripe_connect_accounts: {
+        Row: {
+          account_type: string | null
+          bank_account_verified: boolean | null
+          charges_enabled: boolean | null
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          details_submitted: boolean | null
+          email: string | null
+          id: string
+          onboarding_complete: boolean | null
+          payouts_enabled: boolean | null
+          stripe_account_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_type?: string | null
+          bank_account_verified?: boolean | null
+          charges_enabled?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          details_submitted?: boolean | null
+          email?: string | null
+          id?: string
+          onboarding_complete?: boolean | null
+          payouts_enabled?: boolean | null
+          stripe_account_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_type?: string | null
+          bank_account_verified?: boolean | null
+          charges_enabled?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          details_submitted?: boolean | null
+          email?: string | null
+          id?: string
+          onboarding_complete?: boolean | null
+          payouts_enabled?: boolean | null
+          stripe_account_id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
