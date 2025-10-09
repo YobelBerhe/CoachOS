@@ -1687,30 +1687,36 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           date: string
+          duration_min: number | null
           id: string
           name: string
           notes: string | null
           scheduled_time: string | null
+          total_volume_lbs: number | null
           user_id: string
         }
         Insert: {
           completed_at?: string | null
           created_at?: string | null
           date?: string
+          duration_min?: number | null
           id?: string
           name: string
           notes?: string | null
           scheduled_time?: string | null
+          total_volume_lbs?: number | null
           user_id: string
         }
         Update: {
           completed_at?: string | null
           created_at?: string | null
           date?: string
+          duration_min?: number | null
           id?: string
           name?: string
           notes?: string | null
           scheduled_time?: string | null
+          total_volume_lbs?: number | null
           user_id?: string
         }
         Relationships: [
