@@ -392,22 +392,38 @@ export default function CreateRecipe() {
 
       if (recipeError) throw recipeError;
 
-      // Trigger nutrition calculation (Edge Function)
-      const { error: functionError } = await supabase.functions.invoke('calculate-nutrition', {
-        body: { recipe_id: recipe.id }
-      });
-
-      if (functionError) {
-        console.error('Nutrition calculation error:', functionError);
-        // Don't fail the recipe creation, just log it
-      }
-
       toast({
         title: "Recipe created! 🎉",
-        description: "Your recipe is now live and calculating nutrition..."
+        description: "Calculating nutrition with AI..."
       });
 
-      navigate(`/recipe/${recipe.id}`);
+      // Trigger nutrition calculation (Edge Function)
+      try {
+        const { data: functionData, error: functionError } = await supabase.functions.invoke(
+          'calculate-nutrition',
+          {
+            body: { recipe_id: recipe.id }
+          }
+        );
+
+        if (functionError) {
+          console.error('Nutrition calculation error:', functionError);
+          toast({
+            title: "Warning",
+            description: "Recipe created but nutrition calculation is pending. It will complete shortly.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Success! ✨",
+            description: "Recipe created with accurate AI-powered nutrition data"
+          });
+        }
+      } catch (error) {
+        console.error('Function invocation error:', error);
+      }
+
+      navigate(`/recipes`);
 
     } catch (error: any) {
       console.error('Error creating recipe:', error);

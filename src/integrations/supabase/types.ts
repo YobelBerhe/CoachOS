@@ -564,6 +564,13 @@ export type Database = {
           difficulty: string | null
           equipment: Json | null
           fats_g: number | null
+          fiber_g: number | null
+          good_for_energy: boolean | null
+          good_for_fasting: boolean | null
+          good_for_heart_health: boolean | null
+          good_for_late_night: boolean | null
+          good_for_muscle_gain: boolean | null
+          good_for_weight_loss: boolean | null
           id: string
           image_url: string | null
           images: string[] | null
@@ -573,12 +580,15 @@ export type Database = {
           is_public: boolean | null
           meal_types: string[] | null
           name: string
+          nutrition_breakdown: Json | null
           prep_time_min: number | null
           price: number | null
           protein_g: number | null
           servings: number
+          sodium_mg: number | null
           status: string | null
           stripe_account_id: string | null
+          sugar_g: number | null
           tags: string[] | null
           thumbnail_index: number | null
           total_reviews: number | null
@@ -600,6 +610,13 @@ export type Database = {
           difficulty?: string | null
           equipment?: Json | null
           fats_g?: number | null
+          fiber_g?: number | null
+          good_for_energy?: boolean | null
+          good_for_fasting?: boolean | null
+          good_for_heart_health?: boolean | null
+          good_for_late_night?: boolean | null
+          good_for_muscle_gain?: boolean | null
+          good_for_weight_loss?: boolean | null
           id?: string
           image_url?: string | null
           images?: string[] | null
@@ -609,12 +626,15 @@ export type Database = {
           is_public?: boolean | null
           meal_types?: string[] | null
           name: string
+          nutrition_breakdown?: Json | null
           prep_time_min?: number | null
           price?: number | null
           protein_g?: number | null
           servings?: number
+          sodium_mg?: number | null
           status?: string | null
           stripe_account_id?: string | null
+          sugar_g?: number | null
           tags?: string[] | null
           thumbnail_index?: number | null
           total_reviews?: number | null
@@ -636,6 +656,13 @@ export type Database = {
           difficulty?: string | null
           equipment?: Json | null
           fats_g?: number | null
+          fiber_g?: number | null
+          good_for_energy?: boolean | null
+          good_for_fasting?: boolean | null
+          good_for_heart_health?: boolean | null
+          good_for_late_night?: boolean | null
+          good_for_muscle_gain?: boolean | null
+          good_for_weight_loss?: boolean | null
           id?: string
           image_url?: string | null
           images?: string[] | null
@@ -645,12 +672,15 @@ export type Database = {
           is_public?: boolean | null
           meal_types?: string[] | null
           name?: string
+          nutrition_breakdown?: Json | null
           prep_time_min?: number | null
           price?: number | null
           protein_g?: number | null
           servings?: number
+          sodium_mg?: number | null
           status?: string | null
           stripe_account_id?: string | null
+          sugar_g?: number | null
           tags?: string[] | null
           thumbnail_index?: number | null
           total_reviews?: number | null
