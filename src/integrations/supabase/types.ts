@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      common_allergens: {
+        Row: {
+          alternative_names: string[] | null
+          category: string | null
+          common_in: string[] | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          alternative_names?: string[] | null
+          category?: string | null
+          common_in?: string[] | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          alternative_names?: string[] | null
+          category?: string | null
+          common_in?: string[] | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       compliance_scores: {
         Row: {
           created_at: string | null
@@ -333,8 +360,10 @@ export type Database = {
       }
       food_logs: {
         Row: {
+          allergen_warning_shown: boolean | null
           calories: number
           carbs_g: number
+          contains_allergens: string[] | null
           created_at: string | null
           date: string
           fats_g: number
@@ -351,8 +380,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allergen_warning_shown?: boolean | null
           calories: number
           carbs_g?: number
+          contains_allergens?: string[] | null
           created_at?: string | null
           date?: string
           fats_g?: number
@@ -369,8 +400,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allergen_warning_shown?: boolean | null
           calories?: number
           carbs_g?: number
+          contains_allergens?: string[] | null
           created_at?: string | null
           date?: string
           fats_g?: number
@@ -783,6 +816,10 @@ export type Database = {
           id: string
           sex: string
           updated_at: string | null
+          workout_experience: string | null
+          workout_frequency: number | null
+          workout_location: string | null
+          workout_preference: string | null
         }
         Insert: {
           activity_level: string
@@ -796,6 +833,10 @@ export type Database = {
           id: string
           sex: string
           updated_at?: string | null
+          workout_experience?: string | null
+          workout_frequency?: number | null
+          workout_location?: string | null
+          workout_preference?: string | null
         }
         Update: {
           activity_level?: string
@@ -809,6 +850,10 @@ export type Database = {
           id?: string
           sex?: string
           updated_at?: string | null
+          workout_experience?: string | null
+          workout_frequency?: number | null
+          workout_location?: string | null
+          workout_preference?: string | null
         }
         Relationships: []
       }
@@ -1418,6 +1463,109 @@ export type Database = {
         }
         Relationships: []
       }
+      user_allergies: {
+        Row: {
+          allergen_name: string
+          created_at: string | null
+          diagnosed_by: string | null
+          diagnosed_date: string | null
+          id: string
+          notes: string | null
+          reaction_symptoms: string | null
+          severity: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          allergen_name: string
+          created_at?: string | null
+          diagnosed_by?: string | null
+          diagnosed_date?: string | null
+          id?: string
+          notes?: string | null
+          reaction_symptoms?: string | null
+          severity?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          allergen_name?: string
+          created_at?: string | null
+          diagnosed_by?: string | null
+          diagnosed_date?: string | null
+          id?: string
+          notes?: string | null
+          reaction_symptoms?: string | null
+          severity?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_allergies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_biomarkers: {
+        Row: {
+          biomarker_name: string
+          biomarker_value: number | null
+          created_at: string | null
+          id: string
+          is_normal: boolean | null
+          lab_name: string | null
+          normal_range_max: number | null
+          normal_range_min: number | null
+          notes: string | null
+          test_date: string | null
+          unit: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          biomarker_name: string
+          biomarker_value?: number | null
+          created_at?: string | null
+          id?: string
+          is_normal?: boolean | null
+          lab_name?: string | null
+          normal_range_max?: number | null
+          normal_range_min?: number | null
+          notes?: string | null
+          test_date?: string | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          biomarker_name?: string
+          biomarker_value?: number | null
+          created_at?: string | null
+          id?: string
+          is_normal?: boolean | null
+          lab_name?: string | null
+          normal_range_max?: number | null
+          normal_range_min?: number | null
+          notes?: string | null
+          test_date?: string | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_biomarkers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_taste_profiles: {
         Row: {
           avg_calories_preferred: number | null
@@ -1588,9 +1736,22 @@ export type Database = {
         Args: { p_recipe_id: string }
         Returns: number
       }
+      check_food_allergens: {
+        Args: { p_food_name: string; p_user_id: string }
+        Returns: string[]
+      }
       expire_old_deals: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_low_biomarkers: {
+        Args: { p_user_id: string }
+        Returns: {
+          biomarker_name: string
+          current_value: number
+          deficit: number
+          normal_min: number
+        }[]
       }
       increment_recipe_logs: {
         Args: { recipe_id: string }
