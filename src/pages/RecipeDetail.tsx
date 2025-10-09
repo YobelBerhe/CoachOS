@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import NutritionPanel from '@/components/recipes/NutritionPanel';
 import ReviewsSection from '@/components/recipes/ReviewsSection';
+import CustomerPhotosGallery from '@/components/recipes/CustomerPhotosGallery';
 import PaymentCheckout from '@/components/payments/PaymentCheckout';
 import { trackInteraction } from '@/lib/recommendations/recommendationEngine';
 import type { Database } from '@/integrations/supabase/types';
@@ -730,6 +731,9 @@ export default function RecipeDetail() {
                 </TabsContent>
               </Tabs>
             )}
+
+            {/* Customer Photos Gallery */}
+            <CustomerPhotosGallery recipeId={recipe.id} recipeName={recipe.name} />
 
             {/* Reviews Section */}
             <ReviewsSection recipeId={recipe.id} userId={userId} />

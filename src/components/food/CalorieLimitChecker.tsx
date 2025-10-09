@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { calculateCalorieAdjustment, autoAdjustWorkoutPlan } from '@/lib/smartCalorieManager';
 import { 
   AlertTriangle, 
   Flame, 
@@ -36,12 +39,51 @@ export default function CalorieLimitChecker({
   onContinue,
   onCancel
 }: CalorieLimitCheckerProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [calorieData, setCalorieData] = useState<CalorieData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [smartSuggestions, setSmartSuggestions] = useState<any>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     loadCalorieData();
   }, [userId, date]);
+
+  useEffect(() => {
+    const newTotal = calorieData ? calorieData.consumed + newCalories : 0;
+    const wouldExceed = calorieData ? newTotal > calorieData.dailyGoal : false;
+    const excessCalories = calorieData ? Math.max(0, newTotal - calorieData.dailyGoal) : 0;
+    
+    if (wouldExceed && excessCalories > 0 && !smartSuggestions) {
+      loadSmartSuggestions();
+    }
+  }, [calorieData, newCalories]);
+
+  async function loadSmartSuggestions() {
+    setLoadingSuggestions(true);
+    try {
+      const suggestions = await calculateCalorieAdjustment(
+        userId,
+        date,
+        newCalories
+      );
+      setSmartSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }
+
+  async function handleAutoAdjustWorkout() {
+    const excessCalories = Math.max(0, (calorieData?.consumed || 0) + newCalories - (calorieData?.dailyGoal || 2000));
+    const result = await autoAdjustWorkoutPlan(userId, date, excessCalories);
+    toast({
+      title: result.adjusted ? "Workout Adjusted! 💪" : "Notice",
+      description: result.message
+    });
+  }
 
   async function loadCalorieData() {
     try {
@@ -155,6 +197,66 @@ export default function CalorieLimitChecker({
                     </div>
                   </div>
                 </div>
+
+                {/* Smart Suggestions */}
+                {smartSuggestions && (
+                  <div className="space-y-3 mt-4">
+                    {/* Portion Adjustment Suggestion */}
+                    {smartSuggestions.portionAdjustment && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200">
+                        <p className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                          💡 Portion Adjustment Suggestion
+                        </p>
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          Reduce portion to {(smartSuggestions.portionAdjustment.suggestedPortion * 100).toFixed(0)}% 
+                          to save {smartSuggestions.portionAdjustment.caloriesReduced.toFixed(0)} calories
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Alternative Meals */}
+                    {smartSuggestions.alternativeMeals && smartSuggestions.alternativeMeals.length > 0 && (
+                      <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200">
+                        <p className="font-semibold text-green-900 dark:text-green-100 mb-2">
+                          🍽️ Lower-Calorie Alternatives
+                        </p>
+                        <div className="space-y-2">
+                          {smartSuggestions.alternativeMeals.map((meal: any) => (
+                            <div key={meal.id} className="flex items-center gap-2">
+                              <img 
+                                src={meal.images?.[meal.thumbnail_index] || meal.images?.[0]} 
+                                alt={meal.name}
+                                className="w-10 h-10 rounded object-cover"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{meal.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {meal.calories_per_serving} cal
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/recipe/${meal.id}`)}
+                              >
+                                View
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Auto-Adjust Workout Button */}
+                    <Button
+                      onClick={handleAutoAdjustWorkout}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      🤖 Auto-Adjust My Workout
+                    </Button>
+                  </div>
+                )}
               </div>
             </AlertDescription>
           </Alert>

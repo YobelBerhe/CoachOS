@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FeaturedSections from '@/components/recipes/FeaturedSections';
+import DealsSection from '@/components/recipes/DealsSection';
 
 interface Recipe {
   id: string;
