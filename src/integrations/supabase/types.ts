@@ -881,6 +881,7 @@ export type Database = {
           helpful_count: number | null
           id: string
           not_helpful_count: number | null
+          photo_count: number | null
           photos: string[] | null
           rating: number
           recipe_id: string
@@ -895,6 +896,7 @@ export type Database = {
           helpful_count?: number | null
           id?: string
           not_helpful_count?: number | null
+          photo_count?: number | null
           photos?: string[] | null
           rating: number
           recipe_id: string
@@ -909,6 +911,7 @@ export type Database = {
           helpful_count?: number | null
           id?: string
           not_helpful_count?: number | null
+          photo_count?: number | null
           photos?: string[] | null
           rating?: number
           recipe_id?: string
@@ -1135,6 +1138,11 @@ export type Database = {
           created_at: string | null
           cuisine: string | null
           cuisine_types: string[] | null
+          deal_description: string | null
+          deal_end_date: string | null
+          deal_percentage: number | null
+          deal_price: number | null
+          deal_start_date: string | null
           description: string | null
           difficulty: string | null
           equipment: Json | null
@@ -1151,11 +1159,13 @@ export type Database = {
           images: string[] | null
           ingredients: Json
           instructions: Json
+          is_on_deal: boolean | null
           is_paid: boolean | null
           is_public: boolean | null
           meal_types: string[] | null
           name: string
           nutrition_breakdown: Json | null
+          original_price: number | null
           prep_time_min: number | null
           price: number | null
           protein_g: number | null
@@ -1183,6 +1193,11 @@ export type Database = {
           created_at?: string | null
           cuisine?: string | null
           cuisine_types?: string[] | null
+          deal_description?: string | null
+          deal_end_date?: string | null
+          deal_percentage?: number | null
+          deal_price?: number | null
+          deal_start_date?: string | null
           description?: string | null
           difficulty?: string | null
           equipment?: Json | null
@@ -1199,11 +1214,13 @@ export type Database = {
           images?: string[] | null
           ingredients?: Json
           instructions?: Json
+          is_on_deal?: boolean | null
           is_paid?: boolean | null
           is_public?: boolean | null
           meal_types?: string[] | null
           name: string
           nutrition_breakdown?: Json | null
+          original_price?: number | null
           prep_time_min?: number | null
           price?: number | null
           protein_g?: number | null
@@ -1231,6 +1248,11 @@ export type Database = {
           created_at?: string | null
           cuisine?: string | null
           cuisine_types?: string[] | null
+          deal_description?: string | null
+          deal_end_date?: string | null
+          deal_percentage?: number | null
+          deal_price?: number | null
+          deal_start_date?: string | null
           description?: string | null
           difficulty?: string | null
           equipment?: Json | null
@@ -1247,11 +1269,13 @@ export type Database = {
           images?: string[] | null
           ingredients?: Json
           instructions?: Json
+          is_on_deal?: boolean | null
           is_paid?: boolean | null
           is_public?: boolean | null
           meal_types?: string[] | null
           name?: string
           nutrition_breakdown?: Json | null
+          original_price?: number | null
           prep_time_min?: number | null
           price?: number | null
           protein_g?: number | null
@@ -1564,9 +1588,17 @@ export type Database = {
         Args: { p_recipe_id: string }
         Returns: number
       }
+      expire_old_deals: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       increment_recipe_logs: {
         Args: { recipe_id: string }
         Returns: undefined
+      }
+      is_deal_active: {
+        Args: { recipe: Database["public"]["Tables"]["recipes"]["Row"] }
+        Returns: boolean
       }
       update_user_taste_profile: {
         Args: { p_user_id: string }
