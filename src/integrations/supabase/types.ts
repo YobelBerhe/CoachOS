@@ -339,7 +339,11 @@ export type Database = {
           date: string
           fats_g: number
           food_name: string
+          hydration_ml: number | null
           id: string
+          is_beverage: boolean | null
+          marked_done: boolean | null
+          marked_done_at: string | null
           meal_type: string | null
           protein_g: number
           serving_size: string | null
@@ -353,7 +357,11 @@ export type Database = {
           date?: string
           fats_g?: number
           food_name: string
+          hydration_ml?: number | null
           id?: string
+          is_beverage?: boolean | null
+          marked_done?: boolean | null
+          marked_done_at?: string | null
           meal_type?: string | null
           protein_g?: number
           serving_size?: string | null
@@ -367,7 +375,11 @@ export type Database = {
           date?: string
           fats_g?: number
           food_name?: string
+          hydration_ml?: number | null
           id?: string
+          is_beverage?: boolean | null
+          marked_done?: boolean | null
+          marked_done_at?: string | null
           meal_type?: string | null
           protein_g?: number
           serving_size?: string | null
@@ -389,6 +401,8 @@ export type Database = {
           aggression: string | null
           created_at: string | null
           current_weight_kg: number
+          daily_calorie_goal: number | null
+          daily_water_goal_ml: number | null
           id: string
           is_active: boolean | null
           target_weight_kg: number
@@ -400,6 +414,8 @@ export type Database = {
           aggression?: string | null
           created_at?: string | null
           current_weight_kg: number
+          daily_calorie_goal?: number | null
+          daily_water_goal_ml?: number | null
           id?: string
           is_active?: boolean | null
           target_weight_kg: number
@@ -411,6 +427,8 @@ export type Database = {
           aggression?: string | null
           created_at?: string | null
           current_weight_kg?: number
+          daily_calorie_goal?: number | null
+          daily_water_goal_ml?: number | null
           id?: string
           is_active?: boolean | null
           target_weight_kg?: number

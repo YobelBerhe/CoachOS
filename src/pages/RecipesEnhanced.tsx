@@ -30,7 +30,9 @@ import {
   Award,
   Sparkles,
   RotateCcw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Target,
+  Check
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FeaturedSections from '@/components/recipes/FeaturedSections';
@@ -113,6 +115,7 @@ export default function RecipesEnhanced() {
   const [minRating, setMinRating] = useState(0);
   const [filterByGoal, setFilterByGoal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showDealsOnly, setShowDealsOnly] = useState(false);
 
   // Create recipe dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -303,6 +306,7 @@ export default function RecipesEnhanced() {
     setSelectedPrice('');
     setMinRating(0);
     setFilterByGoal(false);
+    setShowDealsOnly(false);
   }
 
   async function handleCreateRecipe(e: React.FormEvent) {
@@ -396,7 +400,8 @@ export default function RecipesEnhanced() {
     (selectedTime ? 1 : 0) + 
     (selectedPrice ? 1 : 0) +
     (minRating > 0 ? 1 : 0) +
-    (filterByGoal ? 1 : 0);
+    (filterByGoal ? 1 : 0) +
+    (showDealsOnly ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-background to-red-50 dark:from-orange-950/10 dark:via-background dark:to-red-950/10">
@@ -442,41 +447,105 @@ export default function RecipesEnhanced() {
             />
           </div>
 
-          {/* Filter Bar */}
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={showFilters ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </Button>
-
-              {filterByGoal && userGoal && (
-                <Badge variant="default" className="px-3 py-2">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Goal: {userGoal}
+          {/* Enhanced Filter Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold">{filteredRecipes.length} results</h2>
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="text-sm">
+                  {activeFiltersCount} filters applied
                 </Badge>
               )}
             </div>
-
+            
             {activeFiltersCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={resetFilters}
+                className="text-primary hover:text-primary/80"
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Reset
+                Reset all
               </Button>
             )}
+          </div>
+
+          {/* Filter Chips Row */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {userGoal && (
+              <Button
+                variant={filterByGoal ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterByGoal(!filterByGoal)}
+                className="whitespace-nowrap"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                My Goal: {userGoal}
+              </Button>
+            )}
+
+            {selectedPrice && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setSelectedPrice('')}
+                className="whitespace-nowrap"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                {selectedPrice}
+                <X className="w-3 h-3 ml-2" />
+              </Button>
+            )}
+
+            {selectedTime && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setSelectedTime('')}
+                className="whitespace-nowrap"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                {selectedTime}
+                <X className="w-3 h-3 ml-2" />
+              </Button>
+            )}
+
+            {minRating > 0 && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setMinRating(0)}
+                className="whitespace-nowrap"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                {minRating}+ Stars
+                <X className="w-3 h-3 ml-2" />
+              </Button>
+            )}
+
+            {showDealsOnly && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setShowDealsOnly(false)}
+                className="whitespace-nowrap"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Deals
+                <X className="w-3 h-3 ml-2" />
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="whitespace-nowrap"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              More Filters
+            </Button>
           </div>
 
           {/* Expanded Filters */}
