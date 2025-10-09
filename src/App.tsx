@@ -3,7 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { SEO } from "@/components/SEO";
+import { trackPageView, identifyUser } from '@/lib/analytics';
+import { supabase } from '@/integrations/supabase/client';
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PageTransition } from "@/components/PageTransition";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -27,26 +30,16 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function AppRoutes() {
+  const location = useLocation();
+  
+  // Track page views
   useEffect(() => {
-    // Register service worker for PWA
-    registerServiceWorker();
-
-    // Request notification permission after 10 seconds
-    setTimeout(() => {
-      requestNotificationPermission();
-    }, 10000);
-  }, []);
-
+    trackPageView(location.pathname);
+  }, [location]);
+  
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PageTransition>
-              <Routes>
+    <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
@@ -64,7 +57,45 @@ const App = () => {
           <Route path="/creator-dashboard" element={<CreatorDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
+    </Routes>
+  );
+}
+
+const App = () => {
+  useEffect(() => {
+    // Register service worker for PWA
+    registerServiceWorker();
+
+    // Request notification permission after 10 seconds
+    setTimeout(() => {
+      requestNotificationPermission();
+    }, 10000);
+
+    // Check for authenticated user and identify in analytics
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        identifyUser(user.id, {
+          email: user.email,
+          created_at: user.created_at,
+        });
+      }
+    }
+    
+    checkUser();
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <SEO />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <PageTransition>
+              <AppRoutes />
             </PageTransition>
             <InstallPrompt />
           </BrowserRouter>
