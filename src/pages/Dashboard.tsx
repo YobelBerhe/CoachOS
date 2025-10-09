@@ -21,6 +21,7 @@ import {
   Sparkles,
   DollarSign,
   Target,
+  Trophy,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -497,12 +498,12 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => navigate('/recipes')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => navigate('/achievements')}>
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Target className="w-6 h-6 text-orange-500" />
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Trophy className="w-6 h-6 text-yellow-500" />
               </div>
-              <p className="font-semibold text-sm">Recipes</p>
+              <p className="font-semibold text-sm">Achievements</p>
             </CardContent>
           </Card>
 
