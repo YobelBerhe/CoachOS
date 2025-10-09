@@ -14,6 +14,7 @@ import { registerServiceWorker, requestNotificationPermission } from "@/lib/pwa"
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import OnboardingExtended from "./pages/OnboardingExtended";
 import Dashboard from "./pages/Dashboard";
 import Eat from "./pages/Eat";
 import Train from "./pages/Train";
@@ -45,6 +46,7 @@ function AppRoutes() {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/onboarding-extended" element={<OnboardingExtended />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/eat" element={<Eat />} />
           <Route path="/train" element={<Train />} />
