@@ -125,7 +125,7 @@ export default function Reports() {
           ...data
         })));
 
-        const totalCals = Object.values(nutritionByDate).reduce((sum: number, d: any) => sum + d.calories, 0);
+        const totalCals = (Object.values(nutritionByDate) as any[]).reduce((sum: number, d: any) => sum + (d.calories || 0), 0);
         setStats(prev => ({ ...prev, totalCalories: Math.round(totalCals) }));
       }
 

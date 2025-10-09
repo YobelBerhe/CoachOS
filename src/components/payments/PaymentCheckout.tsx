@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Only initialize Stripe if the publishable key is available
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface PaymentCheckoutProps {
   recipeId: string;
