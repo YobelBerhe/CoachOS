@@ -202,7 +202,16 @@ function extractIngredients(product: OpenFoodFactsProduct['product']): {
 }
 
 export async function fetchProductByBarcode(barcode: string): Promise<ScannedProduct | null> {
+  // Check cache first
+  const { barcodeCache } = await import('./barcodeCache');
+  const cached = await barcodeCache.get(barcode);
+  if (cached) {
+    console.log('🚀 Using cached data for:', barcode);
+    return cached;
+  }
+
   try {
+    console.log('🌐 Fetching from Open Food Facts:', barcode);
     const response = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`
     );
