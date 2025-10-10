@@ -249,6 +249,100 @@ export type Database = {
         }
         Relationships: []
       }
+      family_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      family_invites: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          group_id: string
+          id: string
+          invite_code: string
+          invited_by: string
+          invited_email: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          group_id: string
+          id?: string
+          invite_code: string
+          invited_by: string
+          invited_email: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          group_id?: string
+          id?: string
+          invite_code?: string
+          invited_by?: string
+          invited_email?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fasting_plans: {
         Row: {
           created_at: string | null
@@ -1462,9 +1556,11 @@ export type Database = {
         Row: {
           completed_items: number | null
           created_at: string | null
+          family_group_id: string | null
           goal_type: string | null
           id: string
           is_active: boolean | null
+          is_shared: boolean | null
           items: Json
           name: string
           total_estimated_cost: number | null
@@ -1474,9 +1570,11 @@ export type Database = {
         Insert: {
           completed_items?: number | null
           created_at?: string | null
+          family_group_id?: string | null
           goal_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_shared?: boolean | null
           items?: Json
           name: string
           total_estimated_cost?: number | null
@@ -1486,16 +1584,26 @@ export type Database = {
         Update: {
           completed_items?: number | null
           created_at?: string | null
+          family_group_id?: string | null
           goal_type?: string | null
           id?: string
           is_active?: boolean | null
+          is_shared?: boolean | null
           items?: Json
           name?: string
           total_estimated_cost?: number | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shopping_lists_family_group_id_fkey"
+            columns: ["family_group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sleep_logs: {
         Row: {

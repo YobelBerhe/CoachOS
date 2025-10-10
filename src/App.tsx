@@ -44,6 +44,7 @@ import ProfileSetup from "./pages/ProfileSetup";
 import ShoppingList from "./pages/ShoppingList";
 import ReceiptScanner from "./pages/ReceiptScanner";
 import NotificationSettings from "./pages/NotificationSettings";
+import FamilySharing from "./pages/FamilySharing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ function AppRoutes() {
           <Route path="/shopping-list" element={<ShoppingList />} />
           <Route path="/receipt-scanner" element={<ReceiptScanner />} />
           <Route path="/notifications" element={<NotificationSettings />} />
+          <Route path="/family-sharing" element={<FamilySharing />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

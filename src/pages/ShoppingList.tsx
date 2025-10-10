@@ -40,7 +40,8 @@ import {
   Target,
   AlertTriangle,
   CheckCircle2,
-  BarChart3
+  BarChart3,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
@@ -654,6 +655,15 @@ export default function ShoppingList() {
               >
                 <Receipt className="w-4 h-4" />
                 Scan Receipt
+              </Button>
+
+              <Button
+                onClick={() => navigate('/family-sharing')}
+                variant="outline"
+                className="gap-2"
+              >
+                <Users className="w-4 h-4" />
+                Family Sharing
               </Button>
             </div>
 
