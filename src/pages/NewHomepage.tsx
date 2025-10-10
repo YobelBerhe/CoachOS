@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import Timeline3D from '@/components/Timeline3D';
 import {
   Droplet,
   Target,
@@ -530,138 +531,80 @@ export default function NewHomepage() {
       </motion.div>
 
       {/* Interactive Timeline Section */}
-      <div id="timeline" className="relative z-10 bg-background/50 backdrop-blur-sm">
+      <div id="timeline" className="relative z-10 bg-black/20 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12 md:py-20">
+          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-8 md:mb-12"
           >
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+            <Badge className="mb-4 bg-blue-500/20 text-blue-300 border-blue-500/30">
               <Clock className="w-4 h-4 mr-2" />
-              24-Hour Journey
+              Interactive 3D Experience
             </Badge>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Every Moment,
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white">
+              Your Perfect Day,
               <br className="md:hidden" />
-              <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent"> Optimized</span>
+              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                {" "}Visualized in 3D
+              </span>
             </h2>
-            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Click any time slot to explore features designed for that moment
+            <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto">
+              Explore how our 30+ features integrate seamlessly into every moment of your day
             </p>
           </motion.div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentTime}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="flex justify-center mb-6 md:mb-8"
-            >
-              <div className="inline-flex items-center gap-3 px-4 md:px-6 py-3 rounded-full bg-gradient-to-r from-primary/20 to-purple-500/20 border-2 border-primary/30 shadow-lg">
-                <Clock className="w-5 h-5 text-primary" />
-                <span className="text-lg md:text-xl font-bold">
-                  {isPlaying ? (
-                    <>
-                      {timeSlots[activeSlotIndex]?.emoji} {currentTime}:00 - {timeSlots[activeSlotIndex]?.title}
-                    </>
-                  ) : (
-                    'Explore Your Day'
-                  )}
-                </span>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          {/* 3D Timeline */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Timeline3D />
+          </motion.div>
 
-          {/* Timeline Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {timeSlots.map((slot, index) => {
-              const isActive = index === activeSlotIndex && isPlaying;
-              const SlotIcon = slot.icon;
-
-              return (
-                <motion.div
-                  key={slot.time}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  onClick={() => setSelectedSlot(slot)}
-                  className="cursor-pointer"
-                >
-                  <Card className={`border-0 shadow-xl transition-all h-full bg-gradient-to-br ${slot.gradient} ${
-                    isActive ? 'ring-4 ring-primary shadow-2xl shadow-primary/50' : ''
-                  }`}>
-                    <CardContent className="p-4 md:p-6 relative">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <motion.div 
-                            className={`w-12 h-12 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center shadow-lg`}
-                            animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                            transition={{ duration: 1, repeat: isActive ? Infinity : 0 }}
-                          >
-                            <SlotIcon className={`w-6 h-6 ${slot.iconColor}`} />
-                          </motion.div>
-                          <div>
-                            <p className="font-bold text-xs text-muted-foreground">{slot.time}</p>
-                            <p className="text-base md:text-lg font-bold flex items-center gap-2">
-                              <span>{slot.emoji}</span>
-                              {slot.title}
-                            </p>
-                          </div>
-                        </div>
-                        {isActive && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                          >
-                            <Badge className="bg-primary shadow-lg">Live</Badge>
-                          </motion.div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        {slot.features.slice(0, 2).map((feature, idx) => {
-                          const FeatureIcon = feature.icon;
-                          return (
-                            <motion.div
-                              key={idx}
-                              whileHover={{ x: 5 }}
-                              className="flex items-center gap-2 p-2 rounded-lg bg-background/60 hover:bg-background/90 transition-all"
-                            >
-                              <FeatureIcon className="w-4 h-4 text-primary flex-shrink-0" />
-                              <span className="text-sm font-medium flex-1 line-clamp-1">{feature.name}</span>
-                              {feature.badge && (
-                                <Badge variant="secondary" className="text-xs px-1 py-0">
-                                  {feature.badge}
-                                </Badge>
-                              )}
-                            </motion.div>
-                          );
-                        })}
-                        {slot.features.length > 2 && (
-                          <p className="text-xs text-muted-foreground text-center pt-2">
-                            +{slot.features.length - 2} more
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        className="w-full mt-4 gap-2 hover:bg-primary/10"
-                        size="sm"
-                      >
-                        Explore Features
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+          {/* Feature Highlight Cards Below */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: '🌍',
+                title: 'Fully Interactive',
+                description: 'Rotate, zoom, and explore at your own pace'
+              },
+              {
+                icon: '⚡',
+                title: 'Real-time Updates',
+                description: 'See features light up based on time of day'
+              },
+              {
+                icon: '📱',
+                title: 'Mobile Optimized',
+                description: 'Smooth touch controls on any device'
+              }
+            ].map((feature, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card className="border-0 shadow-xl bg-white/5 backdrop-blur-xl">
+                  <CardContent className="p-6 text-center">
+                    <div className="text-4xl mb-3">{feature.icon}</div>
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-gray-300">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
