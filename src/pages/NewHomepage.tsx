@@ -405,29 +405,7 @@ export default function NewHomepage() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background overflow-hidden">
-      {/* Floating Particles Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-primary/20 rounded-full"
-            animate={{
-              y: [0, -100, 0],
-              x: [0, Math.random() * 100 - 50, 0],
-              opacity: [0, 1, 0]
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              delay: Math.random() * 5
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
-          />
-        ))}
-      </div>
+      {/* Removed flickering particles */}
 
       {/* Hero Section */}
       <motion.div style={{ y: y1, opacity }} className="relative z-10">
@@ -614,10 +592,9 @@ export default function NewHomepage() {
                   onClick={() => setSelectedSlot(slot)}
                   className="cursor-pointer"
                 >
-                  <Card className={`border-0 shadow-xl transition-all h-full ${
+                  <Card className={`border-0 shadow-xl transition-all h-full bg-gradient-to-br ${slot.gradient} ${
                     isActive ? 'ring-4 ring-primary shadow-2xl shadow-primary/50' : ''
                   }`}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${slot.gradient} opacity-50 rounded-lg`} />
                     <CardContent className="p-4 md:p-6 relative">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -753,8 +730,7 @@ export default function NewHomepage() {
                 transition={{ delay: idx * 0.1 }}
                 whileHover={{ scale: 1.02, y: -5 }}
               >
-                <Card className="border-0 shadow-2xl h-full">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${innovation.gradient} opacity-10 rounded-lg`} />
+                <Card className={`border-0 shadow-2xl h-full bg-gradient-to-br ${innovation.gradient}/10`}>
                   <CardContent className="p-6 relative">
                     <div className="flex items-start justify-between mb-4">
                       <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${innovation.gradient} flex items-center justify-center shadow-lg`}>
@@ -841,8 +817,7 @@ export default function NewHomepage() {
             viewport={{ once: true }}
             className="max-w-4xl mx-auto"
           >
-            <Card className="border-0 shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20" />
+            <Card className="border-0 shadow-2xl overflow-hidden bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-primary/10">
               <CardContent className="p-8 md:p-12 relative text-center">
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">
                   Ready to Transform
