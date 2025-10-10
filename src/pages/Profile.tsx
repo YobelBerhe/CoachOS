@@ -816,7 +816,7 @@ export default function Profile() {
                       </div>
                     )}
                     {profile.website && (
-                      
+                      <a
                         href={`https://${profile.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1059,7 +1059,7 @@ export default function Profile() {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground mb-1">Website</p>
-                            
+                            <a
                               href={`https://${profile.website}`}
                               target="_blank"
                               rel="noopener noreferrer"
