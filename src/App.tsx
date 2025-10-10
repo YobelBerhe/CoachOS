@@ -45,6 +45,9 @@ import ShoppingList from "./pages/ShoppingList";
 import ReceiptScanner from "./pages/ReceiptScanner";
 import NotificationSettings from "./pages/NotificationSettings";
 import FamilySharing from "./pages/FamilySharing";
+import FoodWasteDashboard from "./pages/FoodWasteDashboard";
+import FridgeScanner from "./pages/FridgeScanner";
+import RescueRecipes from "./pages/RescueRecipes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +97,9 @@ function AppRoutes() {
           <Route path="/receipt-scanner" element={<ReceiptScanner />} />
           <Route path="/notifications" element={<NotificationSettings />} />
           <Route path="/family-sharing" element={<FamilySharing />} />
+          <Route path="/food-waste" element={<FoodWasteDashboard />} />
+          <Route path="/fridge-scanner" element={<FridgeScanner />} />
+          <Route path="/rescue-recipes" element={<RescueRecipes />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

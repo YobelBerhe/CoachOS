@@ -654,7 +654,221 @@ export default function FoodWasteDashboard() {
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
           </TabsList>
 
-          {/* TABS CONTENT CONTINUES IN NEXT MESSAGE! */}
+          <TabsContent value="inventory" className="space-y-4">
+            {inventory.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-12 text-center">
+                  <Apple className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-bold mb-2">No Items in Inventory</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Start by scanning your fridge to track what you have
+                  </p>
+                  <Button
+                    onClick={() => navigate('/fridge-scanner')}
+                    className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Scan Fridge Now
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {inventory.map((item, idx) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <Card className={`border-0 shadow-lg ${
+                      item.status === 'expiring_soon' ? 'border-2 border-yellow-500' : ''
+                    }`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${
+                            item.category === 'produce' ? 'from-green-500 to-emerald-500' :
+                            item.category === 'meat' ? 'from-red-500 to-pink-500' :
+                            item.category === 'dairy' ? 'from-blue-500 to-cyan-500' :
+                            'from-purple-500 to-pink-500'
+                          } flex items-center justify-center text-3xl`}>
+                            {item.category === 'produce' ? '🥬' :
+                             item.category === 'meat' ? '🥩' :
+                             item.category === 'dairy' ? '🥛' :
+                             item.category === 'seafood' ? '🐟' : '🥫'}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-lg">{item.item_name}</h4>
+                              {item.status === 'expiring_soon' && (
+                                <Badge variant="destructive" className="text-xs">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Expiring Soon
+                                </Badge>
+                              )}
+                              <Badge variant="secondary" className="text-xs">
+                                {item.location}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>Qty: {item.quantity} {item.unit}</span>
+                              <span>•</span>
+                              <span className={
+                                item.daysUntilExpiration <= 1 ? 'text-red-500 font-bold' :
+                                item.daysUntilExpiration <= 3 ? 'text-yellow-600 font-semibold' :
+                                'text-muted-foreground'
+                              }>
+                                {item.daysUntilExpiration === 0 ? '⚠️ Expires today!' :
+                                 item.daysUntilExpiration < 0 ? '❌ Expired' :
+                                 `${item.daysUntilExpiration} days left`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-2 text-xs">
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="w-3 h-3 text-green-500" />
+                                ${item.estimated_cost.toFixed(2)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Leaf className="w-3 h-3 text-blue-500" />
+                                {item.carbon_footprint.toFixed(2)}kg CO2
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => markAsConsumed(item.id)}
+                              className="bg-green-500 hover:bg-green-600 whitespace-nowrap"
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Used It
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markAsWasted(item.id, 'forgot')}
+                              className="text-red-500 hover:text-red-600 whitespace-nowrap"
+                            >
+                              Wasted
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="recipes" className="space-y-4">
+            {rescueRecipes.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-12 text-center">
+                  <ChefHat className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-bold mb-2">No Rescue Recipes Yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Generate AI recipes using items about to expire
+                  </p>
+                  <Button
+                    onClick={() => navigate('/rescue-recipes')}
+                    className="gap-2 bg-gradient-to-r from-orange-500 to-red-500"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Generate Recipes
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {rescueRecipes.map((recipe, idx) => (
+                  <motion.div
+                    key={recipe.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-3xl flex-shrink-0">
+                            👨‍🍳
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg mb-2">{recipe.recipe_name}</h4>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              <Badge variant="secondary" className="text-xs">
+                                <Apple className="w-3 h-3 mr-1" />
+                                {recipe.items_rescued} items rescued
+                              </Badge>
+                              <Badge className="bg-green-500 text-xs">
+                                <DollarSign className="w-3 h-3 mr-1" />
+                                ${recipe.money_saved.toFixed(2)} saved
+                              </Badge>
+                              <Badge className="bg-blue-500 text-xs">
+                                <Leaf className="w-3 h-3 mr-1" />
+                                {recipe.carbon_saved.toFixed(2)}kg CO2
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {recipe.instructions.substring(0, 100)}...
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-4">
+            {achievements.length === 0 ? (
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-12 text-center">
+                  <Award className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-bold mb-2">No Achievements Yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Start preventing food waste to unlock achievements!
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {achievements.map((achievement, idx) => (
+                  <motion.div
+                    key={achievement.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <Card className="border-0 shadow-lg">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="text-5xl">{achievement.icon}</div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg mb-1">{achievement.achievement_name}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {achievement.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Earned on {new Date(achievement.earned_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
+                            {achievement.milestone_value}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </div>
