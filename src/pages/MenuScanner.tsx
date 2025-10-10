@@ -1,377 +1,467 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useDropzone } from 'react-dropzone';
-import Tesseract from 'tesseract.js';
-import {
-  ArrowLeft,
-  Camera,
-  Upload,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  TrendingUp,
-  Zap,
-  ChevronRight,
-  Search,
-  MapPin,
-  Star
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { menuAnalyzer } from '@/services/menuAnalyzerService';
-import confetti from 'canvas-confetti';
-
-interface AnalyzedDish {
-  name: string;
-  description?: string;
-  price?: string;
-  category: string;
-  health_score: number;
-  approved: boolean;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fats: number;
-  red_flags: string[];
-  positives: string[];
-  modifications: string[];
-  better_alternatives: string[];
-  reasoning: string;
-}
-
-export default function MenuScanner() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const [restaurantName, setRestaurantName] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [ocrProgress, setOcrProgress] = useState(0);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [analyzedMenu, setAnalyzedMenu] = useState<AnalyzedDish[]>([]);
-  const [selectedDish, setSelectedDish] = useState<AnalyzedDish | null>(null);
-  const [showDishDetail, setShowDishDetail] = useState(false);
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      processMenu(file);
-    }
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.heic'] },
-    maxFiles: 1
-  });
-
-  async function processMenu(file: File) {
-    if (!restaurantName.trim()) {
-      toast({
-        title: "Restaurant name required",
-        description: "Please enter the restaurant name first",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    setOcrProgress(0);
-
-    try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // OCR processing
-      const result = await Tesseract.recognize(
-        file,
-        'eng',
-        {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              setOcrProgress(Math.round(m.progress * 50)); // 0-50%
-            }
-          }
-        }
-      );
-
-      setOcrProgress(60);
-
-      // Parse menu
-      const dishes = menuAnalyzer.parseMenuText(result.data.text);
-      
-      setOcrProgress(70);
-
-      // Analyze dishes
-      const analyzed = await menuAnalyzer.analyzeMenu(dishes);
-      
-      setOcrProgress(90);
-
-      // Save to database
-      await menuAnalyzer.saveMenuScan(restaurantName, analyzed, uploadedImage, result.data.text);
-
-      setOcrProgress(100);
-      setAnalyzedMenu(analyzed);
-
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-
-      toast({
-        title: "🎉 Menu analyzed!",
-        description: `Found ${analyzed.length} dishes`
-      });
-
-    } catch (error) {
-      console.error('Error processing menu:', error);
-      toast({
-        title: "Error processing menu",
-        description: "Please try again with a clearer image",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }
-
-  function viewDishDetails(dish: AnalyzedDish) {
-    setSelectedDish(dish);
-    setShowDishDetail(true);
-  }
-
-  const approvedDishes = analyzedMenu.filter(d => d.approved);
-  const cautionDishes = analyzedMenu.filter(d => !d.approved && d.health_score >= 50);
-  const avoidDishes = analyzedMenu.filter(d => d.health_score < 50);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-purple-500/5 to-background">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b"
-      >
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/dashboard')}
-                className="rounded-full"
+{/* Approved Dishes */}
+            {approvedDishes.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
               >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <Camera className="w-6 h-6 text-purple-500" />
-                  Menu Decoder AI
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  World's first real-time menu analyzer
-                </p>
-              </div>
-            </div>
-
-            {analyzedMenu.length > 0 && (
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500">
-                {approvedDishes.length} Approved
-              </Badge>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {analyzedMenu.length === 0 ? (
-          /* UPLOAD SECTION */
-          <div className="space-y-6">
-            {/* Restaurant Name Input */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="border-0 shadow-xl">
-                <CardContent className="p-6">
-                  <Label className="text-lg mb-3 block">Restaurant Name *</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      placeholder="e.g., Chipotle, McDonald's, The Cheesecake Factory"
-                      value={restaurantName}
-                      onChange={(e) => setRestaurantName(e.target.value)}
-                      className="pl-10 h-14 text-lg"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Upload Area */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="border-0 shadow-2xl overflow-hidden">
-                <CardContent className="p-8">
-                  {!isProcessing ? (
-                    <div
-                      {...getRootProps()}
-                      className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-                        isDragActive
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-border hover:border-purple-500/50'
-                      }`}
-                    >
-                      <input {...getInputProps()} />
-                      
-                      <motion.div
-                        animate={{ y: [0, -10, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6"
-                      >
-                        <Camera className="w-12 h-12 text-white" />
-                      </motion.div>
-
-                      <h3 className="text-2xl font-bold mb-2">
-                        {isDragActive ? 'Drop it here!' : 'Scan Restaurant Menu'}
-                      </h3>
-                      <p className="text-muted-foreground mb-6">
-                        Take a photo of any menu and get instant health analysis
-                      </p>
-
-                      <div className="flex items-center justify-center gap-3">
-                        <Button className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500">
-                          <Camera className="w-4 h-4" />
-                          Take Photo
-                        </Button>
-                        <Button variant="outline" className="gap-2">
-                          <Upload className="w-4 h-4" />
-                          Upload Image
-                        </Button>
-                      </div>
+                <Card className="border-0 shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle2 className="w-6 h-6 text-green-500" />
+                      <h3 className="text-xl font-bold">✅ Approved Dishes</h3>
+                      <Badge className="bg-green-500">{approvedDishes.length}</Badge>
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                        className="w-16 h-16 mx-auto border-4 border-purple-500 border-t-transparent rounded-full mb-6"
-                      />
-                      <h3 className="text-xl font-bold mb-2">Analyzing Menu...</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {ocrProgress < 60 ? 'Reading text from image' :
-                         ocrProgress < 80 ? 'Analyzing dishes' :
-                         'Calculating health scores'}
-                      </p>
-                      <Progress value={ocrProgress} className="h-2 max-w-xs mx-auto" />
-                      <p className="text-xs text-muted-foreground mt-2">{ocrProgress}%</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {approvedDishes.map((dish, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          onClick={() => viewDishDetails(dish)}
+                          className="cursor-pointer"
+                        >
+                          <Card className="border-2 border-green-500 hover:shadow-xl transition-shadow">
+                            <CardContent className="p-4">
+                              {/* Health Score Badge */}
+                              <div className="flex items-center justify-between mb-3">
+                                <Badge className="bg-green-500 text-lg px-3 py-1">
+                                  {dish.health_score}
+                                </Badge>
+                                <CheckCircle2 className="w-6 h-6 text-green-500" />
+                              </div>
 
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[
-                { icon: Sparkles, title: 'AI Powered', desc: 'GPT-4 analysis' },
-                { icon: CheckCircle2, title: 'Instant Results', desc: 'Under 10 seconds' },
-                { icon: TrendingUp, title: 'Health Scores', desc: '0-100 rating' },
-                { icon: Zap, title: 'Smart Swaps', desc: 'Better alternatives' }
-              ].map((feature, idx) => (
-                <Card key={idx} className="border-0 shadow-lg">
-                  <CardContent className="p-4 text-center">
-                    <feature.icon className="w-8 h-8 mx-auto mb-2 text-purple-500" />
-                    <p className="font-semibold text-sm mb-1">{feature.title}</p>
-                    <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                              {/* Dish Name */}
+                              <h4 className="font-bold text-lg mb-2 line-clamp-2">
+                                {dish.name}
+                              </h4>
+
+                              {/* Price */}
+                              {dish.price && (
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  {dish.price}
+                                </p>
+                              )}
+
+                              {/* Macros */}
+                              <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.calories}</p>
+                                  <p className="text-muted-foreground">cal</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.protein}g</p>
+                                  <p className="text-muted-foreground">protein</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.carbs}g</p>
+                                  <p className="text-muted-foreground">carbs</p>
+                                </div>
+                              </div>
+
+                              {/* Top Positive */}
+                              {dish.positives.length > 0 && (
+                                <div className="flex items-start gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                                  <Sparkles className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                  <p className="text-xs text-green-700 dark:text-green-300">
+                                    {dish.positives[0]}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* View Details */}
+                              <Button 
+                                variant="ghost" 
+                                className="w-full mt-3 gap-2 text-xs"
+                              >
+                                View Details
+                                <ChevronRight className="w-3 h-3" />
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* RESULTS SECTION */
-          <div className="space-y-6">
-            {/* Header with Restaurant */}
-            <Card className="border-0 shadow-xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10" />
-              <CardContent className="p-6 relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
-                      🍽️
+              </motion.div>
+            )}
+
+            {/* Caution Dishes */}
+            {cautionDishes.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="border-0 shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                      <h3 className="text-xl font-bold">⚠️ Caution - Can Be Modified</h3>
+                      <Badge className="bg-yellow-500">{cautionDishes.length}</Badge>
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{restaurantName}</h2>
-                      <p className="text-sm text-muted-foreground">
-                        {analyzedMenu.length} dishes analyzed
-                      </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {cautionDishes.map((dish, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          onClick={() => viewDishDetails(dish)}
+                          className="cursor-pointer"
+                        >
+                          <Card className="border-2 border-yellow-500 hover:shadow-xl transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <Badge className="bg-yellow-500 text-lg px-3 py-1">
+                                  {dish.health_score}
+                                </Badge>
+                                <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                              </div>
+
+                              <h4 className="font-bold text-lg mb-2 line-clamp-2">
+                                {dish.name}
+                              </h4>
+
+                              {dish.price && (
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  {dish.price}
+                                </p>
+                              )}
+
+                              <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.calories}</p>
+                                  <p className="text-muted-foreground">cal</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.protein}g</p>
+                                  <p className="text-muted-foreground">protein</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.carbs}g</p>
+                                  <p className="text-muted-foreground">carbs</p>
+                                </div>
+                              </div>
+
+                              {/* Modification Available */}
+                              {dish.modifications.length > 0 && (
+                                <div className="flex items-start gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                  <Zap className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                                    {dish.modifications[0]}
+                                  </p>
+                                </div>
+                              )}
+
+                              <Button 
+                                variant="ghost" 
+                                className="w-full mt-3 gap-2 text-xs"
+                              >
+                                View Modifications
+                                <ChevronRight className="w-3 h-3" />
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-                  <Button
-                    onClick={() => {
-                      setAnalyzedMenu([]);
-                      setRestaurantName('');
-                      setUploadedImage(null);
-                    }}
-                    variant="outline"
-                  >
-                    Scan New Menu
-                  </Button>
-                </div>
+            {/* Avoid Dishes */}
+            {avoidDishes.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="border-0 shadow-xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <AlertTriangle className="w-6 h-6 text-red-500" />
+                      <h3 className="text-xl font-bold">❌ Not Recommended</h3>
+                      <Badge className="bg-red-500">{avoidDishes.length}</Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {avoidDishes.map((dish, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          onClick={() => viewDishDetails(dish)}
+                          className="cursor-pointer"
+                        >
+                          <Card className="border-2 border-red-500 hover:shadow-xl transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <Badge className="bg-red-500 text-lg px-3 py-1">
+                                  {dish.health_score}
+                                </Badge>
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                              </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-3 mt-6">
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="text-2xl font-bold text-green-600">{approvedDishes.length}</p>
-                    <p className="text-xs text-muted-foreground">✅ Approved</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                    <p className="text-2xl font-bold text-yellow-600">{cautionDishes.length}</p>
-                    <p className="text-xs text-muted-foreground">⚠️ Caution</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <p className="text-2xl font-bold text-red-600">{avoidDishes.length}</p>
-                    <p className="text-xs text-muted-foreground">❌ Avoid</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                              <h4 className="font-bold text-lg mb-2 line-clamp-2">
+                                {dish.name}
+                              </h4>
 
-            {/* DISHES GRID CONTINUES IN NEXT MESSAGE! */}
+                              {dish.price && (
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  {dish.price}
+                                </p>
+                              )}
+
+                              <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold text-red-600">{dish.calories}</p>
+                                  <p className="text-muted-foreground">cal</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold">{dish.protein}g</p>
+                                  <p className="text-muted-foreground">protein</p>
+                                </div>
+                                <div className="text-center p-2 rounded bg-secondary">
+                                  <p className="font-bold text-red-600">{dish.fats}g</p>
+                                  <p className="text-muted-foreground">fats</p>
+                                </div>
+                              </div>
+
+                              {/* Red Flag */}
+                              {dish.red_flags.length > 0 && (
+                                <div className="flex items-start gap-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                                  <p className="text-xs text-red-700 dark:text-red-300">
+                                    {dish.red_flags[0]}
+                                  </p>
+                                </div>
+                              )}
+
+                              <Button 
+                                variant="ghost" 
+                                className="w-full mt-3 gap-2 text-xs"
+                              >
+                                View Alternatives
+                                <ChevronRight className="w-3 h-3" />
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Dish Detail Dialog - COMING NEXT! */}
+      {/* Dish Detail Dialog */}
+      <Dialog open={showDishDetail} onOpenChange={setShowDishDetail}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedDish && (
+            <div className="space-y-6">
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-2xl">{selectedDish.name}</DialogTitle>
+                  <Badge className={`text-xl px-4 py-2 ${
+                    selectedDish.approved ? 'bg-green-500' :
+                    selectedDish.health_score >= 50 ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  }`}>
+                    Score: {selectedDish.health_score}
+                  </Badge>
+                </div>
+                {selectedDish.description && (
+                  <DialogDescription className="text-base">
+                    {selectedDish.description}
+                  </DialogDescription>
+                )}
+              </DialogHeader>
+
+              {/* Status Banner */}
+              {selectedDish.approved ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-6 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-green-500"
+                >
+                  <div className="flex items-center gap-4">
+                    <CheckCircle2 className="w-12 h-12 text-green-500" />
+                    <div>
+                      <h3 className="text-xl font-bold text-green-600 mb-1">✅ APPROVED!</h3>
+                      <p className="text-sm">{selectedDish.reasoning}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`p-6 rounded-xl border-2 ${
+                    selectedDish.health_score >= 50
+                      ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-500'
+                      : 'bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <AlertTriangle className={`w-12 h-12 ${
+                      selectedDish.health_score >= 50 ? 'text-yellow-500' : 'text-red-500'
+                    }`} />
+                    <div>
+                      <h3 className={`text-xl font-bold mb-1 ${
+                        selectedDish.health_score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {selectedDish.health_score >= 50 ? '⚠️ CAUTION' : '❌ NOT RECOMMENDED'}
+                      </h3>
+                      <p className="text-sm">{selectedDish.reasoning}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Nutrition Facts */}
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4">Nutrition Facts (Estimated)</h3>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="text-center p-4 rounded-lg bg-secondary">
+                      <p className="text-3xl font-bold">{selectedDish.calories}</p>
+                      <p className="text-sm text-muted-foreground">Calories</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-secondary">
+                      <p className="text-3xl font-bold text-blue-600">{selectedDish.protein}g</p>
+                      <p className="text-sm text-muted-foreground">Protein</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-secondary">
+                      <p className="text-3xl font-bold text-orange-600">{selectedDish.carbs}g</p>
+                      <p className="text-sm text-muted-foreground">Carbs</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-secondary">
+                      <p className="text-3xl font-bold text-yellow-600">{selectedDish.fats}g</p>
+                      <p className="text-sm text-muted-foreground">Fats</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Red Flags */}
+              {selectedDish.red_flags.length > 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-red-500" />
+                      Health Concerns ({selectedDish.red_flags.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedDish.red_flags.map((flag, idx) => (
+                        <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                          <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{flag}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Positives */}
+              {selectedDish.positives.length > 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-green-500" />
+                      Health Benefits ({selectedDish.positives.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedDish.positives.map((positive, idx) => (
+                        <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{positive}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Smart Modifications */}
+              {selectedDish.modifications.length > 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-blue-500" />
+                      Smart Modifications
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedDish.modifications.map((mod, idx) => (
+                        <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                          <Zap className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm font-semibold">{mod}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Better Alternatives */}
+              {selectedDish.better_alternatives.length > 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-500" />
+                      Better Options on This Menu
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedDish.better_alternatives.map((alt, idx) => (
+                        <div key={idx} className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <p className="text-sm font-semibold">{alt}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDishDetail(false)}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await menuAnalyzer.saveOrderToHistory(
+                      restaurantName,
+                      selectedDish,
+                      'lunch'
+                    );
+                    toast({
+                      title: "Added to food diary! 📝",
+                      description: `${selectedDish.name} tracked`
+                    });
+                    setShowDishDetail(false);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                >
+                  Add to Diary
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
