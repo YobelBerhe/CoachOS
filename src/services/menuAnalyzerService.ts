@@ -330,13 +330,13 @@ class MenuAnalyzerService {
 
       const { data, error } = await supabase
         .from('scanned_menus')
-        .insert({
+        .insert([{
           user_id: user.id,
           restaurant_name: restaurantName,
-          analyzed_items: analyzedItems,
+          analyzed_items: analyzedItems as any,
           image_url: imageUrl,
           ocr_text: ocrText
-        })
+        }])
         .select()
         .single();
 

@@ -930,6 +930,60 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_scan_history: {
+        Row: {
+          approved: boolean | null
+          calories: number | null
+          carbs: number | null
+          created_at: string | null
+          date_ordered: string
+          fats: number | null
+          health_score: number | null
+          id: string
+          item_ordered: string
+          meal_type: string | null
+          modifications_made: string | null
+          notes: string | null
+          protein: number | null
+          restaurant_name: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string | null
+          date_ordered: string
+          fats?: number | null
+          health_score?: number | null
+          id?: string
+          item_ordered: string
+          meal_type?: string | null
+          modifications_made?: string | null
+          notes?: string | null
+          protein?: number | null
+          restaurant_name: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          calories?: number | null
+          carbs?: number | null
+          created_at?: string | null
+          date_ordered?: string
+          fats?: number | null
+          health_score?: number | null
+          id?: string
+          item_ordered?: string
+          meal_type?: string | null
+          modifications_made?: string | null
+          notes?: string | null
+          protein?: number | null
+          restaurant_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount_creator_payout: number
@@ -1709,6 +1763,74 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      restaurants: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          cuisine_type: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          cuisine_type?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          cuisine_type?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      scanned_menus: {
+        Row: {
+          analyzed_items: Json | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          ocr_text: string | null
+          restaurant_id: string | null
+          restaurant_name: string | null
+          scan_date: string | null
+          user_id: string
+        }
+        Insert: {
+          analyzed_items?: Json | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          ocr_text?: string | null
+          restaurant_id?: string | null
+          restaurant_name?: string | null
+          scan_date?: string | null
+          user_id: string
+        }
+        Update: {
+          analyzed_items?: Json | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          ocr_text?: string | null
+          restaurant_id?: string | null
+          restaurant_name?: string | null
+          scan_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scanned_menus_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scanned_products: {
         Row: {

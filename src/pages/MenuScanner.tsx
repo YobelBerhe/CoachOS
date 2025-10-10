@@ -76,14 +76,14 @@ export default function MenuScanner() {
       
       if (!user) throw new Error('Not authenticated');
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('menu_scans')
+      const { error: uploadError } = await supabase.storage
+        .from('menu-images')
         .upload(`${user.id}/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('menu_scans')
+        .from('menu-images')
         .getPublicUrl(`${user.id}/${fileName}`);
 
       setImageUrl(publicUrl);
@@ -94,9 +94,7 @@ export default function MenuScanner() {
         description: "Reading text from image"
       });
 
-      const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
-      });
+      const { data: { text } } = await Tesseract.recognize(file, 'eng');
 
       setOcrText(text);
 
@@ -118,7 +116,6 @@ export default function MenuScanner() {
 
       // Save to database
       await menuAnalyzer.saveMenuScan(
-        user.id,
         restaurantName || 'Unknown Restaurant',
         analyzed,
         publicUrl,
@@ -179,15 +176,12 @@ export default function MenuScanner() {
       });
 
       await menuAnalyzer.saveOrderToHistory(
-        user.id,
         restaurantName,
-        dish.name,
-        dish.calories,
-        dish.protein,
-        dish.carbs,
-        dish.fats,
-        dish.health_score,
-        dish.approved,
+        {
+          ...dish,
+          better_alternatives: dish.betterAlternatives || []
+        },
+        'lunch',
         dish.modifications.join(', ')
       );
 
