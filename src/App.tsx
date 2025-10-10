@@ -36,6 +36,7 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import Challenges from "./pages/Challenges";
 import ProgressPhotos from "./pages/ProgressPhotos";
+import LiveWorkouts from "./pages/LiveWorkouts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ function AppRoutes() {
           <Route path="/messages/:username" element={<Messages />} />
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/progress-photos" element={<ProgressPhotos />} />
+          <Route path="/live" element={<LiveWorkouts />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
