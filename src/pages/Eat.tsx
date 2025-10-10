@@ -347,7 +347,7 @@ export default function Eat() {
           <Button
             variant="outline"
             className="h-20 flex-col gap-2 hover:bg-primary/5"
-            onClick={() => toast({ title: "Coming soon!", description: "Barcode scanner feature" })}
+            onClick={() => navigate('/barcode-scanner')}
           >
             <Scan className="w-5 h-5" />
             <span className="text-xs">Scan</span>
