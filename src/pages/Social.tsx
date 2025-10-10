@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +24,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
   Heart,
   MessageCircle,
   Share2,
@@ -38,24 +45,28 @@ import {
   Target,
   Dumbbell,
   Apple,
+  Camera,
   Image as ImageIcon,
   Send,
   Globe,
+  Lock,
   UserPlus,
   UserCheck,
   Sparkles,
+  Zap,
   Crown,
   ArrowLeft,
-  Bell
+  Filter,
+  Bell,
+  X,
+  Check,
+  Link as LinkIcon,
+  Facebook,
+  Twitter,
+  Mail,
+  Copy
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const Flag = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-    <line x1="4" x2="4" y1="22" y2="15"/>
-  </svg>
-);
 
 interface Post {
   id: string;
@@ -80,6 +91,31 @@ interface Post {
   location?: string;
 }
 
+interface Comment {
+  id: string;
+  user: {
+    name: string;
+    avatar: string;
+    username: string;
+  };
+  content: string;
+  created_at: string;
+  likes: number;
+}
+
+interface Notification {
+  id: string;
+  type: 'like' | 'comment' | 'follow' | 'achievement';
+  user: {
+    name: string;
+    avatar: string;
+  };
+  content: string;
+  time: string;
+  read: boolean;
+}
+
+// Sample data (same as before)
 const SAMPLE_POSTS: Post[] = [
   {
     id: '1',
@@ -155,43 +191,66 @@ const SAMPLE_POSTS: Post[] = [
     is_bookmarked: false,
     created_at: '1d ago'
   },
+];
+
+const SAMPLE_COMMENTS: Comment[] = [
   {
-    id: '4',
-    user_id: '4',
+    id: '1',
     user: {
-      name: 'Alex Thompson',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-      username: 'alexlifts',
-      is_verified: false
+      name: 'John Smith',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+      username: 'johnsmith'
     },
-    type: 'progress',
-    content: '3 months transformation! Same weight, completely different body composition. Proof that the scale isn\'t everything! 📊',
-    images: [
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop',
-      'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800&h=600&fit=crop'
-    ],
-    likes_count: 1243,
-    comments_count: 234,
-    is_liked: true,
-    is_bookmarked: true,
-    created_at: '2d ago'
+    content: 'Amazing progress! Keep it up! 💪',
+    created_at: '1h ago',
+    likes: 12
   },
   {
-    id: '5',
-    user_id: '5',
+    id: '2',
     user: {
-      name: 'Jessica Martinez',
-      avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop',
-      username: 'jessicafit',
-      is_verified: true
+      name: 'Lisa Wang',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+      username: 'lisawang'
     },
-    type: 'text',
-    content: 'Reminder: Rest days are just as important as training days! 💤 Your muscles grow when you recover, not when you train. Listen to your body! 🙏',
-    likes_count: 456,
-    comments_count: 67,
-    is_liked: false,
-    is_bookmarked: false,
-    created_at: '3d ago'
+    content: 'This is so inspiring! What\'s your routine?',
+    created_at: '45m ago',
+    likes: 8
+  }
+];
+
+const SAMPLE_NOTIFICATIONS: Notification[] = [
+  {
+    id: '1',
+    type: 'like',
+    user: {
+      name: 'Sarah Johnson',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'
+    },
+    content: 'liked your post',
+    time: '5m ago',
+    read: false
+  },
+  {
+    id: '2',
+    type: 'comment',
+    user: {
+      name: 'Mike Chen',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'
+    },
+    content: 'commented: "Great workout!"',
+    time: '1h ago',
+    read: false
+  },
+  {
+    id: '3',
+    type: 'follow',
+    user: {
+      name: 'Emily Rodriguez',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'
+    },
+    content: 'started following you',
+    time: '2h ago',
+    read: true
   }
 ];
 
@@ -222,6 +281,15 @@ const SUGGESTED_USERS = [
     followers: '15.7k',
     is_following: true,
     bio: 'Personal Trainer'
+  },
+  {
+    id: '4',
+    name: 'Jessica Lee',
+    username: 'jessicalee_fit',
+    avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop',
+    followers: '22.1k',
+    is_following: false,
+    bio: 'Fitness Influencer'
   }
 ];
 
@@ -229,16 +297,33 @@ export default function Social() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState('');
+  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>(SAMPLE_POSTS);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>(SAMPLE_POSTS);
   const [activeTab, setActiveTab] = useState('feed');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedUsers, setSuggestedUsers] = useState(SUGGESTED_USERS);
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState(SAMPLE_NOTIFICATIONS);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [showPostDetail, setShowPostDetail] = useState(false);
+  const [postComments, setPostComments] = useState<Comment[]>(SAMPLE_COMMENTS);
+  const [newComment, setNewComment] = useState('');
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [sharePost, setSharePost] = useState<Post | null>(null);
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     init();
   }, []);
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchQuery, selectedHashtag]);
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -247,6 +332,63 @@ export default function Social() {
       return;
     }
     setUserId(user.id);
+  }
+
+  function handleSearch() {
+    let filtered = posts;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(post =>
+        post.user.name.toLowerCase().includes(query) ||
+        post.user.username.toLowerCase().includes(query) ||
+        post.content.toLowerCase().includes(query) ||
+        (post.location && post.location.toLowerCase().includes(query))
+      );
+    }
+
+    if (selectedHashtag) {
+      filtered = filtered.filter(post =>
+        post.content.includes(selectedHashtag)
+      );
+    }
+
+    setFilteredPosts(filtered);
+  }
+
+  function handleHashtagClick(hashtag: string) {
+    setSelectedHashtag(hashtag);
+    setSearchQuery(hashtag);
+    toast({
+      title: "Filtering by hashtag",
+      description: hashtag
+    });
+  }
+
+  function clearHashtagFilter() {
+    setSelectedHashtag(null);
+    setSearchQuery('');
+  }
+
+  async function loadMorePosts() {
+    setLoading(true);
+    // Simulate loading more posts
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Duplicate first 3 posts for demo
+    const morePosts = SAMPLE_POSTS.slice(0, 3).map(post => ({
+      ...post,
+      id: `${post.id}-${Date.now()}`,
+      created_at: '1w ago'
+    }));
+    
+    setPosts([...posts, ...morePosts]);
+    setFilteredPosts([...filteredPosts, ...morePosts]);
+    setLoading(false);
+    
+    toast({
+      title: "Loaded more posts! 📜",
+    });
   }
 
   async function toggleLike(postId: string) {
@@ -260,10 +402,16 @@ export default function Social() {
       }
       return post;
     }));
-
-    toast({
-      title: posts.find(p => p.id === postId)?.is_liked ? "Removed like" : "Liked! ❤️",
-    });
+    setFilteredPosts(filteredPosts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          is_liked: !post.is_liked,
+          likes_count: post.is_liked ? post.likes_count - 1 : post.likes_count + 1
+        };
+      }
+      return post;
+    }));
   }
 
   async function toggleBookmark(postId: string) {
@@ -276,10 +424,15 @@ export default function Social() {
       }
       return post;
     }));
-
-    toast({
-      title: posts.find(p => p.id === postId)?.is_bookmarked ? "Removed from saved" : "Saved! 🔖",
-    });
+    setFilteredPosts(filteredPosts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          is_bookmarked: !post.is_bookmarked
+        };
+      }
+      return post;
+    }));
   }
 
   async function toggleFollow(userId: string) {
@@ -292,10 +445,68 @@ export default function Social() {
       }
       return user;
     }));
+  }
 
-    toast({
-      title: suggestedUsers.find(u => u.id === userId)?.is_following ? "Unfollowed" : "Following! 👥",
-    });
+  function openPostDetail(post: Post) {
+    setSelectedPost(post);
+    setShowPostDetail(true);
+  }
+
+  function openShare(post: Post) {
+    setSharePost(post);
+    setShowShareDialog(true);
+  }
+
+  async function shareToSocial(platform: string) {
+    const url = `${window.location.origin}/post/${sharePost?.id}`;
+    const text = sharePost?.content.slice(0, 100) + '...';
+
+    let shareUrl = '';
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(url);
+        toast({ title: "Link copied! 🔗" });
+        setShowShareDialog(false);
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+      setShowShareDialog(false);
+    }
+  }
+
+  async function addComment() {
+    if (!newComment.trim()) return;
+
+    const comment: Comment = {
+      id: Date.now().toString(),
+      user: {
+        name: 'You',
+        avatar: '',
+        username: 'you'
+      },
+      content: newComment,
+      created_at: 'Just now',
+      likes: 0
+    };
+
+    setPostComments([comment, ...postComments]);
+    setNewComment('');
+
+    // Update comment count
+    if (selectedPost) {
+      setPosts(posts.map(p => p.id === selectedPost.id ? { ...p, comments_count: p.comments_count + 1 } : p));
+      setFilteredPosts(filteredPosts.map(p => p.id === selectedPost.id ? { ...p, comments_count: p.comments_count + 1 } : p));
+    }
+
+    toast({ title: "Comment added! 💬" });
   }
 
   async function createPost() {
@@ -320,6 +531,7 @@ export default function Social() {
     };
 
     setPosts([newPost, ...posts]);
+    setFilteredPosts([newPost, ...filteredPosts]);
     setNewPostContent('');
     setShowCreatePost(false);
 
@@ -328,6 +540,34 @@ export default function Social() {
       description: "Your post is live!"
     });
   }
+
+  function handleAddPhotos() {
+    fileInputRef.current?.click();
+  }
+
+  function handleLogWorkout() {
+    setShowCreatePost(false);
+    navigate('/workout');
+    toast({
+      title: "Opening workout logger...",
+      description: "Log your workout and share it!"
+    });
+  }
+
+  function handleLogMeal() {
+    setShowCreatePost(false);
+    navigate('/dashboard');
+    toast({
+      title: "Opening food diary...",
+      description: "Log your meal and share it!"
+    });
+  }
+
+  function markNotificationsRead() {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  }
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const FloatingOrb = ({ delay = 0, color = "blue" }: any) => (
     <motion.div
@@ -350,9 +590,7 @@ export default function Social() {
     />
   );
 
-  const PostCard = ({ post }: { post: Post }) => {
-    const [showComments, setShowComments] = useState(false);
-
+  const PostCard = ({ post, onPostClick }: { post: Post; onPostClick: () => void }) => {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -362,8 +600,12 @@ export default function Social() {
       >
         <Card className="border-0 shadow-xl backdrop-blur-xl bg-background/95 overflow-hidden">
           <CardContent className="p-0">
+            {/* Post Header */}
             <div className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => navigate(`/profile/${post.user.username}`)}
+              >
                 <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
                   <Avatar className="w-12 h-12 border-2 border-border cursor-pointer">
                     <AvatarImage src={post.user.avatar} />
@@ -372,7 +614,7 @@ export default function Social() {
                 </motion.div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold hover:underline cursor-pointer">
+                    <p className="font-semibold hover:underline">
                       {post.user.name}
                     </p>
                     {post.user.is_verified && (
@@ -405,22 +647,19 @@ export default function Social() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toggleBookmark(post.id)}>
                     <Bookmark className="w-4 h-4 mr-2" />
-                    Save Post
+                    {post.is_bookmarked ? 'Remove from saved' : 'Save Post'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openShare(post)}>
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    <Flag className="w-4 h-4 mr-2" />
-                    Report
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
+            {/* Post Type Badge */}
             {post.type !== 'text' && (
               <div className="px-4 pb-2">
                 <Badge variant="secondary" className="gap-1">
@@ -432,10 +671,15 @@ export default function Social() {
               </div>
             )}
 
-            <div className="px-4 pb-3">
-              <p className="text-base leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            {/* Post Content - Click to open detail */}
+            <div className="px-4 pb-3 cursor-pointer" onClick={onPostClick}>
+              <p className="text-base leading-relaxed whitespace-pre-wrap line-clamp-4">{post.content}</p>
+              {post.content.length > 200 && (
+                <p className="text-sm text-primary mt-2">Read more...</p>
+              )}
             </div>
 
+            {/* Workout/Meal/Achievement Data */}
             {post.workout_data && (
               <div className="px-4 pb-3">
                 <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
@@ -496,13 +740,17 @@ export default function Social() {
               </div>
             )}
 
+            {/* Post Images - Click to open detail */}
             {post.images && post.images.length > 0 && (
-              <div className={`grid ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-1`}>
+              <div 
+                className={`grid ${post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-1 cursor-pointer`}
+                onClick={onPostClick}
+              >
                 {post.images.map((image, idx) => (
                   <motion.div
                     key={idx}
                     whileHover={{ scale: 1.02 }}
-                    className="relative aspect-square overflow-hidden cursor-pointer"
+                    className="relative aspect-square overflow-hidden"
                   >
                     <img
                       src={image}
@@ -514,7 +762,8 @@ export default function Social() {
               </div>
             )}
 
-            <div className="p-4 space-y-3">
+            {/* Post Actions */}
+            <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <motion.button
@@ -541,7 +790,7 @@ export default function Social() {
 
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowComments(!showComments)}
+                    onClick={onPostClick}
                     className="flex items-center gap-2 group"
                   >
                     <MessageCircle className="w-6 h-6 text-muted-foreground group-hover:text-blue-500 transition-colors" />
@@ -552,6 +801,7 @@ export default function Social() {
 
                   <motion.button
                     whileTap={{ scale: 0.9 }}
+                    onClick={() => openShare(post)}
                     className="flex items-center gap-2 group"
                   >
                     <Share2 className="w-6 h-6 text-muted-foreground group-hover:text-green-500 transition-colors" />
@@ -571,42 +821,6 @@ export default function Social() {
                   />
                 </motion.button>
               </div>
-
-              <AnimatePresence>
-                {showComments && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="pt-3 border-t border-border/50"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop" />
-                        </Avatar>
-                        <div className="flex-1 p-3 rounded-lg bg-secondary">
-                          <p className="text-sm font-semibold mb-1">John Smith</p>
-                          <p className="text-sm">Amazing progress! Keep it up! 💪</p>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback>You</AvatarFallback>
-                        </Avatar>
-                        <Input
-                          placeholder="Add a comment..."
-                          className="flex-1"
-                        />
-                        <Button size="icon">
-                          <Send className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </CardContent>
         </Card>
@@ -616,12 +830,14 @@ export default function Social() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-blue-500/5 to-background overflow-hidden">
+      {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         <FloatingOrb delay={0} color="blue" />
         <FloatingOrb delay={3} color="purple" />
         <FloatingOrb delay={6} color="green" />
       </div>
 
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -648,9 +864,22 @@ export default function Social() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="rounded-full relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full relative"
+                onClick={() => setShowNotifications(true)}
+              >
                 <Bell className="w-5 h-5" />
-                <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold"
+                  >
+                    {unreadCount}
+                  </motion.div>
+                )}
               </Button>
               <Button
                 onClick={() => setShowCreatePost(true)}
@@ -662,20 +891,34 @@ export default function Social() {
             </div>
           </div>
 
-          <div className="mt-4 relative max-w-2xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search users, posts, hashtags..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12"
-            />
+          {/* Search Bar with hashtag filter */}
+          <div className="mt-4">
+            {selectedHashtag && (
+              <div className="mb-2 flex items-center gap-2">
+                <Badge variant="secondary" className="gap-2">
+                  {selectedHashtag}
+                  <button onClick={clearHashtagFilter}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              </div>
+            )}
+            <div className="relative max-w-2xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="Search users, posts, hashtags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-12"
+              />
+            </div>
           </div>
         </div>
       </motion.div>
 
       <div className="relative z-10 container mx-auto px-4 py-6 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Feed */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3 h-12 bg-secondary/50">
@@ -695,25 +938,31 @@ export default function Social() {
 
               <TabsContent value="feed" className="space-y-6 mt-6">
                 <AnimatePresence>
-                  {posts.map((post, index) => (
+                  {filteredPosts.map((post, index) => (
                     <motion.div
                       key={post.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <PostCard post={post} />
+                      <PostCard post={post} onPostClick={() => openPostDetail(post)} />
                     </motion.div>
                   ))}
                 </AnimatePresence>
 
+                {/* Load More */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="text-center py-8"
                 >
-                  <Button variant="outline" size="lg">
-                    Load More Posts
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    onClick={loadMorePosts}
+                    disabled={loading}
+                  >
+                    {loading ? 'Loading...' : 'Load More Posts'}
                   </Button>
                 </motion.div>
               </TabsContent>
@@ -740,7 +989,9 @@ export default function Social() {
             </Tabs>
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-6">
+            {/* User Stats Card */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -763,7 +1014,8 @@ export default function Social() {
                 <CardContent className="pt-8 pb-6 -mt-12 relative">
                   <motion.div
                     whileHover={{ scale: 1.05, rotate: 5 }}
-                    className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-background bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl"
+                    onClick={() => navigate('/profile/me')}
+                    className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-background bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-2xl cursor-pointer"
                   >
                     <Crown className="w-12 h-12 text-white" />
                   </motion.div>
@@ -786,13 +1038,18 @@ export default function Social() {
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => navigate('/profile/me')}
+                  >
                     View Profile
                   </Button>
                 </CardContent>
               </Card>
             </motion.div>
 
+            {/* Suggested Users */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -806,7 +1063,7 @@ export default function Social() {
                   </h3>
 
                   <div className="space-y-4">
-                    {suggestedUsers.map((user, index) => (
+                    {suggestedUsers.slice(0, 3).map((user, index) => (
                       <motion.div
                         key={user.id}
                         initial={{ opacity: 0, x: 20 }}
@@ -814,15 +1071,21 @@ export default function Social() {
                         transition={{ delay: 0.1 * index }}
                         className="flex items-center gap-3"
                       >
-                        <motion.div whileHover={{ scale: 1.1, rotate: 5 }}>
+                        <motion.div 
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          onClick={() => navigate(`/profile/${user.username}`)}
+                        >
                           <Avatar className="w-12 h-12 border-2 border-border cursor-pointer">
                             <AvatarImage src={user.avatar} />
                             <AvatarFallback>{user.name[0]}</AvatarFallback>
                           </Avatar>
                         </motion.div>
 
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate hover:underline cursor-pointer">
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => navigate(`/profile/${user.username}`)}
+                        >
+                          <p className="font-semibold text-sm truncate hover:underline">
                             {user.name}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">{user.bio}</p>
@@ -853,13 +1116,18 @@ export default function Social() {
                     ))}
                   </div>
 
-                  <Button variant="ghost" className="w-full mt-4">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-4"
+                    onClick={() => setShowAllSuggestions(true)}
+                  >
                     See All Suggestions
                   </Button>
                 </CardContent>
               </Card>
             </motion.div>
 
+            {/* Trending Hashtags */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -883,6 +1151,7 @@ export default function Social() {
                       <motion.button
                         key={index}
                         whileHover={{ x: 5 }}
+                        onClick={() => handleHashtagClick(hashtag.tag)}
                         className="w-full text-left p-3 rounded-lg hover:bg-secondary transition-colors"
                       >
                         <p className="font-semibold text-sm text-blue-500">{hashtag.tag}</p>
@@ -897,6 +1166,7 @@ export default function Social() {
         </div>
       </div>
 
+      {/* Create Post Dialog */}
       <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -913,15 +1183,40 @@ export default function Social() {
             />
 
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  toast({ title: "Photos selected! 📸" });
+                }}
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={handleAddPhotos}
+              >
                 <ImageIcon className="w-4 h-4" />
                 Add Photos
               </Button>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={handleLogWorkout}
+              >
                 <Dumbbell className="w-4 h-4" />
                 Log Workout
               </Button>
-              <Button variant="outline" size="sm" className="gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={handleLogMeal}
+              >
                 <Apple className="w-4 h-4" />
                 Log Meal
               </Button>
@@ -947,6 +1242,277 @@ export default function Social() {
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post Detail Dialog */}
+      <Dialog open={showPostDetail} onOpenChange={setShowPostDetail}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+          {selectedPost && (
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              {/* Left: Image */}
+              {selectedPost.images && selectedPost.images.length > 0 && (
+                <div className="bg-black flex items-center justify-center">
+                  <img
+                    src={selectedPost.images[0]}
+                    alt=""
+                    className="w-full h-auto max-h-[90vh] object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Right: Content & Comments */}
+              <div className="flex flex-col max-h-[90vh]">
+                {/* Post Header */}
+                <div className="p-4 border-b flex items-center justify-between">
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => {
+                      setShowPostDetail(false);
+                      navigate(`/profile/${selectedPost.user.username}`);
+                    }}
+                  >
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={selectedPost.user.avatar} />
+                      <AvatarFallback>{selectedPost.user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">{selectedPost.user.name}</p>
+                      <p className="text-xs text-muted-foreground">@{selectedPost.user.username}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPostDetail(false)}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* Post Content */}
+                <div className="p-4 border-b">
+                  <p className="whitespace-pre-wrap">{selectedPost.content}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{selectedPost.created_at}</p>
+                </div>
+
+                {/* Post Stats */}
+                <div className="p-4 border-b">
+                  <div className="flex gap-6 text-sm">
+                    <span><strong>{selectedPost.likes_count}</strong> likes</span>
+                    <span><strong>{selectedPost.comments_count}</strong> comments</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="p-4 border-b flex justify-around">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => toggleLike(selectedPost.id)}
+                  >
+                    <Heart className={`w-5 h-5 mr-2 ${selectedPost.is_liked ? 'fill-red-500 text-red-500' : ''}`} />
+                    Like
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Comment
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => openShare(selectedPost)}
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Share
+                  </Button>
+                </div>
+
+                {/* Comments List */}
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-4">
+                    {postComments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={comment.user.avatar} />
+                          <AvatarFallback>{comment.user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="bg-secondary rounded-lg p-3">
+                            <p className="font-semibold text-sm">{comment.user.name}</p>
+                            <p className="text-sm">{comment.content}</p>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                            <span>{comment.created_at}</span>
+                            <button className="hover:text-foreground">{comment.likes} likes</button>
+                            <button className="hover:text-foreground">Reply</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                {/* Add Comment */}
+                <div className="p-4 border-t">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          addComment();
+                        }
+                      }}
+                    />
+                    <Button 
+                      size="icon"
+                      onClick={addComment}
+                      disabled={!newComment.trim()}
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Post</DialogTitle>
+            <DialogDescription>Share this post with your friends</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3"
+              onClick={() => shareToSocial('facebook')}
+            >
+              <Facebook className="w-5 h-5 text-blue-600" />
+              Share on Facebook
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3"
+              onClick={() => shareToSocial('twitter')}
+            >
+              <Twitter className="w-5 h-5 text-sky-500" />
+              Share on Twitter
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start gap-3"
+              onClick={() => shareToSocial('copy')}
+            >
+              <Copy className="w-5 h-5" />
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notifications Sheet */}
+      <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle className="flex items-center justify-between">
+              <span>Notifications</span>
+              {unreadCount > 0 && (
+                <Button variant="ghost" size="sm" onClick={markNotificationsRead}>
+                  Mark all read
+                </Button>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+
+          <ScrollArea className="h-[calc(100vh-100px)] mt-6">
+            <div className="space-y-2">
+              {notifications.map((notif) => (
+                <motion.div
+                  key={notif.id}
+                  whileHover={{ x: 5 }}
+                  className={`p-4 rounded-lg cursor-pointer transition-colors ${
+                    notif.read ? 'bg-secondary/30' : 'bg-blue-500/10'
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={notif.user.avatar} />
+                      <AvatarFallback>{notif.user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="text-sm">
+                        <strong>{notif.user.name}</strong> {notif.content}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{notif.time}</p>
+                    </div>
+                    {!notif.read && (
+                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" />
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      {/* All Suggestions Dialog */}
+      <Dialog open={showAllSuggestions} onOpenChange={setShowAllSuggestions}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Suggested For You</DialogTitle>
+            <DialogDescription>People you might want to follow</DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-4">
+              {suggestedUsers.map((user) => (
+                <div key={user.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors">
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    onClick={() => {
+                      setShowAllSuggestions(false);
+                      navigate(`/profile/${user.username}`);
+                    }}
+                  >
+                    <Avatar className="w-12 h-12 border-2 border-border cursor-pointer">
+                      <AvatarImage src={user.avatar} />
+                      <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    </Avatar>
+                  </motion.div>
+
+                  <div 
+                    className="flex-1 min-w-0 cursor-pointer"
+                    onClick={() => {
+                      setShowAllSuggestions(false);
+                      navigate(`/profile/${user.username}`);
+                    }}
+                  >
+                    <p className="font-semibold truncate hover:underline">{user.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
+                    <p className="text-xs text-muted-foreground">{user.bio} • {user.followers} followers</p>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant={user.is_following ? "outline" : "default"}
+                    onClick={() => toggleFollow(user.id)}
+                  >
+                    {user.is_following ? 'Following' : 'Follow'}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
