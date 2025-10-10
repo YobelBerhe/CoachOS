@@ -1,3 +1,4 @@
+// Smart Barcode Scanner - Integrates with Open Food Facts API
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,62 +48,10 @@ import {
   Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { fetchProductByBarcode } from '@/services/barcodeApi';
+import { ScannedProduct, ScanHistory } from '@/types/barcode';
 
 type ScanMode = 'grocery' | 'calorie';
-
-interface ScannedProduct {
-  barcode: string;
-  name: string;
-  brand: string;
-  image: string;
-  serving_size: string;
-  servings_per_container: number;
-  
-  // Nutrition
-  nutrition: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fats: number;
-    fiber: number;
-    sugar: number;
-    sodium: number;
-    cholesterol: number;
-    saturated_fat: number;
-    trans_fat: number;
-  };
-  
-  // Health Analysis (Bobby-style)
-  health_analysis: {
-    approved: boolean;
-    health_score: number; // 0-100
-    processing_level: 'minimal' | 'processed' | 'ultra-processed';
-    warnings: string[];
-    red_flags: string[];
-    positives: string[];
-  };
-  
-  // Ingredients
-  ingredients: string[];
-  harmful_ingredients: string[];
-  allergens: string[];
-  
-  // Alternatives
-  alternatives?: Array<{
-    name: string;
-    brand: string;
-    image: string;
-    health_score: number;
-    price_diff: string;
-  }>;
-}
-
-interface ScanHistory {
-  id: string;
-  product: ScannedProduct;
-  scanned_at: string;
-  added_to_diary: boolean;
-}
 
 // Enhanced sample products with Bobby-style analysis
 const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
@@ -403,48 +352,92 @@ export default function BarcodeScanner() {
     }
   }
 
-  function simulateScan(barcode: string) {
-    const product = SAMPLE_PRODUCTS[barcode];
+  async function simulateScan(barcode: string) {
+    setIsScanning(true);
     
-    if (product) {
-      setScannedProduct(product);
-      setShowProductDetail(true);
-      stopCamera();
+    try {
+      // First try real API
+      let product = await fetchProductByBarcode(barcode);
       
-      // Add to history
-      const historyItem: ScanHistory = {
-        id: Date.now().toString(),
-        product,
-        scanned_at: 'Just now',
-        added_to_diary: false
-      };
-      setScanHistory([historyItem, ...scanHistory]);
+      // Fallback to sample data if not found
+      if (!product) {
+        product = SAMPLE_PRODUCTS[barcode];
+      }
       
-      // Different reactions based on mode and approval
-      if (scanMode === 'grocery') {
-        if (product.health_analysis.approved) {
-          toast({
-            title: "✅ APPROVED!",
-            description: `${product.name} is a great choice!`,
-          });
+      if (product) {
+        setScannedProduct(product);
+        setShowProductDetail(true);
+        stopCamera();
+        
+        // Add to history
+        const historyItem: ScanHistory = {
+          id: Date.now().toString(),
+          product,
+          scanned_at: 'Just now',
+          added_to_diary: false
+        };
+        setScanHistory([historyItem, ...scanHistory]);
+        
+        // Save to database
+        await saveToDatabase(product);
+        
+        // Different reactions based on mode and approval
+        if (scanMode === 'grocery') {
+          if (product.health_analysis.approved) {
+            toast({
+              title: "✅ APPROVED!",
+              description: `${product.name} is a great choice!`,
+            });
+          } else {
+            toast({
+              title: "❌ NOT APPROVED",
+              description: `${product.name} has health concerns`,
+              variant: "destructive"
+            });
+          }
         } else {
           toast({
-            title: "❌ NOT APPROVED",
-            description: `${product.name} has health concerns`,
-            variant: "destructive"
+            title: "Product found! 📊",
+            description: `${product.nutrition.calories} calories per serving`,
           });
         }
       } else {
         toast({
-          title: "Product found! 📊",
-          description: `${product.nutrition.calories} calories per serving`,
+          title: "Product not found",
+          description: "Try another barcode or enter manually",
+          variant: "destructive"
         });
+        stopCamera();
       }
-    } else {
+    } catch (error) {
+      console.error('Scan error:', error);
       toast({
-        title: "Product not found",
+        title: "Error scanning product",
+        description: "Please try again",
         variant: "destructive"
       });
+      stopCamera();
+    } finally {
+      setIsScanning(false);
+    }
+  }
+
+  async function saveToDatabase(product: ScannedProduct) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('scanned_products').insert({
+        user_id: user.id,
+        barcode: product.barcode,
+        product_name: product.name,
+        brand: product.brand,
+        nutrition_data: product.nutrition,
+        health_score: product.health_analysis.health_score,
+        approved: product.health_analysis.approved
+      });
+    } catch (error) {
+      console.error('Error saving to database:', error);
     }
   }
 
