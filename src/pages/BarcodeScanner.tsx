@@ -43,7 +43,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Heart,
-  X
+  X,
+  Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -66,6 +67,9 @@ interface ScannedProduct {
     fiber: number;
     sugar: number;
     sodium: number;
+    cholesterol: number;
+    saturated_fat: number;
+    trans_fat: number;
   };
   
   // Health Analysis (Bobby-style)
@@ -93,7 +97,14 @@ interface ScannedProduct {
   }>;
 }
 
-// Enhanced sample products with health analysis
+interface ScanHistory {
+  id: string;
+  product: ScannedProduct;
+  scanned_at: string;
+  added_to_diary: boolean;
+}
+
+// Enhanced sample products with Bobby-style analysis
 const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
   '123456789': {
     barcode: '123456789',
@@ -110,6 +121,9 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       fiber: 3,
       sugar: 2,
       sodium: 180,
+      cholesterol: 0,
+      saturated_fat: 2,
+      trans_fat: 0
     },
     health_analysis: {
       approved: true,
@@ -120,9 +134,10 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       positives: [
         'High in protein (20g)',
         'Low sugar (2g)',
-        'Good fiber content',
+        'Good fiber content (3g)',
         'No artificial sweeteners',
-        'Organic ingredients'
+        'Organic ingredients',
+        'No seed oils'
       ]
     },
     ingredients: [
@@ -134,7 +149,7 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       'Natural Vanilla'
     ],
     harmful_ingredients: [],
-    allergens: ['Milk', 'Tree Nuts'],
+    allergens: ['Milk', 'Tree Nuts (Almonds)'],
     alternatives: []
   },
   '987654321': {
@@ -152,6 +167,9 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       fiber: 1,
       sugar: 22,
       sodium: 250,
+      cholesterol: 5,
+      saturated_fat: 4,
+      trans_fat: 0
     },
     health_analysis: {
       approved: false,
@@ -160,17 +178,18 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       warnings: [
         'High in added sugar (22g)',
         'Contains artificial sweeteners',
-        'Low fiber content',
-        'High sodium'
+        'Very low fiber content',
+        'High sodium (250mg)'
       ],
       red_flags: [
-        'Sucralose (artificial sweetener)',
-        'Soybean oil (seed oil)',
-        'Natural flavors (vague ingredient)',
-        'Maltodextrin (blood sugar spike)'
+        'Sucralose (artificial sweetener - may affect gut bacteria)',
+        'Soybean Oil (inflammatory seed oil)',
+        'Natural Flavors (vague ingredient - could be anything)',
+        'Maltodextrin (spikes blood sugar)',
+        'Corn Syrup (added sugar)'
       ],
       positives: [
-        'Contains protein (15g)'
+        'Contains some protein (15g)'
       ]
     },
     ingredients: [
@@ -216,6 +235,9 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       fiber: 0,
       sugar: 4,
       sodium: 65,
+      cholesterol: 5,
+      saturated_fat: 0,
+      trans_fat: 0
     },
     health_analysis: {
       approved: true,
@@ -226,20 +248,98 @@ const SAMPLE_PRODUCTS: { [key: string]: ScannedProduct } = {
       positives: [
         'Excellent protein source (17g)',
         'Low fat (0g)',
-        'Contains probiotics',
+        'Contains probiotics for gut health',
         'Minimal ingredients',
-        'Low sugar',
-        'No additives'
+        'Low natural sugar (4g)',
+        'No additives or preservatives'
       ]
     },
     ingredients: [
       'Cultured Nonfat Milk',
-      'Live Active Cultures'
+      'Live Active Cultures (L. Bulgaricus, S. Thermophilus)'
     ],
     harmful_ingredients: [],
     allergens: ['Milk']
+  },
+  '444555666': {
+    barcode: '444555666',
+    name: 'Granola Bar',
+    brand: 'Nature Valley',
+    image: 'https://images.unsplash.com/photo-1587241321921-91a834d82ccf?w=400&h=400&fit=crop',
+    serving_size: '2 bars (42g)',
+    servings_per_container: 1,
+    nutrition: {
+      calories: 190,
+      protein: 4,
+      carbs: 29,
+      fats: 7,
+      fiber: 2,
+      sugar: 11,
+      sodium: 160,
+      cholesterol: 0,
+      saturated_fat: 1,
+      trans_fat: 0
+    },
+    health_analysis: {
+      approved: false,
+      health_score: 45,
+      processing_level: 'processed',
+      warnings: [
+        'High sugar content (11g)',
+        'Low protein (4g)',
+        'Contains refined oils'
+      ],
+      red_flags: [
+        'Canola Oil (inflammatory seed oil)',
+        'High Fructose Corn Syrup',
+        'Soy Lecithin'
+      ],
+      positives: [
+        'Contains whole grain oats',
+        'Some fiber content'
+      ]
+    },
+    ingredients: [
+      'Whole Grain Oats',
+      'Sugar',
+      'Canola Oil',
+      'High Fructose Corn Syrup',
+      'Honey',
+      'Salt',
+      'Soy Lecithin',
+      'Natural Flavor'
+    ],
+    harmful_ingredients: [
+      'Canola Oil',
+      'High Fructose Corn Syrup'
+    ],
+    allergens: ['Soy', 'May contain tree nuts'],
+    alternatives: [
+      {
+        name: 'Organic Granola Bar',
+        brand: 'KIND',
+        image: 'https://images.unsplash.com/photo-1560717845-968905b32b0b?w=200&h=200&fit=crop',
+        health_score: 78,
+        price_diff: '+$0.75'
+      }
+    ]
   }
 };
+
+const SAMPLE_HISTORY: ScanHistory[] = [
+  {
+    id: '1',
+    product: SAMPLE_PRODUCTS['123456789'],
+    scanned_at: '2h ago',
+    added_to_diary: true
+  },
+  {
+    id: '2',
+    product: SAMPLE_PRODUCTS['987654321'],
+    scanned_at: '5h ago',
+    added_to_diary: false
+  }
+];
 
 export default function BarcodeScanner() {
   const navigate = useNavigate();
@@ -250,9 +350,17 @@ export default function BarcodeScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
   const [showProductDetail, setShowProductDetail] = useState(false);
+  const [scanHistory, setScanHistory] = useState<ScanHistory[]>(SAMPLE_HISTORY);
+  const [showHistory, setShowHistory] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   async function startCamera() {
     try {
@@ -267,7 +375,7 @@ export default function BarcodeScanner() {
         
         toast({ title: "Camera activated! 📸" });
         
-        // Simulate barcode detection
+        // Simulate barcode detection - randomly pick a product
         setTimeout(() => {
           const randomProduct = Object.keys(SAMPLE_PRODUCTS)[
             Math.floor(Math.random() * Object.keys(SAMPLE_PRODUCTS).length)
@@ -303,6 +411,15 @@ export default function BarcodeScanner() {
       setShowProductDetail(true);
       stopCamera();
       
+      // Add to history
+      const historyItem: ScanHistory = {
+        id: Date.now().toString(),
+        product,
+        scanned_at: 'Just now',
+        added_to_diary: false
+      };
+      setScanHistory([historyItem, ...scanHistory]);
+      
       // Different reactions based on mode and approval
       if (scanMode === 'grocery') {
         if (product.health_analysis.approved) {
@@ -320,7 +437,7 @@ export default function BarcodeScanner() {
       } else {
         toast({
           title: "Product found! 📊",
-          description: `${product.nutrition.calories} calories`,
+          description: `${product.nutrition.calories} calories per serving`,
         });
       }
     } else {
@@ -331,14 +448,19 @@ export default function BarcodeScanner() {
     }
   }
 
-  function addToFoodDiary() {
+  function manualScan() {
+    if (!manualBarcode.trim()) return;
+    simulateScan(manualBarcode);
+    setManualBarcode('');
+    setShowManualEntry(false);
+  }
+
+  function addToDiary() {
     if (!scannedProduct) return;
-    
     toast({
       title: "Added to food diary! 📝",
       description: `${scannedProduct.name} logged`
     });
-    
     setShowProductDetail(false);
   }
 
@@ -416,7 +538,7 @@ export default function BarcodeScanner() {
 
             <Button
               variant="outline"
-              onClick={() => navigate('/scan-history')}
+              onClick={() => setShowHistory(true)}
               className="gap-2"
             >
               <History className="w-4 h-4" />
@@ -611,10 +733,46 @@ export default function BarcodeScanner() {
               )}
             </CardContent>
           </Card>
+
+          {/* Quick Tips */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-4 text-center">
+                <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
+                <p className="text-sm font-medium mb-1">Instant Results</p>
+                <p className="text-xs text-muted-foreground">Get info in seconds</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-4 text-center">
+                <Sparkles className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                <p className="text-sm font-medium mb-1">Smart Analysis</p>
+                <p className="text-xs text-muted-foreground">AI-powered scoring</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-4 text-center">
+                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                <p className="text-sm font-medium mb-1">Quick Logging</p>
+                <p className="text-xs text-muted-foreground">Add to diary instantly</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       </div>
 
-      {/* Product Detail Dialog */}
+      {/* Product Detail Dialog - CONTINUED IN NEXT MESSAGE */}
+    </div>
+  );
+}
+{/* Product Detail Dialog */}
       <Dialog open={showProductDetail} onOpenChange={setShowProductDetail}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {scannedProduct && (
@@ -684,32 +842,405 @@ export default function BarcodeScanner() {
                         <div className="flex items-center gap-3">
                           {scannedProduct.health_analysis.approved ? (
                             <>
-                              <CheckCircle2 className="w-8 h-8 text-green-500 flex-shrink-0" />
+                              <div className="flex-shrink-0">
+                                <motion.div
+                                  animate={{ scale: [1, 1.2, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                >
+                                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                                </motion.div>
+                              </div>
                               <div>
-                                <p className="font-bold text-lg text-green-600">✅ APPROVED!</p>
-                                <p className="text-sm text-muted-foreground">This is a great healthy choice</p>
+                                <p className="font-bold text-xl text-green-600">✅ APPROVED!</p>
+                                <p className="text-sm">This is a great healthy choice for your cart</p>
                               </div>
                             </>
                           ) : (
                             <>
-                              <XCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                              <div className="flex-shrink-0">
+                                <XCircle className="w-10 h-10 text-red-500" />
+                              </div>
                               <div>
-                                <p className="font-bold text-lg text-red-600">❌ NOT APPROVED</p>
-                                <p className="text-sm text-muted-foreground">Contains unhealthy ingredients</p>
+                                <p className="font-bold text-xl text-red-600">❌ NOT APPROVED</p>
+                                <p className="text-sm">Contains unhealthy ingredients - check alternatives below</p>
                               </div>
                             </>
                           )}
                         </div>
                       </motion.div>
                     )}
+
+                    {/* Processing Level (Grocery Mode) */}
+                    {scanMode === 'grocery' && (
+                      <div className="mt-4">
+                        <Badge
+                          className={
+                            scannedProduct.health_analysis.processing_level === 'minimal'
+                              ? 'bg-green-500'
+                              : scannedProduct.health_analysis.processing_level === 'processed'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                          }
+                        >
+                          {scannedProduct.health_analysis.processing_level.toUpperCase()}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Continue with nutrition, warnings, etc... */}
-              {/* I'll add the rest in the next message! */}
+              {/* Positives (Grocery Mode) */}
+              {scanMode === 'grocery' && scannedProduct.health_analysis.positives.length > 0 && (
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10" />
+                  <CardContent className="p-6 relative">
+                    <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                      <ThumbsUp className="w-5 h-5 text-green-500" />
+                      What's Good
+                    </h3>
+                    <div className="space-y-2">
+                      {scannedProduct.health_analysis.positives.map((positive, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span>{positive}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Red Flags (Grocery Mode) */}
+              {scanMode === 'grocery' && scannedProduct.health_analysis.red_flags.length > 0 && (
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10" />
+                  <CardContent className="p-6 relative">
+                    <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                      <Ban className="w-5 h-5 text-red-500" />
+                      Red Flags
+                    </h3>
+                    <div className="space-y-3">
+                      {scannedProduct.health_analysis.red_flags.map((flag, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+                        >
+                          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm">{flag}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Warnings (Grocery Mode) */}
+              {scanMode === 'grocery' && scannedProduct.health_analysis.warnings.length > 0 && (
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10" />
+                  <CardContent className="p-6 relative">
+                    <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                      Health Warnings
+                    </h3>
+                    <div className="space-y-2">
+                      {scannedProduct.health_analysis.warnings.map((warning, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm">
+                          <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+                          <span>{warning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Nutrition Facts */}
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-xl mb-4">Nutrition Facts</h3>
+                  
+                  <div className="space-y-4">
+                    {/* Macros */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                        <Flame className="w-8 h-8 text-orange-500 mb-2" />
+                        <p className="text-2xl font-bold">{scannedProduct.nutrition.calories}</p>
+                        <p className="text-xs text-muted-foreground">Calories</p>
+                      </div>
+
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                        <Beef className="w-8 h-8 text-green-500 mb-2" />
+                        <p className="text-2xl font-bold">{scannedProduct.nutrition.protein}g</p>
+                        <p className="text-xs text-muted-foreground">Protein</p>
+                      </div>
+
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                        <Wheat className="w-8 h-8 text-blue-500 mb-2" />
+                        <p className="text-2xl font-bold">{scannedProduct.nutrition.carbs}g</p>
+                        <p className="text-xs text-muted-foreground">Carbs</p>
+                      </div>
+
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                        <Droplet className="w-8 h-8 text-yellow-500 mb-2" />
+                        <p className="text-2xl font-bold">{scannedProduct.nutrition.fats}g</p>
+                        <p className="text-xs text-muted-foreground">Fats</p>
+                      </div>
+                    </div>
+
+                    {/* Detailed Nutrition */}
+                    <div className="pt-4 border-t space-y-2 text-sm">
+                      {[
+                        { label: 'Fiber', value: scannedProduct.nutrition.fiber, unit: 'g' },
+                        { label: 'Sugar', value: scannedProduct.nutrition.sugar, unit: 'g' },
+                        { label: 'Sodium', value: scannedProduct.nutrition.sodium, unit: 'mg' },
+                        { label: 'Cholesterol', value: scannedProduct.nutrition.cholesterol, unit: 'mg' },
+                        { label: 'Saturated Fat', value: scannedProduct.nutrition.saturated_fat, unit: 'g' },
+                        { label: 'Trans Fat', value: scannedProduct.nutrition.trans_fat, unit: 'g' }
+                      ].map(item => (
+                        <div key={item.label} className="flex items-center justify-between p-2 rounded-lg bg-secondary">
+                          <span className="font-medium">{item.label}</span>
+                          <span className="font-bold">{item.value}{item.unit}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Ingredients */}
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4">Ingredients</h3>
+                  <div className="space-y-2">
+                    {scannedProduct.ingredients.map((ingredient, idx) => {
+                      const isHarmful = scannedProduct.harmful_ingredients.includes(ingredient);
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-2 rounded-lg text-sm ${
+                            isHarmful
+                              ? 'bg-red-500/10 border border-red-500/20 text-red-600 font-medium'
+                              : 'bg-secondary'
+                          }`}
+                        >
+                          {isHarmful && <Ban className="w-3 h-3 inline mr-2" />}
+                          {ingredient}
+                          {isHarmful && ' ⚠️'}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Allergens */}
+              {scannedProduct.allergens.length > 0 && (
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10" />
+                  <CardContent className="p-6 relative">
+                    <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-red-500" />
+                      Allergen Information
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {scannedProduct.allergens.map(allergen => (
+                        <Badge key={allergen} variant="destructive" className="text-sm">
+                          {allergen}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Better Alternatives (Grocery Mode) */}
+              {scanMode === 'grocery' && scannedProduct.alternatives && scannedProduct.alternatives.length > 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-500" />
+                      Better Alternatives
+                    </h3>
+                    <div className="space-y-3">
+                      {scannedProduct.alternatives.map((alt, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="flex items-center gap-4 p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 hover:shadow-md transition-shadow cursor-pointer"
+                        >
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-background flex-shrink-0">
+                            <img src={alt.image} alt={alt.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold">{alt.name}</p>
+                            <p className="text-sm text-muted-foreground">{alt.brand}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{alt.price_diff} more</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge className={`bg-gradient-to-r ${getHealthScoreGradient(alt.health_score)} text-white mb-2`}>
+                              {alt.health_score}
+                            </Badge>
+                            <p className="text-xs text-green-500 font-medium">Better Choice!</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProductDetail(false)}
+                  className="flex-1"
+                >
+                  Close
+                </Button>
+                {scanMode === 'calorie' && (
+                  <Button
+                    onClick={addToDiary}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add to Diary
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast({ title: "Link copied! 🔗" });
+                  }}
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </Button>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Entry Dialog */}
+      <Dialog open={showManualEntry} onOpenChange={setShowManualEntry}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Barcode Manually</DialogTitle>
+            <DialogDescription>Type or paste the product barcode</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="e.g., 123456789"
+                value={manualBarcode}
+                onChange={(e) => setManualBarcode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    manualScan();
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Usually found below the barcode on the package
+              </p>
+            </div>
+
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xs text-blue-600 flex items-start gap-2">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>Try scanning: 123456789, 987654321, 111222333, or 444555666</span>
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowManualEntry(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={manualScan}
+                disabled={!manualBarcode.trim()}
+                className="flex-1"
+              >
+                Search
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Scan History</DialogTitle>
+            <DialogDescription>Recently scanned products</DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-3">
+              {scanHistory.map(item => (
+                <Card
+                  key={item.id}
+                  className="border-0 shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                  onClick={() => {
+                    setScannedProduct(item.product);
+                    setShowHistory(false);
+                    setShowProductDetail(true);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-secondary">
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{item.product.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.product.brand}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{item.scanned_at}</p>
+                      </div>
+                      <div className="text-right">
+                        {item.product.health_analysis.approved ? (
+                          <Badge className="bg-green-500 mb-2">✅ Approved</Badge>
+                        ) : (
+                          <Badge className="bg-red-500 mb-2">❌ Not Approved</Badge>
+                        )}
+                        <p className="text-xs">
+                          Score: <span className={`font-bold ${getHealthScoreColor(item.product.health_analysis.health_score)}`}>
+                            {item.product.health_analysis.health_score}
+                          </span>
+                        </p>
+                        {item.added_to_diary && (
+                          <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            In diary
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
