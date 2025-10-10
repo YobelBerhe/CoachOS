@@ -31,6 +31,7 @@ import ComplianceDashboard from "./pages/ComplianceDashboard";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Achievements from "./pages/Achievements";
 import AICoach from "./pages/AICoach";
+import Social from "./pages/Social";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ function AppRoutes() {
           <Route path="/analytics" element={<AdvancedAnalytics />} />
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/ai-coach" element={<AICoach />} />
+          <Route path="/social" element={<Social />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

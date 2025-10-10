@@ -22,6 +22,7 @@ import {
   DollarSign,
   Target,
   Trophy,
+  Users,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -478,7 +479,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-5 gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
         >
           <Card className="cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => navigate('/eat')}>
             <CardContent className="p-6 text-center">
@@ -522,6 +523,15 @@ export default function Dashboard() {
                 <Sparkles className="w-6 h-6 text-purple-500" />
               </div>
               <p className="font-semibold text-sm">AI Coach</p>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow group" onClick={() => navigate('/social')}>
+            <CardContent className="p-6 text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Users className="w-6 h-6 text-blue-500" />
+              </div>
+              <p className="font-semibold text-sm">Community</p>
             </CardContent>
           </Card>
         </motion.div>
