@@ -264,6 +264,20 @@ body {
   
   /* Prevent pull-to-refresh on mobile */
   overscroll-behavior-y: contain;
+  
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Prevent horizontal overflow globally */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Mobile-friendly touch targets */
@@ -293,6 +307,19 @@ input, select, textarea {
   .container {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Prevent any element from causing horizontal scroll */
+  * {
+    max-width: 100%;
+  }
+
+  /* Images and videos responsive */
+  img, video {
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   /* Stack cards vertically on mobile */
@@ -300,18 +327,51 @@ input, select, textarea {
     gap: 0.75rem;
   }
 
-  /* Larger text on mobile */
+  /* Responsive text sizes with proper wrapping */
   h1 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   h2 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  h3 {
     font-size: 1.125rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Ensure text wraps properly */
+  p, span, div {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   /* Smaller padding on cards */
   .card {
-    padding: 1rem;
+    padding: 0.75rem;
+  }
+
+  /* Ensure buttons fit on mobile */
+  button {
+    font-size: 0.875rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Responsive badges */
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 
