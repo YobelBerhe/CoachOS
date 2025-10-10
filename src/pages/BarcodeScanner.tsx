@@ -378,9 +378,6 @@ export default function BarcodeScanner() {
         };
         setScanHistory([historyItem, ...scanHistory]);
         
-        // Save to database
-        await saveToDatabase(product);
-        
         // Different reactions based on mode and approval
         if (scanMode === 'grocery') {
           if (product.health_analysis.approved) {
@@ -419,25 +416,6 @@ export default function BarcodeScanner() {
       stopCamera();
     } finally {
       setIsScanning(false);
-    }
-  }
-
-  async function saveToDatabase(product: ScannedProduct) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      await supabase.from('scanned_products').insert({
-        user_id: user.id,
-        barcode: product.barcode,
-        product_name: product.name,
-        brand: product.brand,
-        nutrition_data: product.nutrition,
-        health_score: product.health_analysis.health_score,
-        approved: product.health_analysis.approved
-      });
-    } catch (error) {
-      console.error('Error saving to database:', error);
     }
   }
 
@@ -761,11 +739,7 @@ export default function BarcodeScanner() {
         </motion.div>
       </div>
 
-      {/* Product Detail Dialog - CONTINUED IN NEXT MESSAGE */}
-    </div>
-  );
-}
-{/* Product Detail Dialog */}
+      {/* Product Detail Dialog */}
       <Dialog open={showProductDetail} onOpenChange={setShowProductDetail}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {scannedProduct && (

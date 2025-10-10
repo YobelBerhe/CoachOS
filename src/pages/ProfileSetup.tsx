@@ -39,6 +39,7 @@ import {
   Brain,
   Flame,
   Award,
+  Plus,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
@@ -154,18 +155,28 @@ export default function ProfileSetup() {
       // Save biomarkers if any entered
       const hasBiomarkers = Object.values(setupData.biomarkers).some(v => v !== '');
       if (hasBiomarkers) {
-        await supabase.from('user_biomarkers').insert({
-          user_id: userId,
-          glucose: parseFloat(setupData.biomarkers.glucose) || null,
-          iron: parseFloat(setupData.biomarkers.iron) || null,
-          vitamin_d: parseFloat(setupData.biomarkers.vitamin_d) || null,
-          potassium: parseFloat(setupData.biomarkers.potassium) || null,
-          magnesium: parseFloat(setupData.biomarkers.magnesium) || null,
-          hemoglobin: parseFloat(setupData.biomarkers.hemoglobin) || null,
-          ldl_cholesterol: parseFloat(setupData.biomarkers.ldl_cholesterol) || null,
-          hdl_cholesterol: parseFloat(setupData.biomarkers.hdl_cholesterol) || null,
-          test_date: new Date().toISOString().split('T')[0],
-        });
+        const biomarkerRows = [
+          { name: 'Glucose', value: setupData.biomarkers.glucose, unit: 'mg/dL' },
+          { name: 'Iron', value: setupData.biomarkers.iron, unit: 'μg/dL' },
+          { name: 'Vitamin D', value: setupData.biomarkers.vitamin_d, unit: 'ng/mL' },
+          { name: 'Potassium', value: setupData.biomarkers.potassium, unit: 'mmol/L' },
+          { name: 'Magnesium', value: setupData.biomarkers.magnesium, unit: 'mg/dL' },
+          { name: 'Hemoglobin', value: setupData.biomarkers.hemoglobin, unit: 'g/dL' },
+          { name: 'LDL Cholesterol', value: setupData.biomarkers.ldl_cholesterol, unit: 'mg/dL' },
+          { name: 'HDL Cholesterol', value: setupData.biomarkers.hdl_cholesterol, unit: 'mg/dL' },
+        ]
+          .filter(b => b.value && b.value !== '')
+          .map(b => ({
+            user_id: userId,
+            biomarker_name: b.name,
+            biomarker_value: parseFloat(b.value),
+            unit: b.unit,
+            test_date: new Date().toISOString().split('T')[0],
+          }));
+
+        if (biomarkerRows.length > 0) {
+          await supabase.from('user_biomarkers').insert(biomarkerRows);
+        }
       }
 
       // Save lifestyle data
