@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      carbon_savings: {
+        Row: {
+          carbon_saved_kg: number | null
+          created_at: string | null
+          food_saved_kg: number | null
+          id: string
+          miles_driven_equivalent: number | null
+          money_saved: number | null
+          month: string
+          trees_equivalent: number | null
+          user_id: string | null
+          waste_prevented_count: number | null
+        }
+        Insert: {
+          carbon_saved_kg?: number | null
+          created_at?: string | null
+          food_saved_kg?: number | null
+          id?: string
+          miles_driven_equivalent?: number | null
+          money_saved?: number | null
+          month: string
+          trees_equivalent?: number | null
+          user_id?: string | null
+          waste_prevented_count?: number | null
+        }
+        Update: {
+          carbon_saved_kg?: number | null
+          created_at?: string | null
+          food_saved_kg?: number | null
+          id?: string
+          miles_driven_equivalent?: number | null
+          money_saved?: number | null
+          month?: string
+          trees_equivalent?: number | null
+          user_id?: string | null
+          waste_prevented_count?: number | null
+        }
+        Relationships: []
+      }
       common_allergens: {
         Row: {
           alternative_names: string[] | null
@@ -90,6 +129,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consumption_patterns: {
+        Row: {
+          avg_days_to_consume: number | null
+          id: string
+          item_category: string
+          preferred_brands: Json | null
+          purchase_frequency: string | null
+          seasonal_variation: Json | null
+          typical_quantity: number | null
+          updated_at: string | null
+          user_id: string | null
+          waste_percentage: number | null
+        }
+        Insert: {
+          avg_days_to_consume?: number | null
+          id?: string
+          item_category: string
+          preferred_brands?: Json | null
+          purchase_frequency?: string | null
+          seasonal_variation?: Json | null
+          typical_quantity?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          waste_percentage?: number | null
+        }
+        Update: {
+          avg_days_to_consume?: number | null
+          id?: string
+          item_category?: string
+          preferred_brands?: Json | null
+          purchase_frequency?: string | null
+          seasonal_variation?: Json | null
+          typical_quantity?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          waste_percentage?: number | null
+        }
+        Relationships: []
       }
       creator_earnings: {
         Row: {
@@ -343,6 +421,50 @@ export type Database = {
           },
         ]
       }
+      family_waste_stats: {
+        Row: {
+          created_at: string | null
+          family_group_id: string | null
+          id: string
+          items_wasted: number | null
+          money_wasted: number | null
+          rank: number | null
+          user_id: string | null
+          waste_percentage: number | null
+          week_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          family_group_id?: string | null
+          id?: string
+          items_wasted?: number | null
+          money_wasted?: number | null
+          rank?: number | null
+          user_id?: string | null
+          waste_percentage?: number | null
+          week_start: string
+        }
+        Update: {
+          created_at?: string | null
+          family_group_id?: string | null
+          id?: string
+          items_wasted?: number | null
+          money_wasted?: number | null
+          rank?: number | null
+          user_id?: string | null
+          waste_percentage?: number | null
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_waste_stats_family_group_id_fkey"
+            columns: ["family_group_id"]
+            isOneToOne: false
+            referencedRelation: "family_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fasting_plans: {
         Row: {
           created_at: string | null
@@ -451,6 +573,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      food_inventory: {
+        Row: {
+          barcode: string | null
+          carbon_footprint: number | null
+          category: string
+          consumed_date: string | null
+          created_at: string | null
+          estimated_cost: number | null
+          expiration_date: string
+          id: string
+          image_url: string | null
+          item_name: string
+          location: string | null
+          purchase_date: string
+          quantity: number | null
+          status: string | null
+          unit: string | null
+          updated_at: string | null
+          user_id: string | null
+          waste_reason: string | null
+        }
+        Insert: {
+          barcode?: string | null
+          carbon_footprint?: number | null
+          category: string
+          consumed_date?: string | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          expiration_date: string
+          id?: string
+          image_url?: string | null
+          item_name: string
+          location?: string | null
+          purchase_date: string
+          quantity?: number | null
+          status?: string | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          waste_reason?: string | null
+        }
+        Update: {
+          barcode?: string | null
+          carbon_footprint?: number | null
+          category?: string
+          consumed_date?: string | null
+          created_at?: string | null
+          estimated_cost?: number | null
+          expiration_date?: string
+          id?: string
+          image_url?: string | null
+          item_name?: string
+          location?: string | null
+          purchase_date?: string
+          quantity?: number | null
+          status?: string | null
+          unit?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          waste_reason?: string | null
+        }
+        Relationships: []
       }
       food_logs: {
         Row: {
@@ -1480,6 +1665,51 @@ export type Database = {
         }
         Relationships: []
       }
+      rescue_recipes: {
+        Row: {
+          carbon_saved: number
+          cooked: boolean | null
+          cooked_date: string | null
+          created_at: string | null
+          id: string
+          ingredients: Json
+          instructions: string
+          items_rescued: number
+          money_saved: number
+          rating: number | null
+          recipe_name: string
+          user_id: string | null
+        }
+        Insert: {
+          carbon_saved: number
+          cooked?: boolean | null
+          cooked_date?: string | null
+          created_at?: string | null
+          id?: string
+          ingredients: Json
+          instructions: string
+          items_rescued: number
+          money_saved: number
+          rating?: number | null
+          recipe_name: string
+          user_id?: string | null
+        }
+        Update: {
+          carbon_saved?: number
+          cooked?: boolean | null
+          cooked_date?: string | null
+          created_at?: string | null
+          id?: string
+          ingredients?: Json
+          instructions?: string
+          items_rescued?: number
+          money_saved?: number
+          rating?: number | null
+          recipe_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       scanned_products: {
         Row: {
           added_to_diary: boolean | null
@@ -2073,6 +2303,84 @@ export type Database = {
           taste_vector?: Json | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      waste_achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          created_at: string | null
+          description: string
+          earned_date: string
+          icon: string
+          id: string
+          milestone_value: number | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          created_at?: string | null
+          description: string
+          earned_date: string
+          icon: string
+          id?: string
+          milestone_value?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          created_at?: string | null
+          description?: string
+          earned_date?: string
+          icon?: string
+          id?: string
+          milestone_value?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      waste_log: {
+        Row: {
+          carbon_footprint: number
+          category: string
+          could_have_saved: boolean | null
+          created_at: string | null
+          estimated_cost: number
+          id: string
+          item_name: string
+          quantity: number
+          user_id: string | null
+          waste_reason: string
+          wasted_date: string
+        }
+        Insert: {
+          carbon_footprint: number
+          category: string
+          could_have_saved?: boolean | null
+          created_at?: string | null
+          estimated_cost: number
+          id?: string
+          item_name: string
+          quantity: number
+          user_id?: string | null
+          waste_reason: string
+          wasted_date: string
+        }
+        Update: {
+          carbon_footprint?: number
+          category?: string
+          could_have_saved?: boolean | null
+          created_at?: string | null
+          estimated_cost?: number
+          id?: string
+          item_name?: string
+          quantity?: number
+          user_id?: string | null
+          waste_reason?: string
+          wasted_date?: string
         }
         Relationships: []
       }
