@@ -48,6 +48,8 @@ import {
   Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import { barcodeCache } from '@/services/barcodeCache';
 import { fetchProductByBarcode } from '@/services/barcodeApi';
 import { ScannedProduct, ScanHistory } from '@/types/barcode';
 
@@ -293,45 +295,86 @@ const SAMPLE_HISTORY: ScanHistory[] = [
 export default function BarcodeScanner() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Use real barcode scanner hook
+  const {
+    videoRef,
+    isScanning: isCameraScanning,
+    detectedBarcode,
+    error: cameraError,
+    startScanning,
+    stopScanning
+  } = useBarcodeScanner(async (barcode) => {
+    await handleBarcodeDetected(barcode);
+  });
 
   const [scanMode, setScanMode] = useState<ScanMode>('grocery');
-  const [isScanning, setIsScanning] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null);
   const [showProductDetail, setShowProductDetail] = useState(false);
-  const [scanHistory, setScanHistory] = useState<ScanHistory[]>(SAMPLE_HISTORY);
+  const [scanHistory, setScanHistory] = useState<ScanHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [cacheStats, setCacheStats] = useState<any>(null);
 
+  // Load cache stats and history on mount
   useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    loadCacheStats();
+    loadScanHistory();
   }, []);
+
+  async function loadCacheStats() {
+    const stats = await barcodeCache.getStats();
+    setCacheStats(stats);
+  }
+
+  async function loadScanHistory() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('scanned_products')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      // Load full product data from cache for history items
+      const historyWithProducts = await Promise.all(
+        (data || []).map(async (item) => {
+          const product = await barcodeCache.get(item.barcode);
+          if (product) {
+            return {
+              id: item.id,
+              product,
+              scanned_at: new Date(item.created_at).toLocaleString(),
+              added_to_diary: item.added_to_diary || false
+            };
+          }
+          return null;
+        })
+      );
+
+      setScanHistory(historyWithProducts.filter(Boolean) as ScanHistory[]);
+    } catch (error) {
+      console.error('Error loading scan history:', error);
+    }
+  }
 
   async function startCamera() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
+      setCameraActive(true);
+      await startScanning();
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
-        setIsScanning(true);
-        
-        toast({ title: "Camera activated! 📸" });
-        
-        // Simulate barcode detection - randomly pick a product
-        setTimeout(() => {
-          const randomProduct = Object.keys(SAMPLE_PRODUCTS)[
-            Math.floor(Math.random() * Object.keys(SAMPLE_PRODUCTS).length)
-          ];
-          simulateScan(randomProduct);
-        }, 3000);
-      }
+      toast({ 
+        title: "📸 Camera activated!",
+        description: "Point at a barcode to scan"
+      });
     } catch (error) {
       console.error('Camera error:', error);
       toast({
@@ -339,24 +382,24 @@ export default function BarcodeScanner() {
         description: "Please enable camera permissions",
         variant: "destructive"
       });
+      setCameraActive(false);
     }
   }
 
   function stopCamera() {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setCameraActive(false);
-      setIsScanning(false);
-    }
+    stopScanning();
+    setCameraActive(false);
   }
 
-  async function simulateScan(barcode: string) {
-    setIsScanning(true);
+  async function handleBarcodeDetected(barcode: string) {
+    if (isLoading) return; // Prevent multiple simultaneous scans
+    
+    setIsLoading(true);
     
     try {
-      // First try real API
+      console.log('🔍 Processing barcode:', barcode);
+      
+      // Fetch product data (will use cache if available)
       let product = await fetchProductByBarcode(barcode);
       
       // Fallback to sample data if not found
@@ -377,6 +420,12 @@ export default function BarcodeScanner() {
           added_to_diary: false
         };
         setScanHistory([historyItem, ...scanHistory]);
+        
+        // Save to database
+        await saveToDatabase(product);
+        
+        // Update cache stats
+        await loadCacheStats();
         
         // Different reactions based on mode and approval
         if (scanMode === 'grocery') {
@@ -401,10 +450,9 @@ export default function BarcodeScanner() {
       } else {
         toast({
           title: "Product not found",
-          description: "Try another barcode or enter manually",
+          description: "Try another barcode",
           variant: "destructive"
         });
-        stopCamera();
       }
     } catch (error) {
       console.error('Scan error:', error);
@@ -413,26 +461,70 @@ export default function BarcodeScanner() {
         description: "Please try again",
         variant: "destructive"
       });
-      stopCamera();
     } finally {
-      setIsScanning(false);
+      setIsLoading(false);
+    }
+  }
+
+  async function saveToDatabase(product: ScannedProduct) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('scanned_products').insert({
+        user_id: user.id,
+        barcode: product.barcode,
+        product_name: product.name,
+        brand: product.brand,
+        nutrition_data: product.nutrition,
+        health_score: product.health_analysis.health_score,
+        approved: product.health_analysis.approved
+      });
+    } catch (error) {
+      console.error('Error saving to database:', error);
     }
   }
 
   function manualScan() {
     if (!manualBarcode.trim()) return;
-    simulateScan(manualBarcode);
+    handleBarcodeDetected(manualBarcode);
     setManualBarcode('');
     setShowManualEntry(false);
   }
 
-  function addToDiary() {
+  async function addToDiary() {
     if (!scannedProduct) return;
-    toast({
-      title: "Added to food diary! 📝",
-      description: `${scannedProduct.name} logged`
-    });
-    setShowProductDetail(false);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Add to food logs
+      await supabase.from('food_logs').insert({
+        user_id: user.id,
+        food_name: scannedProduct.name,
+        calories: scannedProduct.nutrition.calories,
+        protein_g: scannedProduct.nutrition.protein,
+        carbs_g: scannedProduct.nutrition.carbs,
+        fats_g: scannedProduct.nutrition.fats,
+        meal_type: 'snack',
+        date: new Date().toISOString().split('T')[0]
+      });
+
+      toast({
+        title: "Added to food diary! 📝",
+        description: `${scannedProduct.name} logged`
+      });
+      
+      setShowProductDetail(false);
+    } catch (error) {
+      console.error('Error adding to diary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to diary",
+        variant: "destructive"
+      });
+    }
   }
 
   function getHealthScoreColor(score: number) {
@@ -534,6 +626,44 @@ export default function BarcodeScanner() {
       </motion.div>
 
       <div className="relative z-10 container mx-auto px-4 py-6">
+        {/* Cache Stats Banner */}
+        {cacheStats && cacheStats.totalItems > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Fast Cache Active</p>
+                      <p className="text-xs text-muted-foreground">
+                        {cacheStats.totalItems} products cached • Instant results
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={async () => {
+                      await barcodeCache.clear();
+                      await loadCacheStats();
+                      toast({ title: "Cache cleared! 🗑️" });
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Mode Description */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -628,20 +758,44 @@ export default function BarcodeScanner() {
                     />
                     
                     {/* Scanning Overlay */}
-                    {isScanning && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative w-64 h-64">
-                          <div className="absolute inset-0 border-4 border-green-500 rounded-lg">
-                            <motion.div
-                              className="absolute inset-x-0 top-0 h-1 bg-green-500"
-                              animate={{ y: [0, 256, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                            />
-                          </div>
-                          <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-white bg-black/70 px-6 py-3 rounded-full text-sm font-medium whitespace-nowrap">
-                            {scanMode === 'grocery' ? '🛒 Scanning for health...' : '📊 Reading nutrition...'}
-                          </div>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="relative w-64 h-64">
+                        {/* Scanning frame */}
+                        <div className="absolute inset-0 border-4 border-green-500 rounded-lg">
+                          {/* Animated scanning line */}
+                          <motion.div
+                            className="absolute inset-x-0 top-0 h-1 bg-green-500 shadow-lg shadow-green-500/50"
+                            animate={{ y: [0, 256, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                          />
+                          
+                          {/* Corner decorations */}
+                          <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-green-500" />
+                          <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-green-500" />
+                          <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-green-500" />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-green-500" />
                         </div>
+                        
+                        {/* Status text */}
+                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 text-white bg-black/70 px-6 py-3 rounded-full text-sm font-medium whitespace-nowrap backdrop-blur">
+                          {isLoading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Loading...
+                            </div>
+                          ) : (
+                            <>
+                              {scanMode === 'grocery' ? '🛒 Scanning for health...' : '📊 Reading nutrition...'}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Error message */}
+                    {cameraError && (
+                      <div className="absolute bottom-4 left-4 right-4 p-3 bg-red-500/90 text-white rounded-lg text-sm">
+                        {cameraError}
                       </div>
                     )}
                   </>

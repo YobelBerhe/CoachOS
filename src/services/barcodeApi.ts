@@ -269,6 +269,10 @@ export async function fetchProductByBarcode(barcode: string): Promise<ScannedPro
       alternatives: []
     };
 
+    // Cache the result
+    const { barcodeCache } = await import('./barcodeCache');
+    await barcodeCache.set(barcode, scannedProduct);
+
     return scannedProduct;
   } catch (error) {
     console.error('Error fetching product:', error);

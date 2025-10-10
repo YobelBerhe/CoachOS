@@ -1344,6 +1344,45 @@ export type Database = {
         }
         Relationships: []
       }
+      scanned_products: {
+        Row: {
+          added_to_diary: boolean | null
+          approved: boolean | null
+          barcode: string
+          brand: string | null
+          created_at: string | null
+          health_score: number | null
+          id: string
+          nutrition_data: Json | null
+          product_name: string | null
+          user_id: string
+        }
+        Insert: {
+          added_to_diary?: boolean | null
+          approved?: boolean | null
+          barcode: string
+          brand?: string | null
+          created_at?: string | null
+          health_score?: number | null
+          id?: string
+          nutrition_data?: Json | null
+          product_name?: string | null
+          user_id: string
+        }
+        Update: {
+          added_to_diary?: boolean | null
+          approved?: boolean | null
+          barcode?: string
+          brand?: string | null
+          created_at?: string | null
+          health_score?: number | null
+          id?: string
+          nutrition_data?: Json | null
+          product_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sleep_logs: {
         Row: {
           bedtime: string
