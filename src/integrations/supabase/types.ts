@@ -841,6 +841,78 @@ export type Database = {
           },
         ]
       }
+      meal_swaps: {
+        Row: {
+          allergens: string[] | null
+          best_before: string
+          calories_per_portion: number
+          carbs: number
+          created_at: string | null
+          credits_value: number | null
+          cuisine_type: string | null
+          description: string
+          dietary_tags: string[] | null
+          fats: number
+          id: string
+          meal_type: string
+          pickup_location: string
+          portions: number
+          prep_date: string
+          protein: number
+          status: string | null
+          swap_type: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          allergens?: string[] | null
+          best_before: string
+          calories_per_portion: number
+          carbs: number
+          created_at?: string | null
+          credits_value?: number | null
+          cuisine_type?: string | null
+          description: string
+          dietary_tags?: string[] | null
+          fats: number
+          id?: string
+          meal_type: string
+          pickup_location: string
+          portions?: number
+          prep_date: string
+          protein: number
+          status?: string | null
+          swap_type?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          allergens?: string[] | null
+          best_before?: string
+          calories_per_portion?: number
+          carbs?: number
+          created_at?: string | null
+          credits_value?: number | null
+          cuisine_type?: string | null
+          description?: string
+          dietary_tags?: string[] | null
+          fats?: number
+          id?: string
+          meal_type?: string
+          pickup_location?: string
+          portions?: number
+          prep_date?: string
+          protein?: number
+          status?: string | null
+          swap_type?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       medication_logs: {
         Row: {
           created_at: string | null
@@ -2079,6 +2151,98 @@ export type Database = {
         }
         Relationships: []
       }
+      swap_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          credits: number | null
+          dietary_preferences: string[] | null
+          id: string
+          location: string | null
+          meals_posted: number | null
+          meals_received: number | null
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          credits?: number | null
+          dietary_preferences?: string[] | null
+          id?: string
+          location?: string | null
+          meals_posted?: number | null
+          meals_received?: number | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          credits?: number | null
+          dietary_preferences?: string[] | null
+          id?: string
+          location?: string | null
+          meals_posted?: number | null
+          meals_received?: number | null
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      swap_transactions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          credits_amount: number | null
+          giver_id: string
+          id: string
+          notes: string | null
+          pickup_date: string | null
+          receiver_id: string
+          status: string | null
+          swap_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          credits_amount?: number | null
+          giver_id: string
+          id?: string
+          notes?: string | null
+          pickup_date?: string | null
+          receiver_id: string
+          status?: string | null
+          swap_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          credits_amount?: number | null
+          giver_id?: string
+          id?: string
+          notes?: string | null
+          pickup_date?: string | null
+          receiver_id?: string
+          status?: string | null
+          swap_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swap_transactions_swap_id_fkey"
+            columns: ["swap_id"]
+            isOneToOne: false
+            referencedRelation: "meal_swaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_allergies: {
         Row: {
           allergen_name: string
@@ -2644,6 +2808,10 @@ export type Database = {
           deficit: number
           normal_min: number
         }[]
+      }
+      increment_meals_posted: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       increment_recipe_logs: {
         Args: { recipe_id: string }

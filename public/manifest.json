@@ -1,12 +1,13 @@
 {
-  "name": "CoachOS - Your Personal Health & Fitness Coach",
-  "short_name": "CoachOS",
-  "description": "Track nutrition, workouts, sleep, and recipes all in one place",
-  "start_url": "/",
-  "display": "standalone",
+  "name": "FitTrack Pro - All-in-One Fitness App",
+  "short_name": "FitTrack",
+  "description": "Revolutionary fitness app with AI menu scanning, food waste tracking, and meal swap marketplace",
+  "theme_color": "#6366f1",
   "background_color": "#ffffff",
-  "theme_color": "#8b5cf6",
-  "orientation": "portrait-primary",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
   "icons": [
     {
       "src": "/placeholder.svg",
@@ -23,22 +24,22 @@
   ],
   "shortcuts": [
     {
-      "name": "Log Food",
-      "short_name": "Log Food",
-      "description": "Quick access to food logging",
-      "url": "/eat?source=shortcut"
+      "name": "Scan Menu",
+      "short_name": "Menu AI",
+      "description": "Scan restaurant menus with AI",
+      "url": "/menu-scanner?source=shortcut"
     },
     {
-      "name": "Start Workout",
-      "short_name": "Workout",
-      "description": "Start a workout session",
-      "url": "/train?source=shortcut"
+      "name": "Food Waste",
+      "short_name": "Waste",
+      "description": "Track food waste",
+      "url": "/food-waste?source=shortcut"
     },
     {
-      "name": "Browse Recipes",
-      "short_name": "Recipes",
-      "description": "Explore recipe collection",
-      "url": "/recipes?source=shortcut"
+      "name": "Meal Swap",
+      "short_name": "Swap",
+      "description": "Share meals with community",
+      "url": "/meal-swap?source=shortcut"
     }
   ],
   "categories": ["health", "fitness", "lifestyle", "food"]

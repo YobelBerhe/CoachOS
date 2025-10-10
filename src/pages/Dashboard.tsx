@@ -30,6 +30,8 @@ import {
   Leaf,
   Camera,
   CheckCircle2,
+  Repeat,
+  Star,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -671,6 +673,52 @@ export default function Dashboard() {
 
               <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
                 Scan Menu Now
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Meal Swap Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+        >
+          <Card 
+            className="border-0 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow overflow-hidden"
+            onClick={() => navigate('/meal-swap')}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10" />
+            <CardContent className="p-6 relative">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                  <Repeat className="w-7 h-7 text-white" />
+                </div>
+                <Badge className="bg-gradient-to-r from-orange-500 to-red-500">COMMUNITY</Badge>
+              </div>
+              
+              <h3 className="text-xl font-bold mb-2">🤝 Meal Swap</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Share meals, reduce waste, build community
+              </p>
+
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-orange-500" />
+                  <span>Trade meal prep with neighbors</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-4 h-4 text-green-500" />
+                  <span>Prevent food waste together</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <span>Build community & earn credits</span>
+                </div>
+              </div>
+
+              <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500">
+                Browse Meals
               </Button>
             </CardContent>
           </Card>

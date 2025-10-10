@@ -50,6 +50,9 @@ import FridgeScanner from "./pages/FridgeScanner";
 import RescueRecipes from "./pages/RescueRecipes";
 import WasteReport from "./pages/WasteReport";
 import MenuScanner from "./pages/MenuScanner";
+import MealSwapMarketplace from "./pages/MealSwapMarketplace";
+import FridgeInventory from "./pages/FridgeInventory";
+import MobileNav from "./components/MobileNav";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +107,8 @@ function AppRoutes() {
           <Route path="/rescue-recipes" element={<RescueRecipes />} />
           <Route path="/waste-report" element={<WasteReport />} />
           <Route path="/menu-scanner" element={<MenuScanner />} />
+          <Route path="/meal-swap" element={<MealSwapMarketplace />} />
+          <Route path="/fridge-inventory" element={<FridgeInventory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
@@ -143,9 +148,12 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <PageTransition>
-              <AppRoutes />
-            </PageTransition>
+            <div className="pb-20 lg:pb-0">
+              <PageTransition>
+                <AppRoutes />
+              </PageTransition>
+              <MobileNav />
+            </div>
             <InstallPrompt />
           </BrowserRouter>
         </TooltipProvider>
