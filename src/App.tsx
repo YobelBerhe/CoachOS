@@ -43,6 +43,7 @@ import VoiceCoach from "./pages/VoiceCoach";
 import ProfileSetup from "./pages/ProfileSetup";
 import ShoppingList from "./pages/ShoppingList";
 import ReceiptScanner from "./pages/ReceiptScanner";
+import NotificationSettings from "./pages/NotificationSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,7 @@ function AppRoutes() {
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
           <Route path="/receipt-scanner" element={<ReceiptScanner />} />
+          <Route path="/notifications" element={<NotificationSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

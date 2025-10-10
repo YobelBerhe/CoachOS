@@ -1425,6 +1425,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          sent: boolean | null
+          title: string
+          trigger_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          sent?: boolean | null
+          title: string
+          trigger_at: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          sent?: boolean | null
+          title?: string
+          trigger_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       shopping_lists: {
         Row: {
           completed_items: number | null
@@ -1829,9 +1862,17 @@ export type Database = {
           focus_areas: string[] | null
           health_data_tracking: boolean | null
           id: string
+          meal_prep_day: string | null
+          meal_prep_reminders: boolean | null
           notifications_enabled: boolean | null
+          shopping_reminders: boolean | null
+          shopping_time: string | null
           updated_at: string | null
           user_id: string | null
+          water_interval: number | null
+          water_reminders: boolean | null
+          workout_reminders: boolean | null
+          workout_time: string | null
         }
         Insert: {
           ai_suggestions?: boolean | null
@@ -1840,9 +1881,17 @@ export type Database = {
           focus_areas?: string[] | null
           health_data_tracking?: boolean | null
           id?: string
+          meal_prep_day?: string | null
+          meal_prep_reminders?: boolean | null
           notifications_enabled?: boolean | null
+          shopping_reminders?: boolean | null
+          shopping_time?: string | null
           updated_at?: string | null
           user_id?: string | null
+          water_interval?: number | null
+          water_reminders?: boolean | null
+          workout_reminders?: boolean | null
+          workout_time?: string | null
         }
         Update: {
           ai_suggestions?: boolean | null
@@ -1851,9 +1900,17 @@ export type Database = {
           focus_areas?: string[] | null
           health_data_tracking?: boolean | null
           id?: string
+          meal_prep_day?: string | null
+          meal_prep_reminders?: boolean | null
           notifications_enabled?: boolean | null
+          shopping_reminders?: boolean | null
+          shopping_time?: string | null
           updated_at?: string | null
           user_id?: string | null
+          water_interval?: number | null
+          water_reminders?: boolean | null
+          workout_reminders?: boolean | null
+          workout_time?: string | null
         }
         Relationships: []
       }

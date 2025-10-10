@@ -48,6 +48,7 @@ import {
   Share2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { notificationService } from '@/services/notificationService';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { barcodeCache } from '@/services/barcodeCache';
 import { fetchProductByBarcode } from '@/services/barcodeApi';
@@ -532,6 +533,18 @@ export default function BarcodeScanner() {
         setScannedProduct(product);
         setShowProductDetail(true);
         stopCamera();
+        
+        // Send notification based on health score
+        if (notificationService.isEnabled()) {
+          if (product.health_analysis.approved && product.health_analysis.health_score >= 80) {
+            await notificationService.sendHealthyChoiceCongrats(product.name);
+          } else if (!product.health_analysis.approved || product.health_analysis.red_flags.length > 0) {
+            await notificationService.sendUnhealthyWarning(
+              product.name,
+              product.health_analysis.red_flags.length
+            );
+          }
+        }
         
         const historyItem: ScanHistory = {
           id: Date.now().toString(),

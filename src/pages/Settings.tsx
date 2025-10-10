@@ -915,6 +915,19 @@ export default function Settings() {
               animate={{ opacity: 1, y: 0 }}
             >
               <SettingSection icon={Bell} title="Notification Preferences">
+                <div className="mb-6">
+                  <Button
+                    onClick={() => navigate('/notifications')}
+                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500"
+                  >
+                    <Bell className="w-4 h-4 mr-2" />
+                    Manage All Notifications
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Set up reminders for shopping, workouts, meals, and more
+                  </p>
+                </div>
+                
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
                     <div>
