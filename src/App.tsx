@@ -34,6 +34,8 @@ import AICoach from "./pages/AICoach";
 import Social from "./pages/Social";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
+import Challenges from "./pages/Challenges";
+import ProgressPhotos from "./pages/ProgressPhotos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,8 @@ function AppRoutes() {
           <Route path="/profile/:username" element={<Profile />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:username" element={<Messages />} />
+          <Route path="/challenges" element={<Challenges />} />
+          <Route path="/progress-photos" element={<ProgressPhotos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
