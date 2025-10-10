@@ -860,6 +860,48 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          created_at: string | null
+          estimated_total: number | null
+          id: string
+          items: Json | null
+          receipt_date: string | null
+          savings: number | null
+          store_name: string | null
+          subtotal: number | null
+          tax: number | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_total?: number | null
+          id?: string
+          items?: Json | null
+          receipt_date?: string | null
+          savings?: number | null
+          store_name?: string | null
+          subtotal?: number | null
+          tax?: number | null
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          estimated_total?: number | null
+          id?: string
+          items?: Json | null
+          receipt_date?: string | null
+          savings?: number | null
+          store_name?: string | null
+          subtotal?: number | null
+          tax?: number | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipe_interactions: {
         Row: {
           created_at: string | null

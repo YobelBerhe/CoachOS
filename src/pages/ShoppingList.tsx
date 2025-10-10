@@ -24,6 +24,7 @@ import {
   Trash2,
   Check,
   Scan,
+  Receipt,
   DollarSign,
   Apple,
   Beef,
@@ -644,6 +645,15 @@ export default function ShoppingList() {
               >
                 <Scan className="w-4 h-4" />
                 Start Shopping
+              </Button>
+
+              <Button
+                onClick={() => navigate('/receipt-scanner')}
+                variant="outline"
+                className="gap-2"
+              >
+                <Receipt className="w-4 h-4" />
+                Scan Receipt
               </Button>
             </div>
 
