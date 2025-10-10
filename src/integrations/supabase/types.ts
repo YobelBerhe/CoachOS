@@ -814,6 +814,7 @@ export type Database = {
           health_conditions: string[] | null
           height_cm: number
           id: string
+          profile_completed: boolean | null
           sex: string
           updated_at: string | null
           workout_experience: string | null
@@ -831,6 +832,7 @@ export type Database = {
           health_conditions?: string[] | null
           height_cm: number
           id: string
+          profile_completed?: boolean | null
           sex: string
           updated_at?: string | null
           workout_experience?: string | null
@@ -848,6 +850,7 @@ export type Database = {
           health_conditions?: string[] | null
           height_cm?: number
           id?: string
+          profile_completed?: boolean | null
           sex?: string
           updated_at?: string | null
           workout_experience?: string | null
@@ -1565,6 +1568,174 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_conditions: {
+        Row: {
+          condition_type: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          condition_type: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          condition_type?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_fasting: {
+        Row: {
+          created_at: string | null
+          eating_window_end: string | null
+          eating_window_start: string | null
+          fasting_enabled: boolean | null
+          fasting_method: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          eating_window_end?: string | null
+          eating_window_start?: string | null
+          fasting_enabled?: boolean | null
+          fasting_method?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          eating_window_end?: string | null
+          eating_window_start?: string | null
+          fasting_enabled?: boolean | null
+          fasting_method?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_lifestyle: {
+        Row: {
+          alcohol: boolean | null
+          caffeine_intake: string | null
+          created_at: string | null
+          id: string
+          sleep_hours: string | null
+          smokes: boolean | null
+          stress_level: string | null
+          updated_at: string | null
+          user_id: string | null
+          water_intake: number | null
+        }
+        Insert: {
+          alcohol?: boolean | null
+          caffeine_intake?: string | null
+          created_at?: string | null
+          id?: string
+          sleep_hours?: string | null
+          smokes?: boolean | null
+          stress_level?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          water_intake?: number | null
+        }
+        Update: {
+          alcohol?: boolean | null
+          caffeine_intake?: string | null
+          created_at?: string | null
+          id?: string
+          sleep_hours?: string | null
+          smokes?: boolean | null
+          stress_level?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          water_intake?: number | null
+        }
+        Relationships: []
+      }
+      user_meds: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          dosage: string | null
+          id: string
+          name: string
+          purpose: string | null
+          time: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          dosage?: string | null
+          id?: string
+          name: string
+          purpose?: string | null
+          time?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          dosage?: string | null
+          id?: string
+          name?: string
+          purpose?: string | null
+          time?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          ai_suggestions: boolean | null
+          created_at: string | null
+          daily_summary_email: boolean | null
+          focus_areas: string[] | null
+          health_data_tracking: boolean | null
+          id: string
+          notifications_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_suggestions?: boolean | null
+          created_at?: string | null
+          daily_summary_email?: boolean | null
+          focus_areas?: string[] | null
+          health_data_tracking?: boolean | null
+          id?: string
+          notifications_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_suggestions?: boolean | null
+          created_at?: string | null
+          daily_summary_email?: boolean | null
+          focus_areas?: string[] | null
+          health_data_tracking?: boolean | null
+          id?: string
+          notifications_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_taste_profiles: {
         Row: {
