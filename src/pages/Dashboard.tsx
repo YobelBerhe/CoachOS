@@ -343,11 +343,7 @@ export default function Dashboard() {
             exit={{ opacity: 0, y: -20 }}
           >
             <Card className="border-2 border-primary/50 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 shadow-2xl overflow-hidden">
-              <CardContent className="p-0">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 animate-pulse" />
-                  
-                  <div className="relative p-6">
+              <CardContent className="p-6">
                     <div className="flex items-start gap-4">
                       <motion.div
                         animate={{ rotate: [0, 10, -10, 0] }}
@@ -431,8 +427,6 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </motion.div>
