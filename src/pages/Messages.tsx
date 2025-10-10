@@ -43,7 +43,7 @@ import {
   Settings,
   Info,
   BellOff,
-  Block,
+  Blocks,
   Flag,
   Camera,
   File,
@@ -52,7 +52,8 @@ import {
   ThumbsUp,
   Laugh,
   Angry,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -422,7 +423,6 @@ export default function Messages() {
       <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
         <motion.div
           whileHover={{ scale: 1.02 }}
-          onLongPress={() => setSelectedMessage(message.id)}
           onClick={() => setSelectedMessage(message.id)}
           className={`relative px-4 py-2 rounded-2xl ${
             isOwn
@@ -925,7 +925,7 @@ export default function Messages() {
                   Archive chat
                 </Button>
                 <Button variant="ghost" className="w-full justify-start text-destructive">
-                  <Block className="w-4 h-4 mr-2" />
+                  <Blocks className="w-4 h-4 mr-2" />
                   Block user
                 </Button>
                 <Button variant="ghost" className="w-full justify-start text-destructive">
