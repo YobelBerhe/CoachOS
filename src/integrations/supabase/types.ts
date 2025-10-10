@@ -1383,6 +1383,45 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_lists: {
+        Row: {
+          completed_items: number | null
+          created_at: string | null
+          goal_type: string | null
+          id: string
+          is_active: boolean | null
+          items: Json
+          name: string
+          total_estimated_cost: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_items?: number | null
+          created_at?: string | null
+          goal_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+          name: string
+          total_estimated_cost?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_items?: number | null
+          created_at?: string | null
+          goal_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+          name?: string
+          total_estimated_cost?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sleep_logs: {
         Row: {
           bedtime: string
