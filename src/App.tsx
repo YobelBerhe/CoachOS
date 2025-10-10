@@ -49,6 +49,7 @@ import FoodWasteDashboard from "./pages/FoodWasteDashboard";
 import FridgeScanner from "./pages/FridgeScanner";
 import RescueRecipes from "./pages/RescueRecipes";
 import WasteReport from "./pages/WasteReport";
+import MenuScanner from "./pages/MenuScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,6 +103,7 @@ function AppRoutes() {
           <Route path="/fridge-scanner" element={<FridgeScanner />} />
           <Route path="/rescue-recipes" element={<RescueRecipes />} />
           <Route path="/waste-report" element={<WasteReport />} />
+          <Route path="/menu-scanner" element={<MenuScanner />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

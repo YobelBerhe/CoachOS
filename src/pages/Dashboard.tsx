@@ -28,6 +28,8 @@ import {
   Zap,
   X,
   Leaf,
+  Camera,
+  CheckCircle2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -623,6 +625,52 @@ export default function Dashboard() {
 
               <Button className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500">
                 Get Started
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Menu Scanner Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card 
+            className="border-0 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow overflow-hidden"
+            onClick={() => navigate('/menu-scanner')}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10" />
+            <CardContent className="p-6 relative">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Camera className="w-7 h-7 text-white" />
+                </div>
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">WORLD-FIRST</Badge>
+              </div>
+              
+              <h3 className="text-xl font-bold mb-2">🍽️ Menu Decoder AI</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Scan any restaurant menu, get instant health analysis
+              </p>
+
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span>AI-powered health scores</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-blue-500" />
+                  <span>Smart modification suggestions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <span>Better alternatives instantly</span>
+                </div>
+              </div>
+
+              <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500">
+                Scan Menu Now
               </Button>
             </CardContent>
           </Card>
