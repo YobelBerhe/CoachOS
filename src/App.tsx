@@ -32,6 +32,7 @@ import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Achievements from "./pages/Achievements";
 import AICoach from "./pages/AICoach";
 import Social from "./pages/Social";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ function AppRoutes() {
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/ai-coach" element={<AICoach />} />
           <Route path="/social" element={<Social />} />
+          <Route path="/profile/:username" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
