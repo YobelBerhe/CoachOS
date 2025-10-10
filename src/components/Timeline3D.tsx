@@ -329,7 +329,7 @@ function OrbitRing() {
 // Floating Particles
 function FloatingParticles() {
   const particlesRef = useRef<THREE.Points>(null);
-  const count = 500;
+  const count = 200;
   
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
@@ -404,7 +404,7 @@ function Scene({
       <Stars 
         radius={100} 
         depth={50} 
-        count={5000} 
+        count={2000} 
         factor={4} 
         saturation={0} 
         fade 
