@@ -40,6 +40,7 @@ import LiveWorkouts from "./pages/LiveWorkouts";
 import WorkoutBuddy from "./pages/WorkoutBuddy";
 import BarcodeScanner from "./pages/BarcodeScanner";
 import VoiceCoach from "./pages/VoiceCoach";
+import ProfileSetup from "./pages/ProfileSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ function AppRoutes() {
           <Route path="/workout-buddy" element={<WorkoutBuddy />} />
           <Route path="/barcode-scanner" element={<BarcodeScanner />} />
           <Route path="/voice-coach" element={<VoiceCoach />} />
+          <Route path="/profile-setup" element={<ProfileSetup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

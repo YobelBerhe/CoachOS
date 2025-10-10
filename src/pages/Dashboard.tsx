@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import SmartRecommendations from '@/components/dashboard/SmartRecommendations';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import ProfileCompletionReminder from '@/components/ProfileCompletionReminder';
 import {
   LogOut,
   Flame,
@@ -23,6 +24,9 @@ import {
   Target,
   Trophy,
   Users,
+  Brain,
+  Zap,
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -33,6 +37,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
   const [overallScore, setOverallScore] = useState(0);
+  const [profileComplete, setProfileComplete] = useState(true);
+  const [showBanner, setShowBanner] = useState(true);
   
   // Stats
   const [nutrition, setNutrition] = useState({ consumed: 0, target: 2000, percentage: 0 });
@@ -63,13 +69,15 @@ export default function Dashboard() {
       // Load profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, profile_completed')
         .eq('id', uid)
         .maybeSingle();
       
       if (profile?.full_name) {
         setUserName(profile.full_name.split(' ')[0]);
       }
+      
+      setProfileComplete(profile?.profile_completed ?? false);
 
       // Load streak
       const { data: streakData } = await supabase
@@ -310,6 +318,109 @@ export default function Dashboard() {
       </motion.div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Profile Completion Banner */}
+        {!profileComplete && showBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Card className="border-2 border-primary/50 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 shadow-2xl overflow-hidden">
+              <CardContent className="p-0">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 animate-pulse" />
+                  
+                  <div className="relative p-6">
+                    <div className="flex items-start gap-4">
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="flex-shrink-0"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                          <Sparkles className="w-8 h-8 text-white" />
+                        </div>
+                      </motion.div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-xl font-bold mb-1">
+                              🎯 Complete Your Health Profile
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Unlock AI-powered meal plans, health insights, and personalized recommendations
+                            </p>
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShowBanner(false)}
+                            className="flex-shrink-0 ml-2"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2 text-sm">
+                            <span className="font-medium">Profile Completion</span>
+                            <span className="text-muted-foreground">35%</span>
+                          </div>
+                          <Progress value={35} className="h-2" />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                          {[
+                            { icon: Brain, label: 'AI Recommendations', locked: true },
+                            { icon: Pill, label: 'Med Reminders', locked: true },
+                            { icon: Sparkles, label: 'Smart Insights', locked: true }
+                          ].map((feature, idx) => (
+                            <motion.div
+                              key={idx}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.1 }}
+                              className="flex items-center gap-2 p-3 rounded-lg bg-background/50 backdrop-blur"
+                            >
+                              <feature.icon className="w-5 h-5 text-primary" />
+                              <span className="text-sm font-medium">{feature.label}</span>
+                              {feature.locked && (
+                                <Badge variant="secondary" className="ml-auto text-xs">
+                                  🔒 Locked
+                                </Badge>
+                              )}
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <Button
+                            onClick={() => navigate('/profile-setup')}
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+                            size="lg"
+                          >
+                            <Zap className="w-4 h-4 mr-2" />
+                            Complete Setup (5 min)
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowBanner(false)}
+                            className="sm:w-auto"
+                          >
+                            Remind Me Later
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+        
         {/* Health Rings Section - Apple Health Style */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -539,6 +650,9 @@ export default function Dashboard() {
 
       {/* Bottom Navigation */}
       <QuickActions userId={userId} />
+      
+      {/* Profile Completion Reminder Popup */}
+      <ProfileCompletionReminder />
     </div>
   );
 }
