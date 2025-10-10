@@ -37,6 +37,9 @@ import Messages from "./pages/Messages";
 import Challenges from "./pages/Challenges";
 import ProgressPhotos from "./pages/ProgressPhotos";
 import LiveWorkouts from "./pages/LiveWorkouts";
+import WorkoutBuddy from "./pages/WorkoutBuddy";
+import BarcodeScanner from "./pages/BarcodeScanner";
+import VoiceCoach from "./pages/VoiceCoach";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +81,9 @@ function AppRoutes() {
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/progress-photos" element={<ProgressPhotos />} />
           <Route path="/live" element={<LiveWorkouts />} />
+          <Route path="/workout-buddy" element={<WorkoutBuddy />} />
+          <Route path="/barcode-scanner" element={<BarcodeScanner />} />
+          <Route path="/voice-coach" element={<VoiceCoach />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

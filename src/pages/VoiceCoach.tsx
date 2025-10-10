@@ -165,7 +165,7 @@ export default function VoiceCoach() {
     return responses[Math.floor(Math.random() * responses.length)];
   }
 
-  function addMessage(type: 'user' | 'coach', content: string, category?: string) {
+  function addMessage(type: 'user' | 'coach', content: string, category?: 'workout' | 'nutrition' | 'motivation' | 'general') {
     const message: Message = {
       id: Date.now().toString(),
       type,
