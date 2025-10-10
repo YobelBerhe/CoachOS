@@ -30,6 +30,7 @@ import CreatorDashboard from "./pages/CreatorDashboard";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Achievements from "./pages/Achievements";
+import AICoach from "./pages/AICoach";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ function AppRoutes() {
           <Route path="/compliance" element={<ComplianceDashboard />} />
           <Route path="/analytics" element={<AdvancedAnalytics />} />
           <Route path="/achievements" element={<Achievements />} />
+          <Route path="/ai-coach" element={<AICoach />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
