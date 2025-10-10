@@ -40,6 +40,7 @@ import LiveWorkouts from "./pages/LiveWorkouts";
 import WorkoutBuddy from "./pages/WorkoutBuddy";
 import BarcodeScanner from "./pages/BarcodeScanner";
 import VoiceCoach from "./pages/VoiceCoach";
+import VoiceCommands from "./pages/VoiceCommands";
 import ProfileSetup from "./pages/ProfileSetup";
 import ShoppingList from "./pages/ShoppingList";
 import ReceiptScanner from "./pages/ReceiptScanner";
@@ -97,6 +98,7 @@ function AppRoutes() {
           <Route path="/workout-buddy" element={<WorkoutBuddy />} />
           <Route path="/barcode-scanner" element={<BarcodeScanner />} />
           <Route path="/voice-coach" element={<VoiceCoach />} />
+          <Route path="/voice-commands" element={<VoiceCommands />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
           <Route path="/shopping-list" element={<ShoppingList />} />
           <Route path="/receipt-scanner" element={<ReceiptScanner />} />

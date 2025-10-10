@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { voiceService } from '@/services/voiceService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +59,17 @@ export default function Dashboard() {
   useEffect(() => {
     init();
   }, []);
+
+  useEffect(() => {
+    // Check if user wants voice greetings
+    const voiceEnabled = localStorage.getItem('voiceEnabled') !== 'false';
+    
+    if (voiceEnabled && userName !== 'User') {
+      // Greet user when they open the dashboard
+      const greeting = voiceService.getGreeting();
+      voiceService.speak(`${greeting} ${userName}!`);
+    }
+  }, [userName]);
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser();
