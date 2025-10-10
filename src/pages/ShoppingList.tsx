@@ -639,12 +639,11 @@ export default function ShoppingList() {
               </Button>
 
               <Button
-                variant="outline"
                 onClick={() => navigate('/barcode-scanner')}
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500"
               >
                 <Scan className="w-4 h-4" />
-                Scan & Check Off
+                Start Shopping
               </Button>
             </div>
 

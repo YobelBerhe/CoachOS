@@ -52,6 +52,8 @@ import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 import { barcodeCache } from '@/services/barcodeCache';
 import { fetchProductByBarcode } from '@/services/barcodeApi';
 import { ScannedProduct, ScanHistory } from '@/types/barcode';
+import { soundManager } from '@/utils/soundEffects';
+import confetti from 'canvas-confetti';
 
 type ScanMode = 'grocery' | 'calorie';
 
@@ -319,10 +321,16 @@ export default function BarcodeScanner() {
   const [isLoading, setIsLoading] = useState(false);
   const [cacheStats, setCacheStats] = useState<any>(null);
 
-  // Load cache stats and history on mount
+  // Shopping mode state
+  const [shoppingMode, setShoppingMode] = useState(false);
+  const [activeShoppingList, setActiveShoppingList] = useState<any>(null);
+  const [matchedListItem, setMatchedListItem] = useState<any>(null);
+
+  // Load cache stats, history, and shopping list on mount
   useEffect(() => {
     loadCacheStats();
     loadScanHistory();
+    loadActiveShoppingList();
   }, []);
 
   async function loadCacheStats() {
@@ -366,6 +374,105 @@ export default function BarcodeScanner() {
     }
   }
 
+  async function loadActiveShoppingList() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setActiveShoppingList({
+          ...data,
+          items: data.items as any
+        });
+        setShoppingMode(true);
+        console.log('📋 Active shopping list loaded:', data.name);
+      }
+    } catch (error) {
+      console.error('Error loading shopping list:', error);
+    }
+  }
+
+  function findMatchingListItem(product: ScannedProduct, listItems: any[]) {
+    const productNameLower = product.name.toLowerCase();
+    const productBrand = product.brand.toLowerCase();
+    
+    for (const item of listItems) {
+      if (item.checked) continue;
+      
+      const itemNameLower = item.name.toLowerCase();
+      
+      if (itemNameLower === productNameLower) {
+        return item;
+      }
+      
+      if (itemNameLower.includes(productNameLower) || productNameLower.includes(itemNameLower)) {
+        return item;
+      }
+      
+      if (productNameLower.includes(itemNameLower) || itemNameLower.includes(productBrand)) {
+        return item;
+      }
+    }
+    
+    return null;
+  }
+
+  async function checkOffListItem(itemId: string) {
+    if (!activeShoppingList) return;
+    
+    try {
+      const updatedItems = activeShoppingList.items.map((item: any) =>
+        item.id === itemId ? { ...item, checked: true } : item
+      );
+      
+      const completedCount = updatedItems.filter((i: any) => i.checked).length;
+      
+      await supabase
+        .from('shopping_lists')
+        .update({
+          items: updatedItems as any,
+          completed_items: completedCount
+        })
+        .eq('id', activeShoppingList.id);
+      
+      setActiveShoppingList({
+        ...activeShoppingList,
+        items: updatedItems,
+        completed_items: completedCount
+      });
+      
+      soundManager.play('checkOff');
+      
+      if (completedCount === updatedItems.length) {
+        confetti({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.6 }
+        });
+        
+        soundManager.play('complete');
+        
+        toast({
+          title: "🎉 Shopping Complete!",
+          description: "All items checked off!",
+        });
+      }
+    } catch (error) {
+      console.error('Error checking off item:', error);
+    }
+  }
+
   async function startCamera() {
     try {
       setCameraActive(true);
@@ -392,27 +499,40 @@ export default function BarcodeScanner() {
   }
 
   async function handleBarcodeDetected(barcode: string) {
-    if (isLoading) return; // Prevent multiple simultaneous scans
+    if (isLoading) return;
     
     setIsLoading(true);
     
     try {
       console.log('🔍 Processing barcode:', barcode);
       
-      // Fetch product data (will use cache if available)
       let product = await fetchProductByBarcode(barcode);
       
-      // Fallback to sample data if not found
       if (!product) {
         product = SAMPLE_PRODUCTS[barcode];
       }
       
       if (product) {
+        // Check if item is on shopping list
+        let listItemMatched = null;
+        if (shoppingMode && activeShoppingList) {
+          listItemMatched = findMatchingListItem(product, activeShoppingList.items);
+          
+          if (listItemMatched) {
+            await checkOffListItem(listItemMatched.id);
+            setMatchedListItem(listItemMatched);
+            
+            toast({
+              title: "✅ Item checked off!",
+              description: `${product.name} removed from your list`,
+            });
+          }
+        }
+        
         setScannedProduct(product);
         setShowProductDetail(true);
         stopCamera();
         
-        // Add to history
         const historyItem: ScanHistory = {
           id: Date.now().toString(),
           product,
@@ -421,30 +541,31 @@ export default function BarcodeScanner() {
         };
         setScanHistory([historyItem, ...scanHistory]);
         
-        // Save to database
         await saveToDatabase(product);
-        
-        // Update cache stats
         await loadCacheStats();
         
-        // Different reactions based on mode and approval
-        if (scanMode === 'grocery') {
-          if (product.health_analysis.approved) {
-            toast({
-              title: "✅ APPROVED!",
-              description: `${product.name} is a great choice!`,
-            });
-          } else {
-            toast({
-              title: "❌ NOT APPROVED",
-              description: `${product.name} has health concerns`,
-              variant: "destructive"
-            });
-          }
-        } else {
+        // Show health warnings or approval
+        if (product.health_analysis.approved) {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+          
+          soundManager.play('approved');
+          
           toast({
-            title: "Product found! 📊",
-            description: `${product.nutrition.calories} calories per serving`,
+            title: "✅ APPROVED!",
+            description: `${product.name} is a great choice!`,
+          });
+        } else {
+          soundManager.play('warning');
+          
+          toast({
+            title: "❌ NOT APPROVED",
+            description: `${product.name} has ${product.health_analysis.red_flags.length} red flags`,
+            variant: "destructive",
+            duration: 5000
           });
         }
       } else {
@@ -659,6 +780,52 @@ export default function BarcodeScanner() {
                     Clear
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Shopping Mode Banner */}
+        {shoppingMode && activeShoppingList && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="border-0 shadow-xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10" />
+              <CardContent className="p-4 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                      <ShoppingCart className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">🛒 Shopping Mode Active</p>
+                      <p className="text-xs text-muted-foreground">
+                        {activeShoppingList.completed_items}/{activeShoppingList.items.length} items checked off
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-500">
+                      {Math.round((activeShoppingList.completed_items / activeShoppingList.items.length) * 100)}% Complete
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/shopping-list')}
+                    >
+                      View List
+                    </Button>
+                  </div>
+                </div>
+
+                <Progress 
+                  value={(activeShoppingList.completed_items / activeShoppingList.items.length) * 100} 
+                  className="h-2 mt-3"
+                />
               </CardContent>
             </Card>
           </motion.div>
@@ -894,119 +1061,189 @@ export default function BarcodeScanner() {
       </div>
 
       {/* Product Detail Dialog */}
-      <Dialog open={showProductDetail} onOpenChange={setShowProductDetail}>
+      <Dialog open={showProductDetail} onOpenChange={() => {
+        setShowProductDetail(false);
+        setMatchedListItem(null);
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {scannedProduct && (
             <div className="space-y-6">
-              {/* Product Header with Approval Status */}
-              <div className="relative -m-6 mb-6">
-                {scanMode === 'grocery' && (
-                  <div className={`absolute inset-0 ${
-                    scannedProduct.health_analysis.approved
-                      ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20'
-                      : 'bg-gradient-to-br from-red-500/20 to-rose-500/20'
-                  }`} />
-                )}
-                
-                <div className="relative p-6 flex flex-col md:flex-row gap-6">
-                  <div className="w-full md:w-48 aspect-square rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                    <img
-                      src={scannedProduct.image}
-                      alt={scannedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h2 className="text-3xl font-bold mb-1">{scannedProduct.name}</h2>
-                        <p className="text-lg text-muted-foreground mb-2">{scannedProduct.brand}</p>
-                        <Badge variant="secondary">{scannedProduct.serving_size}</Badge>
+              {/* SHOPPING LIST MATCH NOTIFICATION */}
+              {matchedListItem && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative -m-6 mb-6"
+                >
+                  <Card className="border-0 shadow-xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20" />
+                    <CardContent className="p-6 relative">
+                      <div className="flex items-center gap-4">
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 0.5 }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center"
+                        >
+                          <CheckCircle2 className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold mb-1">✅ Found on Your List!</h3>
+                          <p className="text-sm text-muted-foreground">
+                            "{matchedListItem.name}" has been automatically checked off
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate('/shopping-list')}
+                          className="gap-2"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          View List
+                        </Button>
                       </div>
-                      
-                      {/* Health Score (Grocery Mode) or Calories (Calorie Mode) */}
-                      {scanMode === 'grocery' ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring' }}
-                          className={`w-24 h-24 rounded-full bg-gradient-to-br ${getHealthScoreGradient(scannedProduct.health_analysis.health_score)} flex flex-col items-center justify-center text-white shadow-xl`}
-                        >
-                          <p className="text-3xl font-bold">{scannedProduct.health_analysis.health_score}</p>
-                          <p className="text-xs">SCORE</p>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring' }}
-                          className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex flex-col items-center justify-center text-white shadow-xl"
-                        >
-                          <p className="text-3xl font-bold">{scannedProduct.nutrition.calories}</p>
-                          <p className="text-xs">CALORIES</p>
-                        </motion.div>
-                      )}
-                    </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
 
-                    {/* Approval Status (Grocery Mode Only) */}
-                    {scanMode === 'grocery' && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`p-4 rounded-lg border-2 ${
-                          scannedProduct.health_analysis.approved
-                            ? 'bg-green-500/10 border-green-500'
-                            : 'bg-red-500/10 border-red-500'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          {scannedProduct.health_analysis.approved ? (
-                            <>
-                              <div className="flex-shrink-0">
-                                <motion.div
-                                  animate={{ scale: [1, 1.2, 1] }}
-                                  transition={{ duration: 1, repeat: Infinity }}
-                                >
-                                  <CheckCircle2 className="w-10 h-10 text-green-500" />
-                                </motion.div>
+              {/* BOBBY-STYLE HEALTH WARNING (If not approved) */}
+              {!scannedProduct.health_analysis.approved && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative -m-6 mb-6"
+                >
+                  <Card className="border-2 border-red-500 shadow-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-orange-500/20" />
+                    <CardContent className="p-6 relative">
+                      <div className="flex items-start gap-4">
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            rotate: [0, -5, 5, 0]
+                          }}
+                          transition={{ 
+                            duration: 0.5,
+                            repeat: Infinity,
+                            repeatDelay: 2
+                          }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0"
+                        >
+                          <AlertTriangle className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-red-600 mb-2">
+                            ⚠️ HEALTH WARNING
+                          </h3>
+                          <p className="text-lg font-semibold mb-3">
+                            This product has {scannedProduct.health_analysis.red_flags.length} red flags
+                          </p>
+                          <div className="space-y-2">
+                            {scannedProduct.health_analysis.red_flags.slice(0, 3).map((flag, idx) => (
+                              <div key={idx} className="flex items-start gap-2 p-3 rounded-lg bg-red-500/20 border border-red-500/30">
+                                <Ban className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                <span className="text-sm font-medium">{flag}</span>
                               </div>
-                              <div>
-                                <p className="font-bold text-xl text-green-600">✅ APPROVED!</p>
-                                <p className="text-sm">This is a great healthy choice for your cart</p>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex-shrink-0">
-                                <XCircle className="w-10 h-10 text-red-500" />
-                              </div>
-                              <div>
-                                <p className="font-bold text-xl text-red-600">❌ NOT APPROVED</p>
-                                <p className="text-sm">Contains unhealthy ingredients - check alternatives below</p>
-                              </div>
-                            </>
+                            ))}
+                          </div>
+                          {scannedProduct.health_analysis.red_flags.length > 3 && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              + {scannedProduct.health_analysis.red_flags.length - 3} more concerns
+                            </p>
                           )}
                         </div>
-                      </motion.div>
-                    )}
-
-                    {/* Processing Level (Grocery Mode) */}
-                    {scanMode === 'grocery' && (
-                      <div className="mt-4">
-                        <Badge
-                          className={
-                            scannedProduct.health_analysis.processing_level === 'minimal'
-                              ? 'bg-green-500'
-                              : scannedProduct.health_analysis.processing_level === 'processed'
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                          }
-                        >
-                          {scannedProduct.health_analysis.processing_level.toUpperCase()}
-                        </Badge>
                       </div>
-                    )}
+
+                      <div className="mt-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <p className="text-sm font-semibold text-green-600 flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4" />
+                          Recommendation: Look for alternatives with no seed oils, artificial sweeteners, or ultra-processed ingredients
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* BOBBY-STYLE APPROVAL (If approved) */}
+              {scannedProduct.health_analysis.approved && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative -m-6 mb-6"
+                >
+                  <Card className="border-2 border-green-500 shadow-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20" />
+                    <CardContent className="p-6 relative">
+                      <div className="flex items-start gap-4">
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                          }}
+                          transition={{ 
+                            duration: 1,
+                            repeat: Infinity,
+                            repeatDelay: 2
+                          }}
+                          className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0"
+                        >
+                          <CheckCircle2 className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-green-600 mb-2">
+                            ✅ APPROVED!
+                          </h3>
+                          <p className="text-lg font-semibold mb-3">
+                            Great choice! This product is healthy
+                          </p>
+                          <div className="space-y-2">
+                            {scannedProduct.health_analysis.positives.slice(0, 3).map((positive, idx) => (
+                              <div key={idx} className="flex items-start gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                                <span className="text-sm">{positive}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={`text-center p-4 rounded-lg bg-gradient-to-br ${getHealthScoreGradient(scannedProduct.health_analysis.health_score)}`}>
+                          <p className="text-4xl font-bold text-white mb-1">
+                            {scannedProduct.health_analysis.health_score}
+                          </p>
+                          <p className="text-xs text-white/80">Health Score</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* Product Header (simplified) */}
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="w-full md:w-48 aspect-square rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                  <img
+                    src={scannedProduct.image}
+                    alt={scannedProduct.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <h2 className="text-3xl font-bold mb-1">{scannedProduct.name}</h2>
+                  <p className="text-lg text-muted-foreground mb-2">{scannedProduct.brand}</p>
+                  <Badge variant="secondary">{scannedProduct.serving_size}</Badge>
+                  
+                  <div className="mt-3">
+                    <Badge
+                      className={
+                        scannedProduct.health_analysis.processing_level === 'minimal'
+                          ? 'bg-green-500'
+                          : scannedProduct.health_analysis.processing_level === 'processed'
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }
+                    >
+                      {scannedProduct.health_analysis.processing_level.toUpperCase()}
+                    </Badge>
                   </div>
                 </div>
               </div>
