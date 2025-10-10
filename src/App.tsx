@@ -48,6 +48,7 @@ import FamilySharing from "./pages/FamilySharing";
 import FoodWasteDashboard from "./pages/FoodWasteDashboard";
 import FridgeScanner from "./pages/FridgeScanner";
 import RescueRecipes from "./pages/RescueRecipes";
+import WasteReport from "./pages/WasteReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,7 @@ function AppRoutes() {
           <Route path="/food-waste" element={<FoodWasteDashboard />} />
           <Route path="/fridge-scanner" element={<FridgeScanner />} />
           <Route path="/rescue-recipes" element={<RescueRecipes />} />
+          <Route path="/waste-report" element={<WasteReport />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

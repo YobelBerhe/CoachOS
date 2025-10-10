@@ -27,6 +27,7 @@ import {
   Brain,
   Zap,
   X,
+  Leaf,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -581,6 +582,48 @@ export default function Dashboard() {
                 </div>
                 <Progress value={medications.percentage} className="h-2" />
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Food Waste Widget */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+        >
+          <Card 
+            className="border-0 shadow-xl cursor-pointer hover:shadow-2xl transition-shadow overflow-hidden"
+            onClick={() => navigate('/food-waste')}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10" />
+            <CardContent className="p-6 relative">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                  <Leaf className="w-7 h-7 text-white" />
+                </div>
+                <Badge className="bg-green-500">NEW</Badge>
+              </div>
+              
+              <h3 className="text-xl font-bold mb-2">🌍 Food Waste Tracker</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Save money, save the planet
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-green-500/10">
+                  <p className="text-xs text-muted-foreground mb-1">Money Saved</p>
+                  <p className="text-lg font-bold text-green-600">$0</p>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-500/10">
+                  <p className="text-xs text-muted-foreground mb-1">CO2 Saved</p>
+                  <p className="text-lg font-bold text-blue-600">0kg</p>
+                </div>
+              </div>
+
+              <Button className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500">
+                Get Started
+              </Button>
             </CardContent>
           </Card>
         </motion.div>

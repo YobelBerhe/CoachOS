@@ -38,6 +38,7 @@ import {
   treesEquivalent,
   milesDrivenEquivalent
 } from '@/data/carbonFootprint';
+import { checkAchievements } from '@/services/achievementService';
 
 interface InventoryItem {
   id: string;
@@ -291,6 +292,7 @@ export default function FoodWasteDashboard() {
       });
 
       await loadDashboardData();
+      await checkAchievements();
     } catch (error) {
       console.error('Error marking as consumed:', error);
     }
