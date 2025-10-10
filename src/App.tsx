@@ -41,6 +41,7 @@ import WorkoutBuddy from "./pages/WorkoutBuddy";
 import BarcodeScanner from "./pages/BarcodeScanner";
 import VoiceCoach from "./pages/VoiceCoach";
 import ProfileSetup from "./pages/ProfileSetup";
+import ShoppingList from "./pages/ShoppingList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,7 @@ function AppRoutes() {
           <Route path="/barcode-scanner" element={<BarcodeScanner />} />
           <Route path="/voice-coach" element={<VoiceCoach />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/shopping-list" element={<ShoppingList />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>

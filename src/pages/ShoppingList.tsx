@@ -173,9 +173,14 @@ export default function ShoppingList() {
 
       if (error) throw error;
 
-      setShoppingLists(data || []);
-      if (data && data.length > 0) {
-        setCurrentList(data[0]);
+      const parsedLists = (data || []).map(list => ({
+        ...list,
+        items: list.items as unknown as ShoppingItem[]
+      }));
+
+      setShoppingLists(parsedLists);
+      if (parsedLists.length > 0) {
+        setCurrentList(parsedLists[0]);
       }
     } catch (error) {
       console.error('Error loading lists:', error);
@@ -219,7 +224,7 @@ export default function ShoppingList() {
         .insert({
           user_id: user.id,
           name: newList.name,
-          items: newList.items,
+          items: newList.items as any,
           goal_type: newList.goal_type,
           total_estimated_cost: newList.total_estimated_cost
         });
@@ -273,7 +278,7 @@ export default function ShoppingList() {
       await supabase
         .from('shopping_lists')
         .update({
-          items: updatedItems,
+          items: updatedItems as any,
           completed_items: completedCount
         })
         .eq('id', currentList.id);
@@ -319,7 +324,7 @@ export default function ShoppingList() {
     try {
       await supabase
         .from('shopping_lists')
-        .update({ items: updatedItems })
+        .update({ items: updatedItems as any })
         .eq('id', currentList.id);
 
       toast({
@@ -346,7 +351,7 @@ export default function ShoppingList() {
     try {
       await supabase
         .from('shopping_lists')
-        .update({ items: updatedItems })
+        .update({ items: updatedItems as any })
         .eq('id', currentList.id);
 
       toast({ title: "Item removed" });
@@ -487,12 +492,418 @@ export default function ShoppingList() {
             </div>
           </motion.div>
         ) : (
-          // Shopping List View - CONTINUES IN NEXT MESSAGE
+          // Shopping List View
           <div className="space-y-6">
-            {/* I'll continue with the full shopping list UI in the next message! */}
+            {/* Progress Overview */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Card className="border-0 shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold mb-2">{currentList.name}</h2>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(currentList.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Target className="w-4 h-4" />
+                          {currentList.goal_type}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-green-600">
+                        ${currentList.total_estimated_cost.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Estimated Total</p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Shopping Progress</span>
+                      <span className="font-bold">
+                        {currentList.completed_items} / {currentList.items.length} items
+                      </span>
+                    </div>
+                    <Progress value={completionPercentage} className="h-3" />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{Math.round(completionPercentage)}% Complete</span>
+                      <span>
+                        {currentList.items.length - currentList.completed_items} items remaining
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-3 mt-6">
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                      <BarChart3 className="w-5 h-5 text-blue-500 mb-1" />
+                      <p className="text-lg font-bold">{currentList.items.length}</p>
+                      <p className="text-xs text-muted-foreground">Total Items</p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mb-1" />
+                      <p className="text-lg font-bold">{currentList.completed_items}</p>
+                      <p className="text-xs text-muted-foreground">Checked Off</p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                      <DollarSign className="w-5 h-5 text-orange-500 mb-1" />
+                      <p className="text-lg font-bold">
+                        ${(currentList.total_estimated_cost - 
+                          currentList.items
+                            .filter(i => i.checked)
+                            .reduce((sum, i) => sum + i.estimatedPrice, 0)
+                        ).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Remaining</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Category Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Apple className="w-5 h-5 text-green-500" />
+                    Shop by Category
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <button
+                      onClick={() => setSelectedCategory('all')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        selectedCategory === 'all'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <ShoppingCart className="w-6 h-6 mx-auto mb-2 text-primary" />
+                      <p className="font-semibold text-sm">All Items</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {currentList.items.length} items
+                      </p>
+                    </button>
+
+                    {categoryStats.map(category => {
+                      const Icon = category.icon;
+                      return (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`p-4 rounded-lg border-2 transition-all ${
+                            selectedCategory === category.id
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <p className="font-semibold text-sm">{category.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {category.checked}/{category.total}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowNewItemDialog(true)}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Custom Item
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate('/barcode-scanner')}
+                className="gap-2"
+              >
+                <Scan className="w-4 h-4" />
+                Scan & Check Off
+              </Button>
+            </div>
+
+            {/* Shopping Items List */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-4"
+            >
+              <AnimatePresence>
+                {filteredItems.map((item, idx) => {
+                  const category = CATEGORIES.find(c => c.id === item.category);
+                  const Icon = category?.icon || ShoppingCart;
+                  
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card 
+                        className={`border-0 shadow-lg transition-all cursor-pointer ${
+                          item.checked
+                            ? 'opacity-60 bg-secondary'
+                            : 'hover:shadow-xl'
+                        }`}
+                        onClick={() => toggleItem(item.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            {/* Checkbox */}
+                            <div className="flex-shrink-0 pt-1">
+                              <div 
+                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                                  item.checked
+                                    ? 'bg-green-500 border-green-500'
+                                    : 'border-border hover:border-green-500'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleItem(item.id);
+                                }}
+                              >
+                                {item.checked && <Check className="w-4 h-4 text-white" />}
+                              </div>
+                            </div>
+
+                            {/* Category Icon */}
+                            <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br ${category?.color || 'from-gray-500 to-gray-600'} flex items-center justify-center`}>
+                              <Icon className="w-6 h-6 text-white" />
+                            </div>
+
+                            {/* Item Details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h4 className={`font-bold text-lg ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
+                                    {item.name}
+                                  </h4>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {item.quantity} {item.unit}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {category?.name}
+                                    </Badge>
+                                    {item.isHealthy && (
+                                      <Badge className="bg-green-500 text-xs">
+                                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                                        Healthy
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="text-right flex-shrink-0">
+                                  <p className="text-xl font-bold text-green-600">
+                                    ${item.estimatedPrice.toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Reason */}
+                              {item.reason && (
+                                <div className="flex items-start gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 mb-2">
+                                  <Sparkles className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.reason}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Alternatives */}
+                              {item.alternatives && item.alternatives.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                    Better alternatives:
+                                  </p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {item.alternatives.map((alt, altIdx) => (
+                                      <Badge key={altIdx} variant="outline" className="text-xs">
+                                        {alt}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Actions */}
+                              <div className="flex items-center gap-2 mt-3">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteItem(item.id);
+                                  }}
+                                  className="gap-1 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {filteredItems.length === 0 && (
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-12 text-center">
+                    <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-lg font-semibold mb-2">No items in this category</p>
+                    <p className="text-sm text-muted-foreground">
+                      Try selecting a different category or add custom items
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </motion.div>
+
+            {/* Summary Card */}
+            {currentList.completed_items === currentList.items.length && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <Card className="border-0 shadow-2xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20" />
+                  <CardContent className="p-8 text-center relative">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4"
+                    >
+                      <CheckCircle2 className="w-10 h-10 text-white" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold mb-2">Shopping Complete! 🎉</h3>
+                    <p className="text-muted-foreground mb-4">
+                      You've checked off all {currentList.items.length} items
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      <Button
+                        onClick={generateSmartList}
+                        className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Generate Next Week's List
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Add Custom Item Dialog */}
+      <Dialog open={showNewItemDialog} onOpenChange={setShowNewItemDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Custom Item</DialogTitle>
+            <DialogDescription>Add your own item to the shopping list</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Item Name</label>
+              <Input
+                placeholder="e.g., Avocados"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    addCustomItem();
+                  }
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Quantity</label>
+              <Input
+                placeholder="e.g., 3 or 1 lb"
+                value={newItemQuantity}
+                onChange={(e) => setNewItemQuantity(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Category</label>
+              <div className="grid grid-cols-3 gap-2">
+                {CATEGORIES.slice(0, 9).map(category => {
+                  const Icon = category.icon;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setNewItemCategory(category.id)}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        newItemCategory === category.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 mx-auto mb-1" />
+                      <p className="text-xs font-medium">{category.name}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowNewItemDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={addCustomItem}
+                disabled={!newItemName.trim()}
+                className="flex-1"
+              >
+                Add Item
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
