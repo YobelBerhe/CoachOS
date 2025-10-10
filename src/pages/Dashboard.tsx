@@ -60,8 +60,16 @@ export default function Dashboard() {
     init();
   }, []);
 
-  // Voice greeting removed - was causing freezing on dashboard load
-  // Users can enable it manually from voice settings if needed
+  useEffect(() => {
+    // Check if user wants voice greetings
+    const voiceEnabled = localStorage.getItem('voiceEnabled') !== 'false';
+    
+    if (voiceEnabled && userName !== 'User') {
+      // Greet user when they open the dashboard
+      const greeting = voiceService.getGreeting();
+      voiceService.speak(`${greeting} ${userName}!`);
+    }
+  }, [userName]);
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser();
