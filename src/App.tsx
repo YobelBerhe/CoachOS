@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import Eat from "./pages/Eat";
 import Train from "./pages/Train";
 import Sleep from "./pages/Sleep";
+import SleepTracker from "./pages/SleepTracker";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Medications from "./pages/Medications";
@@ -76,6 +77,7 @@ function AppRoutes() {
           <Route path="/eat" element={<Eat />} />
           <Route path="/train" element={<Train />} />
           <Route path="/sleep" element={<Sleep />} />
+          <Route path="/sleep-tracker" element={<SleepTracker />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/medications" element={<Medications />} />

@@ -1,817 +1,324 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  ArrowLeft,
-  Moon,
-  Sun,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Clock,
-  Heart,
-  Brain,
-  Zap,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  Plus,
-  BarChart3,
-  Sparkles
-} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import confetti from 'canvas-confetti';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { AddSleepDialog } from '@/components/sleep/AddSleepDialog';
+import { toast } from '@/hooks/use-toast';
+import {
+  Moon,
+  TrendingUp,
+  Clock,
+  Calendar,
+  Plus,
+  ChevronLeft,
+  AlertCircle
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface SleepLog {
   id: string;
-  sleep_date: string;
-  bed_time: string;
+  date: string;
+  bedtime: string;
   wake_time: string;
-  total_sleep_hours: number;
-  sleep_quality_rating: number;
-  feeling_rating: string;
-  fell_asleep_easily: boolean;
-  stayed_asleep: boolean;
-  felt_rested: boolean;
-  wake_count: number;
-  notes: string;
-  sleep_debt_minutes: number;
+  duration_min: number;
+  quality: number;
+  created_at: string;
+}
+
+interface SleepStats {
+  avgSleep: number;
+  avgQuality: number;
+  totalLogs: number;
+  sleepDebt: number;
 }
 
 export default function SleepTracker() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const [user, setUser] = useState<any>(null);
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
-  const [stats, setStats] = useState<any>(null);
-  const [showLogModal, setShowLogModal] = useState(false);
-  const [showScienceModal, setShowScienceModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    sleep_date: new Date().toISOString().split('T')[0],
-    bed_time: '23:00',
-    wake_time: '07:00',
-    sleep_quality_rating: 7,
-    feeling_rating: 'good',
-    fell_asleep_easily: true,
-    stayed_asleep: true,
-    felt_rested: true,
-    wake_count: 0,
-    notes: ''
-  });
+  const [stats, setStats] = useState<SleepStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
-    loadSleepData();
+    checkUser();
   }, []);
 
-  async function loadSleepData() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  useEffect(() => {
+    if (user) {
+      fetchSleepLogs();
+    }
+  }, [user]);
 
-      // Load sleep logs
-      const { data: logs, error: logsError } = await supabase
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setUser(user);
+  }
+
+  async function fetchSleepLogs() {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
         .from('sleep_logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('sleep_date', { ascending: false })
+        .order('date', { ascending: false })
         .limit(30);
-
-      if (logsError) throw logsError;
-      setSleepLogs(logs || []);
-
-      // Calculate stats
-      if (logs && logs.length > 0) {
-        const avgSleep = logs.reduce((sum, log) => sum + log.total_sleep_hours, 0) / logs.length;
-        const avgQuality = logs.reduce((sum, log) => sum + (log.sleep_quality_rating || 0), 0) / logs.length;
-        const totalDebt = logs.reduce((sum, log) => sum + log.sleep_debt_minutes, 0);
-        
-        setStats({
-          avgSleep: avgSleep.toFixed(1),
-          avgQuality: avgQuality.toFixed(1),
-          totalDebt: Math.abs(totalDebt),
-          debtDirection: totalDebt > 0 ? 'deficit' : 'surplus',
-          streak: calculateStreak(logs),
-          last7Days: logs.slice(0, 7)
-        });
-      }
-
-    } catch (error) {
-      console.error('Error loading sleep data:', error);
-      toast({
-        title: "Error loading data",
-        variant: "destructive"
-      });
-    }
-  }
-
-  function calculateStreak(logs: SleepLog[]) {
-    let streak = 0;
-    const sortedLogs = [...logs].sort((a, b) => 
-      new Date(b.sleep_date).getTime() - new Date(a.sleep_date).getTime()
-    );
-
-    for (let i = 0; i < sortedLogs.length; i++) {
-      if (sortedLogs[i].total_sleep_hours >= 7) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
-  async function handleLogSleep() {
-    setIsLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Calculate sleep duration
-      const bedTime = new Date(`${formData.sleep_date}T${formData.bed_time}`);
-      let wakeTime = new Date(`${formData.sleep_date}T${formData.wake_time}`);
-      
-      // If wake time is before bed time, assume it's the next day
-      if (wakeTime <= bedTime) {
-        wakeTime.setDate(wakeTime.getDate() + 1);
-      }
-
-      const sleepMinutes = Math.floor((wakeTime.getTime() - bedTime.getTime()) / 1000 / 60);
-
-      const { error } = await supabase
-        .from('sleep_logs')
-        .upsert({
-          user_id: user.id,
-          sleep_date: formData.sleep_date,
-          bed_time: bedTime.toISOString(),
-          wake_time: wakeTime.toISOString(),
-          total_sleep_minutes: sleepMinutes,
-          sleep_quality_rating: formData.sleep_quality_rating,
-          feeling_rating: formData.feeling_rating,
-          fell_asleep_easily: formData.fell_asleep_easily,
-          stayed_asleep: formData.stayed_asleep,
-          felt_rested: formData.felt_rested,
-          wake_count: formData.wake_count,
-          notes: formData.notes
-        });
 
       if (error) throw error;
 
-      // Celebration for good sleep
-      if (sleepMinutes >= 420) { // 7+ hours
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      }
-
+      setSleepLogs(data || []);
+      calculateStats(data || []);
+    } catch (error: any) {
       toast({
-        title: sleepMinutes >= 420 ? "Great sleep! 😴💪" : "Sleep logged ✓",
-        description: `${(sleepMinutes / 60).toFixed(1)} hours tracked`
-      });
-
-      setShowLogModal(false);
-      await loadSleepData();
-
-    } catch (error) {
-      console.error('Error logging sleep:', error);
-      toast({
-        title: "Error logging sleep",
-        variant: "destructive"
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }
 
-  const getFeelingEmoji = (feeling: string) => {
-    const map: any = {
-      exhausted: '😴',
-      tired: '😐',
-      okay: '🙂',
-      good: '😊',
-      excellent: '🤩'
-    };
-    return map[feeling] || '🙂';
-  };
+  function calculateStats(logs: SleepLog[]) {
+    if (logs.length === 0) {
+      setStats(null);
+      return;
+    }
 
-  const getSleepGrade = (hours: number) => {
-    if (hours >= 8) return { grade: 'A+', color: 'text-green-600', bg: 'bg-green-50' };
-    if (hours >= 7) return { grade: 'A', color: 'text-green-600', bg: 'bg-green-50' };
-    if (hours >= 6) return { grade: 'B', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    if (hours >= 5) return { grade: 'C', color: 'text-orange-600', bg: 'bg-orange-50' };
-    return { grade: 'D', color: 'text-red-600', bg: 'bg-red-50' };
-  };
+    const avgSleep = logs.reduce((sum, log) => sum + log.duration_min, 0) / logs.length;
+    const avgQuality = logs.reduce((sum, log) => sum + log.quality, 0) / logs.length;
+    const targetSleep = 480; // 8 hours
+    const sleepDebt = (targetSleep - avgSleep) * logs.length;
+
+    setStats({
+      avgSleep: avgSleep / 60,
+      avgQuality,
+      totalLogs: logs.length,
+      sleepDebt: sleepDebt / 60
+    });
+  }
+
+  function getQualityColor(quality: number) {
+    if (quality >= 8) return 'bg-green-500';
+    if (quality >= 6) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  function getQualityLabel(quality: number) {
+    if (quality >= 8) return 'Excellent';
+    if (quality >= 6) return 'Good';
+    if (quality >= 4) return 'Fair';
+    return 'Poor';
+  }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/dashboard')}
-                className="rounded-full"
+                className="text-white hover:bg-white/20"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" />
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <Moon className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Sleep Tracker</h1>
-                  <p className="text-sm text-gray-600">Track & optimize your rest</p>
-                </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Moon className="w-7 h-7" />
+                  Sleep Tracker
+                </h1>
+                <p className="text-indigo-100 text-sm mt-1">
+                  Track your sleep and build better habits
+                </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowScienceModal(true)}
-                className="hidden md:flex"
-              >
-                <Info className="w-4 h-4 mr-2" />
-                Why Sleep Matters
-              </Button>
-              <Button
-                onClick={() => setShowLogModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Log Sleep
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowAddDialog(true)}
+              className="bg-white text-indigo-600 hover:bg-indigo-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Log Sleep
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Average Sleep */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Moon className="w-5 h-5 text-indigo-600" />
-                <Badge variant="secondary" className="text-xs">Last 30 days</Badge>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mb-1">
-                {stats?.avgSleep || '0.0'}h
-              </p>
-              <p className="text-sm text-gray-600">Average Sleep</p>
-              <p className="text-xs text-gray-500 mt-2">Target: 8h</p>
-            </CardContent>
-          </Card>
-
-          {/* Sleep Quality */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Heart className="w-5 h-5 text-pink-600" />
-                <Badge variant="secondary" className="text-xs">Quality</Badge>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mb-1">
-                {stats?.avgQuality || '0'}/10
-              </p>
-              <p className="text-sm text-gray-600">Sleep Quality</p>
-              <div className="mt-2">
-                <Progress 
-                  value={(parseFloat(stats?.avgQuality || 0) / 10) * 100} 
-                  className="h-2 bg-gray-100"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sleep Debt */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                {stats?.debtDirection === 'deficit' ? (
-                  <TrendingDown className="w-5 h-5 text-red-600" />
-                ) : (
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                )}
-                <Badge 
-                  variant={stats?.debtDirection === 'deficit' ? 'destructive' : 'default'}
-                  className="text-xs"
-                >
-                  {stats?.debtDirection === 'deficit' ? 'Deficit' : 'Surplus'}
-                </Badge>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mb-1">
-                {Math.floor((stats?.totalDebt || 0) / 60)}h
-              </p>
-              <p className="text-sm text-gray-600">Sleep Debt</p>
-              <p className="text-xs text-gray-500 mt-2">
-                {stats?.debtDirection === 'deficit' 
-                  ? 'Catch up on rest' 
-                  : 'Well rested!'}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Streak */}
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Zap className="w-5 h-5 text-orange-600" />
-                <Badge variant="secondary" className="text-xs">Streak</Badge>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mb-1">
-                {stats?.streak || 0}
-              </p>
-              <p className="text-sm text-gray-600">Days (7+ hours)</p>
-              <p className="text-xs text-orange-600 mt-2 flex items-center gap-1">
-                <span className="text-lg">🔥</span> Keep going!
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Recent Logs */}
-          <div className="lg:col-span-2">
-            <Card className="border border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card className="border-0 shadow-lg">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Recent Sleep</h2>
-                    <p className="text-sm text-gray-600">Last 7 nights</p>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    View All
-                  </Button>
-                </div>
-
-                {sleepLogs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Moon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      No sleep logged yet
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Start tracking your sleep to see insights
+                    <p className="text-sm text-muted-foreground mb-1">Avg Sleep</p>
+                    <p className="text-3xl font-bold">
+                      {stats.avgSleep.toFixed(1)}
+                      <span className="text-lg text-muted-foreground ml-1">hrs</span>
                     </p>
-                    <Button onClick={() => setShowLogModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Log Your First Sleep
-                    </Button>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {stats?.last7Days?.map((log: SleepLog, idx: number) => {
-                      const grade = getSleepGrade(log.total_sleep_hours);
-                      return (
-                        <motion.div
-                          key={log.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                        >
-                          <div className="p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4 flex-1">
-                                {/* Date */}
-                                <div className="text-center">
-                                  <p className="text-xs text-gray-500 mb-1">
-                                    {new Date(log.sleep_date).toLocaleDateString('en-US', { weekday: 'short' })}
-                                  </p>
-                                  <p className="text-lg font-bold text-gray-900">
-                                    {new Date(log.sleep_date).getDate()}
-                                  </p>
-                                </div>
-
-                                {/* Sleep Duration */}
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Moon className="w-4 h-4 text-indigo-600" />
-                                    <span className="text-sm font-semibold text-gray-700">
-                                      {new Date(log.bed_time).toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                      })}
-                                    </span>
-                                    <span className="text-gray-400">→</span>
-                                    <Sun className="w-4 h-4 text-orange-600" />
-                                    <span className="text-sm font-semibold text-gray-700">
-                                      {new Date(log.wake_time).toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                      })}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-gray-500">
-                                    {log.total_sleep_hours.toFixed(1)}h sleep
-                                  </p>
-                                </div>
-
-                                {/* Quality Rating */}
-                                <div className="text-center">
-                                  <div className="text-2xl mb-1">
-                                    {getFeelingEmoji(log.feeling_rating)}
-                                  </div>
-                                  <p className="text-xs text-gray-600">
-                                    {log.sleep_quality_rating}/10
-                                  </p>
-                                </div>
-
-                                {/* Grade */}
-                                <div className={`w-16 h-16 rounded-lg ${grade.bg} flex items-center justify-center`}>
-                                  <span className={`text-2xl font-bold ${grade.color}`}>
-                                    {grade.grade}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Additional Details */}
-                            {log.notes && (
-                              <div className="mt-3 pt-3 border-t border-gray-100">
-                                <p className="text-xs text-gray-600 italic">
-                                  "{log.notes}"
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-indigo-600" />
                   </div>
-                )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Avg Quality</p>
+                    <p className="text-3xl font-bold">
+                      {stats.avgQuality.toFixed(1)}
+                      <span className="text-lg text-muted-foreground ml-1">/10</span>
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Logs</p>
+                    <p className="text-3xl font-bold">{stats.totalLogs}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-pink-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Sleep Debt</p>
+                    <p className={`text-3xl font-bold ${stats.sleepDebt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {Math.abs(stats.sleepDebt).toFixed(1)}
+                      <span className="text-lg text-muted-foreground ml-1">hrs</span>
+                    </p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-full ${stats.sleepDebt > 0 ? 'bg-red-100' : 'bg-green-100'} flex items-center justify-center`}>
+                    <AlertCircle className={`w-5 h-5 ${stats.sleepDebt > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
+        )}
 
-          {/* Right Column - Insights & Tips */}
-          <div className="space-y-6">
-            {/* Today's Insight */}
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Today's Insight</h3>
-                <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-100">
-                  <p className="text-sm text-indigo-900 font-semibold mb-2">
-                    Sleep is Your Superpower
-                  </p>
-                  <p className="text-xs text-indigo-700 leading-relaxed">
-                    {stats?.avgSleep >= 7 
-                      ? `Great job! You're averaging ${stats.avgSleep}h. Keep this consistency to maintain peak performance.`
-                      : `You're averaging ${stats?.avgSleep || 0}h. Try adding 30 minutes to see a 20% boost in cognition!`
-                    }
-                  </p>
-                </div>
-
-                {stats?.debtDirection === 'deficit' && stats?.totalDebt > 120 && (
-                  <div className="mt-3 p-4 rounded-lg bg-red-50 border border-red-100">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
+        {/* Sleep Logs */}
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle>Sleep History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading sleep logs...</p>
+              </div>
+            ) : sleepLogs.length === 0 ? (
+              <div className="text-center py-12">
+                <Moon className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-lg font-semibold mb-2">No sleep logs yet</p>
+                <p className="text-muted-foreground mb-4">Start tracking your sleep to see patterns and insights</p>
+                <Button onClick={() => setShowAddDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Log Your First Sleep
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sleepLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white">
+                        <Moon className="w-6 h-6" />
+                      </div>
                       <div>
-                        <p className="text-sm text-red-900 font-semibold mb-1">
-                          Sleep Debt Alert
+                        <p className="font-semibold">
+                          {format(new Date(log.date), 'EEEE, MMMM d')}
                         </p>
-                        <p className="text-xs text-red-700">
-                          You're {Math.floor((stats.totalDebt || 0) / 60)}h behind. Try going to bed 1 hour earlier tonight.
+                        <p className="text-sm text-muted-foreground">
+                          {log.bedtime} → {log.wake_time}
                         </p>
                       </div>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* Sleep Tips */}
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Sleep Better</h3>
-                <div className="space-y-3">
-                  {[
-                    { icon: '🌡️', tip: 'Cool room (65-68°F)', science: 'Optimal for deep sleep' },
-                    { icon: '📱', tip: 'No screens 1hr before bed', science: '50% less melatonin' },
-                    { icon: '🌙', tip: 'Consistent sleep schedule', science: '20% better quality' },
-                    { icon: '☕', tip: 'No caffeine after 2 PM', science: '6hr half-life' }
-                  ].map((item, idx) => (
-                    <div key={idx} className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{item.icon}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-900">{item.tip}</p>
-                          <p className="text-xs text-gray-600">{item.science}</p>
-                        </div>
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">
+                          {(log.duration_min / 60).toFixed(1)}
+                          <span className="text-sm text-muted-foreground ml-1">hrs</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.duration_min % 60} mins
+                        </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Famous Sleepers */}
-            <Card className="border border-gray-200 shadow-sm">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">🌟 Sleep Champions</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="p-3 rounded-lg bg-gray-50">
-                    <p className="font-semibold text-gray-900 mb-1">Jeff Bezos</p>
-                    <p className="text-xs text-gray-600">"8 hours = better decisions"</p>
+                      <Badge
+                        className={`${getQualityColor(log.quality)} text-white`}
+                      >
+                        {getQualityLabel(log.quality)} ({log.quality}/10)
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-gray-50">
-                    <p className="font-semibold text-gray-900 mb-1">LeBron James</p>
-                    <p className="text-xs text-gray-600">12 hours daily (8 + 4 nap)</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-gray-50">
-                    <p className="font-semibold text-gray-900 mb-1">Arianna Huffington</p>
-                    <p className="text-xs text-gray-600">Built Thrive on sleep importance</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Tips Card */}
+        <Card className="border-0 shadow-lg mt-8 bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+              <Moon className="w-5 h-5" />
+              Sleep Better Tonight
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>• Aim for 7-9 hours of sleep per night</li>
+              <li>• Keep a consistent sleep schedule</li>
+              <li>• Avoid screens 1 hour before bed</li>
+              <li>• Keep your bedroom cool and dark</li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Log Sleep Modal */}
-      <Dialog open={showLogModal} onOpenChange={setShowLogModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900">Log Sleep</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Track your sleep to unlock insights
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {/* Date */}
-            <div>
-              <Label className="text-gray-900">Sleep Date</Label>
-              <Input
-                type="date"
-                value={formData.sleep_date}
-                onChange={(e) => setFormData({ ...formData, sleep_date: e.target.value })}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Sleep Times */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-900 flex items-center gap-2">
-                  <Moon className="w-4 h-4 text-indigo-600" />
-                  Bed Time
-                </Label>
-                <Input
-                  type="time"
-                  value={formData.bed_time}
-                  onChange={(e) => setFormData({ ...formData, bed_time: e.target.value })}
-                  className="mt-2"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-900 flex items-center gap-2">
-                  <Sun className="w-4 h-4 text-orange-600" />
-                  Wake Time
-                </Label>
-                <Input
-                  type="time"
-                  value={formData.wake_time}
-                  onChange={(e) => setFormData({ ...formData, wake_time: e.target.value })}
-                  className="mt-2"
-                />
-              </div>
-            </div>
-
-            {/* Sleep Quality Rating */}
-            <div>
-              <Label className="text-gray-900 mb-2 block">
-                Sleep Quality: {formData.sleep_quality_rating}/10
-              </Label>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={formData.sleep_quality_rating}
-                onChange={(e) => setFormData({ ...formData, sleep_quality_rating: parseInt(e.target.value) })}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Poor</span>
-                <span>Excellent</span>
-              </div>
-            </div>
-
-            {/* Feeling Rating */}
-            <div>
-              <Label className="text-gray-900">How do you feel?</Label>
-              <Select
-                value={formData.feeling_rating}
-                onValueChange={(value) => setFormData({ ...formData, feeling_rating: value })}
-              >
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="exhausted">😴 Exhausted</SelectItem>
-                  <SelectItem value="tired">😐 Tired</SelectItem>
-                  <SelectItem value="okay">🙂 Okay</SelectItem>
-                  <SelectItem value="good">😊 Good</SelectItem>
-                  <SelectItem value="excellent">🤩 Excellent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sleep Factors (Optional) */}
-            <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-              <Label className="text-gray-900 mb-3 block">Sleep Quality Factors (Optional)</Label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.fell_asleep_easily}
-                    onChange={(e) => setFormData({ ...formData, fell_asleep_easily: e.target.checked })}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-gray-700">Fell asleep easily</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.stayed_asleep}
-                    onChange={(e) => setFormData({ ...formData, stayed_asleep: e.target.checked })}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-gray-700">Stayed asleep through the night</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.felt_rested}
-                    onChange={(e) => setFormData({ ...formData, felt_rested: e.target.checked })}
-                    className="w-4 h-4 rounded"
-                  />
-                  <span className="text-sm text-gray-700">Felt rested upon waking</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Wake Count */}
-            <div>
-              <Label className="text-gray-900">Times woken during night</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.wake_count}
-                onChange={(e) => setFormData({ ...formData, wake_count: parseInt(e.target.value) || 0 })}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Notes */}
-            <div>
-              <Label className="text-gray-900">Notes (Optional)</Label>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Any factors affecting sleep? (stress, exercise, caffeine, etc.)"
-                className="mt-2 min-h-[80px]"
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowLogModal(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleLogSleep}
-              disabled={isLoading}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-            >
-              {isLoading ? 'Logging...' : (
-                <>
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Log Sleep
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Science Modal */}
-      <Dialog open={showScienceModal} onOpenChange={setShowScienceModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Brain className="w-6 h-6 text-indigo-600" />
-              Why Sleep Matters
-            </DialogTitle>
-            <DialogDescription className="text-gray-600">
-              The science behind sleep tracking
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {[
-              {
-                title: '🧠 Cognitive Performance',
-                stat: '6 hours sleep = 11-day cognitive impairment',
-                source: 'University of Pennsylvania',
-                description: 'Even moderate sleep deprivation severely impacts decision-making, memory, and focus.'
-              },
-              {
-                title: '💼 Productivity Impact',
-                stat: '30% productivity loss from sleep deprivation',
-                source: 'Matthew Walker, "Why We Sleep"',
-                description: 'Your brain needs sleep to consolidate memories and clear toxic waste products.'
-              },
-              {
-                title: '💪 Physical Performance',
-                stat: '10-30% decrease in athletic performance',
-                source: 'Stanford Sleep Research',
-                description: 'Sleep affects reaction time, accuracy, and recovery. Elite athletes prioritize 8-10 hours.'
-              },
-              {
-                title: '🎯 Decision Making',
-                stat: '8 hours = better decisions',
-                source: 'Jeff Bezos',
-                description: 'Bezos refuses meetings before 10 AM to protect his 8-hour sleep schedule.'
-              },
-              {
-                title: '🏆 Elite Performance',
-                stat: 'LeBron James: 12 hours daily',
-                source: 'Professional Athletes',
-                description: '8 hours at night + 4 hours naps. Roger Federer also sleeps 12 hours.'
-              },
-              {
-                title: '⚠️ Sleep Debt',
-                stat: 'Cumulative deficits compound',
-                source: 'Harvard Medical School',
-                description: 'You can\'t "catch up" on weekends. Consistency is key.'
-              }
-            ].map((item, idx) => (
-              <div key={idx} className="p-4 rounded-lg border border-gray-200 bg-gray-50">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm font-semibold text-indigo-600 mb-1">{item.stat}</p>
-                <p className="text-sm text-gray-700 mb-2">{item.description}</p>
-                <p className="text-xs text-gray-500">Source: {item.source}</p>
-              </div>
-            ))}
-
-            <div className="p-6 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-600" />
-                The Bottom Line
-              </h3>
-              <p className="text-gray-700 leading-relaxed">
-                Sleep is not negotiable. It's the ultimate performance enhancer, affecting every aspect of your life: health, productivity, relationships, and longevity. Track it, protect it, prioritize it.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={() => setShowScienceModal(false)}>
-              Got it!
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Add Sleep Dialog */}
+      <AddSleepDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        userId={user?.id || ''}
+        onSuccess={() => {
+          setShowAddDialog(false);
+          fetchSleepLogs();
+        }}
+      />
     </div>
   );
 }
