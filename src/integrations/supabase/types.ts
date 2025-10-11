@@ -758,6 +758,30 @@ export type Database = {
           },
         ]
       }
+      gratitude_items: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          gratitude_text: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date: string
+          gratitude_text: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          gratitude_text?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grocery_lists: {
         Row: {
           created_at: string | null
@@ -840,6 +864,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      journal_entries: {
+        Row: {
+          created_at: string | null
+          daily_affirmation: string | null
+          daily_intention: string | null
+          energy_level: number | null
+          entry_date: string
+          entry_type: string | null
+          franklin_evening: string | null
+          franklin_morning: string | null
+          free_form_entry: string | null
+          gratitude_1: string | null
+          gratitude_2: string | null
+          gratitude_3: string | null
+          id: string
+          lessons_learned: string | null
+          mood_rating: number | null
+          tags: string[] | null
+          tomorrow_focus: string | null
+          updated_at: string | null
+          user_id: string
+          voice_transcription: string | null
+          what_would_make_today_great: string | null
+          wins_today: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_affirmation?: string | null
+          daily_intention?: string | null
+          energy_level?: number | null
+          entry_date: string
+          entry_type?: string | null
+          franklin_evening?: string | null
+          franklin_morning?: string | null
+          free_form_entry?: string | null
+          gratitude_1?: string | null
+          gratitude_2?: string | null
+          gratitude_3?: string | null
+          id?: string
+          lessons_learned?: string | null
+          mood_rating?: number | null
+          tags?: string[] | null
+          tomorrow_focus?: string | null
+          updated_at?: string | null
+          user_id: string
+          voice_transcription?: string | null
+          what_would_make_today_great?: string | null
+          wins_today?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_affirmation?: string | null
+          daily_intention?: string | null
+          energy_level?: number | null
+          entry_date?: string
+          entry_type?: string | null
+          franklin_evening?: string | null
+          franklin_morning?: string | null
+          free_form_entry?: string | null
+          gratitude_1?: string | null
+          gratitude_2?: string | null
+          gratitude_3?: string | null
+          id?: string
+          lessons_learned?: string | null
+          mood_rating?: number | null
+          tags?: string[] | null
+          tomorrow_focus?: string | null
+          updated_at?: string | null
+          user_id?: string
+          voice_transcription?: string | null
+          what_would_make_today_great?: string | null
+          wins_today?: string[] | null
+        }
+        Relationships: []
       }
       meal_swaps: {
         Row: {
@@ -2781,7 +2880,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      journal_stats: {
+        Row: {
+          avg_energy: number | null
+          avg_mood: number | null
+          evening_entries: number | null
+          last_entry_date: string | null
+          morning_entries: number | null
+          total_entries: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_recipe_similarity: {
