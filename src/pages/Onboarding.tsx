@@ -137,7 +137,8 @@ export default function Onboarding() {
           workout_frequency: parseInt(formData.workout_frequency),
           workout_location: formData.workout_location,
           workout_experience: formData.workout_experience,
-          dietary_restrictions: formData.dietary_restrictions
+          dietary_restrictions: formData.dietary_restrictions,
+          profile_completed: true
         })
         .eq('id', userId);
 
@@ -191,69 +192,16 @@ export default function Onboarding() {
     }
   }
 
-  const FloatingElement = ({ children, delay = 0 }: any) => (
-    <motion.div
-      animate={{
-        y: [0, -10, 0],
-        rotate: [-2, 2, -2]
-      }}
-      transition={{
-        duration: 3,
-        repeat: Infinity,
-        delay,
-        ease: "easeInOut"
-      }}
-      style={{
-        transformStyle: 'preserve-3d',
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-
-  const Step3DCard = ({ children, isActive }: any) => (
-    <motion.div
-      initial={{ opacity: 0, rotateY: -20, z: -100 }}
-      animate={{ 
-        opacity: isActive ? 1 : 0.5, 
-        rotateY: isActive ? 0 : -20,
-        z: isActive ? 0 : -100,
-        scale: isActive ? 1 : 0.95
-      }}
-      exit={{ opacity: 0, rotateY: 20, z: -100 }}
-      transition={{ duration: 0.5, type: 'spring' }}
-      style={{
-        transformStyle: 'preserve-3d',
-        perspective: '1000px'
-      }}
-    >
-      {children}
-    </motion.div>
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500/10 via-background to-blue-500/10 overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <FloatingElement delay={0}>
-          <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 blur-3xl" />
-        </FloatingElement>
-        <FloatingElement delay={1}>
-          <div className="absolute top-40 right-20 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 blur-3xl" />
-        </FloatingElement>
-        <FloatingElement delay={2}>
-          <div className="absolute bottom-40 left-1/4 w-36 h-36 rounded-full bg-gradient-to-br from-orange-500/20 to-red-500/20 blur-3xl" />
-        </FloatingElement>
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 py-4 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500/10 via-background to-blue-500/10 py-8 px-4">
+      <div className="container mx-auto max-w-2xl">
         {/* Progress Bar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
+          className="mb-6"
         >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium">
               Step {currentStep} of {STEPS.length}
             </p>
@@ -262,160 +210,107 @@ export default function Onboarding() {
             </p>
           </div>
           <Progress value={(currentStep / STEPS.length) * 100} className="h-2" />
-          
-          {/* Step indicators */}
-          <div className="flex justify-between mt-4">
-            {STEPS.map((step) => {
-              const Icon = step.icon;
-              const isPast = step.id < currentStep;
-              const isCurrent = step.id === currentStep;
-              
-              return (
-                <motion.div
-                  key={step.id}
-                  className="flex flex-col items-center"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <motion.div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all ${
-                      isPast
-                        ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white'
-                        : isCurrent
-                        ? 'bg-gradient-to-br from-primary to-purple-500 text-white shadow-lg'
-                        : 'bg-secondary text-muted-foreground'
-                    }`}
-                    animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transform: isCurrent ? 'translateZ(20px)' : 'translateZ(0px)'
-                    }}
-                  >
-                    {isPast ? <CheckCircle className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
-                  </motion.div>
-                  <p className={`text-xs font-medium ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {step.title}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
         </motion.div>
 
         {/* Step Content */}
-        <AnimatePresence mode="wait">
-          <Step3DCard key={currentStep} isActive={true}>
-            <Card className="border-0 shadow-2xl backdrop-blur-xl bg-background/95 max-h-[calc(100vh-280px)] overflow-hidden">
-              <CardContent className="p-6 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
+        <Card className="border-0 shadow-xl">
+          <CardContent className="p-6">
+            <div className="max-h-[60vh] overflow-y-auto pr-2">
+              <AnimatePresence mode="wait">
                 {/* Step 1: Welcome */}
                 {currentStep === 1 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     className="text-center space-y-6"
                   >
-                    <FloatingElement>
-                      <motion.div
-                        className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-6xl shadow-2xl"
-                        style={{
-                          transformStyle: 'preserve-3d',
-                          transform: 'translateZ(50px)'
-                        }}
-                      >
-                        🎯
-                      </motion.div>
-                    </FloatingElement>
+                    <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-4xl">
+                      🎯
+                    </div>
 
                     <div>
-                      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      <h1 className="text-3xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                         Welcome to Your Journey!
                       </h1>
-                      <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                      <p className="text-muted-foreground">
                         Let's set up your personalized health & fitness plan. This will only take 2 minutes! 🚀
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Target className="w-8 h-8 text-blue-500 mb-3 mx-auto" />
-                        <h3 className="font-semibold mb-2">Personalized Goals</h3>
-                        <p className="text-sm text-muted-foreground">Custom plans built for YOU</p>
-                      </motion.div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                        <Target className="w-8 h-8 text-blue-500 mb-2 mx-auto" />
+                        <h3 className="font-semibold text-sm mb-1">Personalized Goals</h3>
+                        <p className="text-xs text-muted-foreground">Custom plans built for YOU</p>
+                      </div>
 
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Activity className="w-8 h-8 text-green-500 mb-3 mx-auto" />
-                        <h3 className="font-semibold mb-2">Track Progress</h3>
-                        <p className="text-sm text-muted-foreground">Watch yourself improve</p>
-                      </motion.div>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                        <Activity className="w-8 h-8 text-green-500 mb-2 mx-auto" />
+                        <h3 className="font-semibold text-sm mb-1">Track Progress</h3>
+                        <p className="text-xs text-muted-foreground">Watch yourself improve</p>
+                      </div>
 
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Award className="w-8 h-8 text-orange-500 mb-3 mx-auto" />
-                        <h3 className="font-semibold mb-2">Earn Rewards</h3>
-                        <p className="text-sm text-muted-foreground">Unlock achievements</p>
-                      </motion.div>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                        <Award className="w-8 h-8 text-orange-500 mb-2 mx-auto" />
+                        <h3 className="font-semibold text-sm mb-1">Earn Rewards</h3>
+                        <p className="text-xs text-muted-foreground">Unlock achievements</p>
+                      </div>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Step 2: Goal Selection */}
+                {/* Step 2: Goal */}
                 {currentStep === 2 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="step2"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
                     <div className="text-center mb-4">
-                      <FloatingElement>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-3xl shadow-xl">
-                          🎯
-                        </div>
-                      </FloatingElement>
-                      <h2 className="text-2xl font-bold mt-3 mb-1">Your Goal</h2>
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl mb-2">
+                        🎯
+                      </div>
+                      <h2 className="text-xl font-bold">Your Goal</h2>
                       <p className="text-sm text-muted-foreground">Choose what matters most to you</p>
                     </div>
 
-                    <RadioGroup value={formData.goal_type} onValueChange={(v) => updateFormData({ goal_type: v })}>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { value: 'Lose Weight', icon: '📉', color: 'from-green-500 to-emerald-500' },
-                          { value: 'Gain Muscle', icon: '💪', color: 'from-blue-500 to-purple-500' },
-                          { value: 'Maintain Weight', icon: '⚖️', color: 'from-orange-500 to-yellow-500' },
-                          { value: 'Improve Energy', icon: '⚡', color: 'from-yellow-500 to-orange-500' }
-                        ].map((goal) => (
-                          <label
-                            key={goal.value}
-                            className={`relative p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                              formData.goal_type === goal.value
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <RadioGroupItem value={goal.value} className="sr-only" />
-                            <div className="flex flex-col items-center gap-2 text-center">
-                              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${goal.color} flex items-center justify-center text-2xl`}>
-                                {goal.icon}
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Primary Goal</Label>
+                      <RadioGroup value={formData.goal_type} onValueChange={(v) => updateFormData({ goal_type: v })}>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { value: 'Lose Weight', icon: '📉', color: 'from-green-500 to-emerald-500' },
+                            { value: 'Gain Muscle', icon: '💪', color: 'from-blue-500 to-purple-500' },
+                            { value: 'Maintain Weight', icon: '⚖️', color: 'from-orange-500 to-yellow-500' },
+                            { value: 'Improve Energy', icon: '⚡', color: 'from-yellow-500 to-orange-500' }
+                          ].map((goal) => (
+                            <label
+                              key={goal.value}
+                              className={`relative p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                formData.goal_type === goal.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={goal.value} className="sr-only" />
+                              <div className="flex flex-col items-center gap-2 text-center">
+                                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${goal.color} flex items-center justify-center text-xl`}>
+                                  {goal.icon}
+                                </div>
+                                <span className="font-semibold text-xs">{goal.value}</span>
+                                {formData.goal_type === goal.value && (
+                                  <CheckCircle className="w-4 h-4 text-primary absolute top-2 right-2" />
+                                )}
                               </div>
-                              <span className="font-semibold text-sm">{goal.value}</span>
-                              {formData.goal_type === goal.value && (
-                                <CheckCircle className="w-4 h-4 text-primary absolute top-2 right-2" />
-                              )}
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </RadioGroup>
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
 
                     {formData.goal_type && (
                       <motion.div
@@ -431,6 +326,7 @@ export default function Onboarding() {
                             value={formData.target_weight_kg}
                             onChange={(e) => updateFormData({ target_weight_kg: e.target.value })}
                             className="h-10"
+                            autoComplete="off"
                           />
                         </div>
 
@@ -451,12 +347,15 @@ export default function Onboarding() {
                                       : 'border-border hover:border-primary/50'
                                   }`}
                                 >
-                                  <RadioGroupItem value={pace.value} />
-                                  <span className="text-xl">{pace.icon}</span>
+                                  <RadioGroupItem value={pace.value} className="sr-only" />
+                                  <span className="text-2xl">{pace.icon}</span>
                                   <div className="flex-1">
                                     <p className="font-semibold text-sm">{pace.label}</p>
                                     <p className="text-xs text-muted-foreground">{pace.desc}</p>
                                   </div>
+                                  {formData.goal_aggression === pace.value && (
+                                    <CheckCircle className="w-5 h-5 text-primary" />
+                                  )}
                                 </label>
                               ))}
                             </div>
@@ -467,133 +366,120 @@ export default function Onboarding() {
                   </motion.div>
                 )}
 
-                {/* Step 3: Personal Info */}
+                {/* Step 3: About You */}
                 {currentStep === 3 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="step3"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
                     <div className="text-center mb-4">
-                      <FloatingElement>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl shadow-xl">
-                          👤
-                        </div>
-                      </FloatingElement>
-                      <h2 className="text-2xl font-bold mt-3 mb-1">About You</h2>
-                      <p className="text-sm text-muted-foreground">Help us personalize your plan</p>
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-2">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
+                      <h2 className="text-xl font-bold">About You</h2>
+                      <p className="text-sm text-muted-foreground">Tell us a bit about yourself</p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm font-semibold mb-1 block">Full Name</Label>
+                      <Input
+                        placeholder="John Doe"
+                        value={formData.full_name}
+                        onChange={(e) => updateFormData({ full_name: e.target.value })}
+                        className="h-10"
+                        autoComplete="off"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-sm">Full Name</Label>
+                        <Label className="text-sm font-semibold mb-1 block">Age</Label>
                         <Input
-                          placeholder="John Doe"
-                          value={formData.full_name}
-                          onChange={(e) => updateFormData({ full_name: e.target.value })}
-                          className="h-10 mt-1"
+                          type="number"
+                          placeholder="25"
+                          value={formData.age}
+                          onChange={(e) => updateFormData({ age: e.target.value })}
+                          className="h-10"
+                          autoComplete="off"
                         />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-sm">Age</Label>
-                          <Input
-                            type="number"
-                            placeholder="25"
-                            value={formData.age}
-                            onChange={(e) => updateFormData({ age: e.target.value })}
-                            className="h-10 mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm">Sex</Label>
-                          <RadioGroup value={formData.sex} onValueChange={(v) => updateFormData({ sex: v })}>
-                            <div className="flex gap-2 mt-1">
-                              {['Male', 'Female', 'Other'].map((sex) => (
-                                <label
-                                  key={sex}
-                                  className={`flex-1 p-2 rounded-lg border-2 cursor-pointer text-center transition-colors text-sm ${
-                                    formData.sex === sex
-                                      ? 'border-primary bg-primary/5'
-                                      : 'border-border'
-                                  }`}
-                                >
-                                  <RadioGroupItem value={sex} className="sr-only" />
-                                  <span className="font-medium">{sex}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </RadioGroup>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-sm">Height (cm)</Label>
-                          <Input
-                            type="number"
-                            placeholder="175"
-                            value={formData.height_cm}
-                            onChange={(e) => updateFormData({ height_cm: e.target.value })}
-                            className="h-10 mt-1"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm">Current Weight (kg)</Label>
-                          <Input
-                            type="number"
-                            placeholder="80"
-                            value={formData.current_weight_kg}
-                            onChange={(e) => updateFormData({ current_weight_kg: e.target.value })}
-                            className="h-10 mt-1"
-                          />
-                        </div>
-                      </div>
-
-                      {formData.current_weight_kg && formData.target_weight_kg && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 text-sm"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold">Weight to {formData.goal_type === 'Lose Weight' ? 'lose' : 'gain'}:</span>
-                            <span className="text-xl font-bold">
-                              {Math.abs(parseFloat(formData.current_weight_kg) - parseFloat(formData.target_weight_kg)).toFixed(1)} kg
-                            </span>
+                      <div>
+                        <Label className="text-sm font-semibold mb-1 block">Sex</Label>
+                        <RadioGroup value={formData.sex} onValueChange={(v) => updateFormData({ sex: v })}>
+                          <div className="flex gap-2">
+                            {['Male', 'Female'].map((sex) => (
+                              <label
+                                key={sex}
+                                className={`flex-1 p-2 rounded-lg border-2 cursor-pointer transition-colors text-center ${
+                                  formData.sex === sex
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50'
+                                }`}
+                              >
+                                <RadioGroupItem value={sex} className="sr-only" />
+                                <span className="text-sm font-semibold">{sex}</span>
+                              </label>
+                            ))}
                           </div>
-                        </motion.div>
-                      )}
+                        </RadioGroup>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-sm font-semibold mb-1 block">Height (cm)</Label>
+                        <Input
+                          type="number"
+                          placeholder="175"
+                          value={formData.height_cm}
+                          onChange={(e) => updateFormData({ height_cm: e.target.value })}
+                          className="h-10"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold mb-1 block">Weight (kg)</Label>
+                        <Input
+                          type="number"
+                          placeholder="70"
+                          value={formData.current_weight_kg}
+                          onChange={(e) => updateFormData({ current_weight_kg: e.target.value })}
+                          className="h-10"
+                          autoComplete="off"
+                        />
+                      </div>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Step 4: Activity Level */}
+                {/* Step 4: Activity */}
                 {currentStep === 4 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="step4"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
                     <div className="text-center mb-4">
-                      <FloatingElement>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-3xl shadow-xl">
-                          🏃
-                        </div>
-                      </FloatingElement>
-                      <h2 className="text-2xl font-bold mt-3 mb-1">Activity Level</h2>
-                      <p className="text-sm text-muted-foreground">Outside of planned workouts</p>
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-2">
+                        <Activity className="w-8 h-8 text-white" />
+                      </div>
+                      <h2 className="text-xl font-bold">Activity Level</h2>
+                      <p className="text-sm text-muted-foreground">How active are you daily?</p>
                     </div>
 
                     <RadioGroup value={formData.activity_level} onValueChange={(v) => updateFormData({ activity_level: v })}>
                       <div className="space-y-2">
                         {[
-                          { value: 'Sedentary', icon: '🪑', desc: 'Desk job, little exercise', multiplier: '1.2x' },
-                          { value: 'Light', icon: '🚶', desc: 'Light exercise 1-3 days/week', multiplier: '1.375x' },
-                          { value: 'Moderate', icon: '🏃', desc: 'Moderate 3-5 days/week', multiplier: '1.55x' },
-                          { value: 'Active', icon: '🚴', desc: 'Heavy 6-7 days/week', multiplier: '1.725x' },
-                          { value: 'Very Active', icon: '🏋️', desc: 'Very heavy/physical job', multiplier: '1.9x' }
+                          { value: 'Sedentary', icon: '🪑', desc: 'Little to no exercise' },
+                          { value: 'Lightly Active', icon: '🚶', desc: 'Exercise 1-3 days/week' },
+                          { value: 'Moderately Active', icon: '🏃', desc: 'Exercise 3-5 days/week' },
+                          { value: 'Very Active', icon: '💪', desc: 'Exercise 6-7 days/week' },
+                          { value: 'Extremely Active', icon: '🔥', desc: 'Physical job + exercise' }
                         ].map((level) => (
                           <label
                             key={level.value}
@@ -603,13 +489,15 @@ export default function Onboarding() {
                                 : 'border-border hover:border-primary/50'
                             }`}
                           >
-                            <RadioGroupItem value={level.value} />
+                            <RadioGroupItem value={level.value} className="sr-only" />
                             <span className="text-2xl">{level.icon}</span>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1">
                               <p className="font-semibold text-sm">{level.value}</p>
-                              <p className="text-xs text-muted-foreground truncate">{level.desc}</p>
+                              <p className="text-xs text-muted-foreground">{level.desc}</p>
                             </div>
-                            <span className="text-xs font-medium text-muted-foreground flex-shrink-0">{level.multiplier}</span>
+                            {formData.activity_level === level.value && (
+                              <CheckCircle className="w-5 h-5 text-primary" />
+                            )}
                           </label>
                         ))}
                       </div>
@@ -617,220 +505,206 @@ export default function Onboarding() {
                   </motion.div>
                 )}
 
-                {/* Step 5: Fitness Preferences */}
+                {/* Step 5: Fitness */}
                 {currentStep === 5 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="step5"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     className="space-y-4"
                   >
                     <div className="text-center mb-4">
-                      <FloatingElement>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-3xl shadow-xl">
-                          💪
-                        </div>
-                      </FloatingElement>
-                      <h2 className="text-2xl font-bold mt-3 mb-1">Workout Style</h2>
-                      <p className="text-sm text-muted-foreground">Plan your training</p>
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-2">
+                        <Dumbbell className="w-8 h-8 text-white" />
+                      </div>
+                      <h2 className="text-xl font-bold">Workout Style</h2>
+                      <p className="text-sm text-muted-foreground">How do you like to exercise?</p>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Preferred Split</Label>
-                        <RadioGroup value={formData.workout_preference} onValueChange={(v) => updateFormData({ workout_preference: v })}>
-                          <div className="grid grid-cols-2 gap-2">
-                            {[
-                              { value: 'Push/Pull/Legs', icon: '🔄' },
-                              { value: 'Upper/Lower', icon: '⬆️' },
-                              { value: 'Full Body', icon: '💪' },
-                              { value: 'Bro Split', icon: '🏋️' }
-                            ].map((split) => (
-                              <label
-                                key={split.value}
-                                className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                                  formData.workout_preference === split.value
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border'
-                                }`}
-                              >
-                                <RadioGroupItem value={split.value} className="sr-only" />
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xl">{split.icon}</span>
-                                  <span className="font-medium text-sm">{split.value}</span>
-                                </div>
-                              </label>
-                            ))}
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Frequency (days/week)</Label>
-                        <div className="flex gap-2">
-                          {[3, 4, 5, 6].map((days) => (
-                            <button
-                              key={days}
-                              type="button"
-                              onClick={() => updateFormData({ workout_frequency: days.toString() })}
-                              className={`flex-1 h-10 rounded-lg border-2 font-semibold transition-colors text-sm ${
-                                formData.workout_frequency === days.toString()
-                                  ? 'border-primary bg-primary text-primary-foreground'
-                                  : 'border-border hover:border-primary'
-                              }`}
-                            >
-                              {days}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Location</Label>
-                        <RadioGroup value={formData.workout_location} onValueChange={(v) => updateFormData({ workout_location: v })}>
-                          <div className="flex gap-2">
-                            {[
-                              { value: 'Gym', icon: '🏋️' },
-                              { value: 'Home', icon: '🏠' }
-                            ].map((loc) => (
-                              <label
-                                key={loc.value}
-                                className={`flex-1 h-10 rounded-lg border-2 cursor-pointer transition-colors flex items-center justify-center gap-2 ${
-                                  formData.workout_location === loc.value
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border'
-                                }`}
-                              >
-                                <RadioGroupItem value={loc.value} className="sr-only" />
-                                <span className="text-lg">{loc.icon}</span>
-                                <span className="font-medium text-sm">{loc.value}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Experience Level</Label>
-                        <RadioGroup value={formData.workout_experience} onValueChange={(v) => updateFormData({ workout_experience: v })}>
-                          <div className="grid grid-cols-3 gap-2">
-                            {['Beginner', 'Intermediate', 'Advanced'].map((level) => (
-                              <label
-                                key={level}
-                                className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-colors ${
-                                  formData.workout_experience === level
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border'
-                                }`}
-                              >
-                                <RadioGroupItem value={level} className="sr-only" />
-                                <span className="font-medium text-sm block">{level}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 6: Nutrition Preferences */}
-                {currentStep === 6 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="text-center mb-4">
-                      <FloatingElement>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-3xl shadow-xl">
-                          🍎
-                        </div>
-                      </FloatingElement>
-                      <h2 className="text-2xl font-bold mt-3 mb-1">Nutrition</h2>
-                      <p className="text-sm text-muted-foreground">Your meal preferences</p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Dietary Restrictions</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {['Vegetarian', 'Vegan', 'Gluten Free', 'Dairy Free', 'Keto', 'Paleo'].map((diet) => (
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Workout Preference</Label>
+                      <RadioGroup value={formData.workout_preference} onValueChange={(v) => updateFormData({ workout_preference: v })}>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { value: 'Strength Training', icon: '🏋️' },
+                            { value: 'Cardio', icon: '🏃' },
+                            { value: 'Yoga', icon: '🧘' },
+                            { value: 'Mixed', icon: '🎯' }
+                          ].map((pref) => (
                             <label
-                              key={diet}
-                              className={`p-2 rounded-lg border-2 cursor-pointer transition-colors ${
-                                formData.dietary_restrictions.includes(diet)
+                              key={pref.value}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                formData.workout_preference === pref.value
                                   ? 'border-primary bg-primary/5'
-                                  : 'border-border'
+                                  : 'border-border hover:border-primary/50'
                               }`}
                             >
-                              <div className="flex items-center gap-2">
-                                <Checkbox
-                                  checked={formData.dietary_restrictions.includes(diet)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      updateFormData({ dietary_restrictions: [...formData.dietary_restrictions, diet] });
-                                    } else {
-                                      updateFormData({ dietary_restrictions: formData.dietary_restrictions.filter(d => d !== diet) });
-                                    }
-                                  }}
-                                />
-                                <span className="font-medium text-xs">{diet}</span>
+                              <RadioGroupItem value={pref.value} className="sr-only" />
+                              <div className="text-center">
+                                <span className="text-2xl block mb-1">{pref.icon}</span>
+                                <span className="text-xs font-semibold">{pref.value}</span>
                               </div>
                             </label>
                           ))}
                         </div>
-                      </div>
+                      </RadioGroup>
+                    </div>
 
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Meal Prep Style</Label>
-                        <RadioGroup value={formData.meal_prep_preference} onValueChange={(v) => updateFormData({ meal_prep_preference: v })}>
-                          <div className="space-y-2">
-                            {[
-                              { value: 'Daily', icon: '☀️', desc: 'Cook fresh daily' },
-                              { value: 'Weekly', icon: '📦', desc: 'Batch prep weekly' },
-                              { value: 'Mixed', icon: '🔄', desc: 'Combination' }
-                            ].map((prep) => (
-                              <label
-                                key={prep.value}
-                                className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                                  formData.meal_prep_preference === prep.value
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border'
-                                }`}
-                              >
-                                <RadioGroupItem value={prep.value} />
-                                <span className="text-xl">{prep.icon}</span>
-                                <div className="flex-1">
-                                  <p className="font-semibold text-sm">{prep.value}</p>
-                                  <p className="text-xs text-muted-foreground">{prep.desc}</p>
-                                </div>
-                              </label>
-                            ))}
-                          </div>
-                        </RadioGroup>
-                      </div>
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Frequency (days/week)</Label>
+                      <RadioGroup value={formData.workout_frequency} onValueChange={(v) => updateFormData({ workout_frequency: v })}>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['2', '3', '4', '5'].map((freq) => (
+                            <label
+                              key={freq}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-colors text-center ${
+                                formData.workout_frequency === freq
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={freq} className="sr-only" />
+                              <span className="text-sm font-semibold">{freq}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
 
-                      <div>
-                        <Label className="text-sm font-semibold mb-2 block">Cooking Experience</Label>
-                        <RadioGroup value={formData.cooking_skill} onValueChange={(v) => updateFormData({ cooking_skill: v })}>
-                          <div className="grid grid-cols-3 gap-2">
-                            {['Beginner', 'Intermediate', 'Expert'].map((skill) => (
-                              <label
-                                key={skill}
-                                className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-colors ${
-                                  formData.cooking_skill === skill
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border'
-                                }`}
-                              >
-                                <RadioGroupItem value={skill} className="sr-only" />
-                                <ChefHat className="w-5 h-5 mx-auto mb-1" />
-                                <span className="font-medium text-xs block break-words">{skill}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </RadioGroup>
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Location</Label>
+                      <RadioGroup value={formData.workout_location} onValueChange={(v) => updateFormData({ workout_location: v })}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {['Gym', 'Home', 'Outdoors'].map((loc) => (
+                            <label
+                              key={loc}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-colors text-center ${
+                                formData.workout_location === loc
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={loc} className="sr-only" />
+                              <span className="text-xs font-semibold break-words">{loc}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Experience</Label>
+                      <RadioGroup value={formData.workout_experience} onValueChange={(v) => updateFormData({ workout_experience: v })}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {['Beginner', 'Intermediate', 'Advanced'].map((exp) => (
+                            <label
+                              key={exp}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-colors text-center ${
+                                formData.workout_experience === exp
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={exp} className="sr-only" />
+                              <span className="text-xs font-semibold break-words">{exp}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 6: Nutrition */}
+                {currentStep === 6 && (
+                  <motion.div
+                    key="step6"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center mb-2">
+                        <Apple className="w-8 h-8 text-white" />
                       </div>
+                      <h2 className="text-xl font-bold">Nutrition</h2>
+                      <p className="text-sm text-muted-foreground">Your dietary preferences</p>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Dietary Restrictions</Label>
+                      <div className="space-y-2">
+                        {['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'None'].map((diet) => (
+                          <div key={diet} className="flex items-center gap-2">
+                            <Checkbox
+                              id={diet}
+                              checked={formData.dietary_restrictions.includes(diet)}
+                              onCheckedChange={(checked) => {
+                                const newRestrictions = checked
+                                  ? [...formData.dietary_restrictions, diet]
+                                  : formData.dietary_restrictions.filter((d) => d !== diet);
+                                updateFormData({ dietary_restrictions: newRestrictions });
+                              }}
+                            />
+                            <Label htmlFor={diet} className="text-sm cursor-pointer">
+                              {diet}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Meal Prep</Label>
+                      <RadioGroup value={formData.meal_prep_preference} onValueChange={(v) => updateFormData({ meal_prep_preference: v })}>
+                        <div className="space-y-2">
+                          {[
+                            { value: 'I meal prep weekly', icon: '📦' },
+                            { value: 'I cook fresh daily', icon: '🍳' },
+                            { value: 'I eat out mostly', icon: '🍽️' },
+                            { value: 'Mixed approach', icon: '🎯' }
+                          ].map((meal) => (
+                            <label
+                              key={meal.value}
+                              className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                formData.meal_prep_preference === meal.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={meal.value} className="sr-only" />
+                              <span className="text-2xl">{meal.icon}</span>
+                              <span className="text-sm font-semibold">{meal.value}</span>
+                              {formData.meal_prep_preference === meal.value && (
+                                <CheckCircle className="w-5 h-5 text-primary ml-auto" />
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Cooking Experience</Label>
+                      <RadioGroup value={formData.cooking_skill} onValueChange={(v) => updateFormData({ cooking_skill: v })}>
+                        <div className="grid grid-cols-3 gap-2">
+                          {['Beginner', 'Intermediate', 'Advanced'].map((skill) => (
+                            <label
+                              key={skill}
+                              className={`p-3 rounded-lg border-2 cursor-pointer transition-colors text-center ${
+                                formData.cooking_skill === skill
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <RadioGroupItem value={skill} className="sr-only" />
+                              <span className="text-xs font-semibold break-words">{skill}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </RadioGroup>
                     </div>
                   </motion.div>
                 )}
@@ -838,110 +712,93 @@ export default function Onboarding() {
                 {/* Step 7: Finish */}
                 {currentStep === 7 && (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center space-y-4"
+                    key="step7"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-6"
                   >
-                    <motion.div
-                      className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-5xl shadow-xl mb-4"
+                    <div className="w-24 h-24 mx-auto mb-4">
+                      <Award className="w-full h-full text-yellow-500" />
+                    </div>
+                    
+                    <motion.h2 
+                      className="text-2xl font-bold mb-3"
                       animate={{ 
-                        scale: [1, 1.05, 1],
-                        y: [0, -5, 0]
+                        opacity: [0.8, 1, 0.8],
                       }}
                       transition={{ 
-                        duration: 2, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                       }}
                     >
-                      🏆
-                    </motion.div>
+                      You're All Set!
+                    </motion.h2>
+                    
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      Your personalized plan is ready. Let's start your journey to a healthier, happier you!
+                    </p>
 
-                    <div>
-                      <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                        You're All Set!
-                      </h1>
-                      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
-                        Your personalized health plan is ready 💪
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto text-left">
-                      <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
-                        <Target className="w-8 h-8 text-blue-500 mb-2" />
-                        <h3 className="font-bold text-sm mb-1">Goal: {formData.goal_type}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          Target: {formData.target_weight_kg}kg
-                        </p>
+                    <div className="space-y-2 max-w-sm mx-auto">
+                      <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                        <Sparkles className="w-5 h-5 text-green-600" />
+                        <span className="text-sm font-medium">Personalized Dashboard</span>
                       </div>
-
-                      <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
-                        <Dumbbell className="w-8 h-8 text-green-500 mb-2" />
-                        <h3 className="font-bold text-sm mb-1">{formData.workout_frequency}x/week</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {formData.workout_preference}
-                        </p>
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <Target className="w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-medium">Custom Workout Plans</span>
                       </div>
-
-                      <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
-                        <Apple className="w-8 h-8 text-orange-500 mb-2" />
-                        <h3 className="font-bold text-sm mb-1">{formData.meal_prep_preference}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {formData.dietary_restrictions.length} restrictions
-                        </p>
-                      </div>
-
-                      <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-                        <Activity className="w-8 h-8 text-purple-500 mb-2" />
-                        <h3 className="font-bold text-sm mb-1">{formData.activity_level}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          Activity Level
-                        </p>
+                      <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                        <Apple className="w-5 h-5 text-purple-600" />
+                        <span className="text-sm font-medium">Nutrition Tracking</span>
                       </div>
                     </div>
                   </motion.div>
                 )}
-              </CardContent>
-            </Card>
-          </Step3DCard>
-        </AnimatePresence>
+              </AnimatePresence>
+            </div>
+          </CardContent>
 
-        {/* Navigation Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mt-4 pt-4 border-t sticky bottom-0 bg-background"
-        >
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
+          {/* Navigation */}
+          <div className="border-t p-6 bg-muted/30">
+            <div className="flex gap-3">
+              {currentStep > 1 && currentStep < 7 && (
+                <Button
+                  variant="outline"
+                  onClick={prevStep}
+                  className="flex-1"
+                  type="button"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              )}
+              
+              {currentStep < 7 && (
+                <Button
+                  onClick={nextStep}
+                  disabled={!isStepValid()}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
+                  type="button"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              )}
 
-          {currentStep < STEPS.length ? (
-            <Button
-              onClick={nextStep}
-              disabled={!isStepValid()}
-              className="gap-2 bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90"
-            >
-              Continue
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={completeOnboarding}
-              disabled={loading}
-              className="gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
-            >
-              {loading ? 'Setting up...' : "Let's Go!"}
-              <Sparkles className="w-4 h-4" />
-            </Button>
-          )}
-        </motion.div>
+              {currentStep === 7 && (
+                <Button
+                  onClick={completeOnboarding}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500"
+                  type="button"
+                >
+                  {loading ? 'Setting up...' : "Let's GO! 🚀"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
