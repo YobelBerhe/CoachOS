@@ -54,6 +54,7 @@ import WasteReport from "./pages/WasteReport";
 import MenuScanner from "./pages/MenuScanner";
 import MealSwapMarketplace from "./pages/MealSwapMarketplace";
 import FridgeInventory from "./pages/FridgeInventory";
+import MorningJournal from "./pages/MorningJournal";
 import MobileNav from "./components/MobileNav";
 import NotFound from "./pages/NotFound";
 
@@ -113,6 +114,7 @@ function AppRoutes() {
           <Route path="/menu-scanner" element={<MenuScanner />} />
           <Route path="/meal-swap" element={<MealSwapMarketplace />} />
           <Route path="/fridge-inventory" element={<FridgeInventory />} />
+          <Route path="/journal" element={<MorningJournal />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
     </Routes>
