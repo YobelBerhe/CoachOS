@@ -71,6 +71,10 @@ export default function Onboarding() {
     cooking_skill: 'Beginner'
   });
 
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
+  };
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -242,12 +246,12 @@ export default function Onboarding() {
         </FloatingElement>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
+      <div className="relative z-10 container mx-auto px-4 py-4 max-w-4xl">
         {/* Progress Bar */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-4"
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium">
@@ -301,8 +305,8 @@ export default function Onboarding() {
         {/* Step Content */}
         <AnimatePresence mode="wait">
           <Step3DCard key={currentStep} isActive={true}>
-            <Card className="border-0 shadow-2xl backdrop-blur-xl bg-background/95">
-              <CardContent className="p-8 md:p-12">
+            <Card className="border-0 shadow-2xl backdrop-blur-xl bg-background/95 max-h-[calc(100vh-280px)] overflow-hidden">
+              <CardContent className="p-6 overflow-y-auto max-h-[calc(100vh-280px)] scrollbar-thin">
                 {/* Step 1: Welcome */}
                 {currentStep === 1 && (
                   <motion.div
@@ -370,103 +374,90 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                       <FloatingElement>
-                        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-5xl mb-4 shadow-2xl">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-3xl shadow-xl">
                           🎯
                         </div>
                       </FloatingElement>
-                      <h2 className="text-3xl font-bold mb-2">What's Your Main Goal?</h2>
-                      <p className="text-muted-foreground">Choose what matters most to you right now</p>
+                      <h2 className="text-2xl font-bold mt-3 mb-1">Your Goal</h2>
+                      <p className="text-sm text-muted-foreground">Choose what matters most to you</p>
                     </div>
 
-                    <RadioGroup value={formData.goal_type} onValueChange={(v) => setFormData({ ...formData, goal_type: v })}>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <RadioGroup value={formData.goal_type} onValueChange={(v) => updateFormData({ goal_type: v })}>
+                      <div className="grid grid-cols-2 gap-3">
                         {[
-                          { value: 'Lose Weight', icon: '📉', color: 'from-green-500 to-emerald-500', desc: 'Burn fat & get lean' },
-                          { value: 'Gain Muscle', icon: '💪', color: 'from-blue-500 to-purple-500', desc: 'Build strength & size' },
-                          { value: 'Maintain Weight', icon: '⚖️', color: 'from-orange-500 to-yellow-500', desc: 'Stay consistent' },
-                          { value: 'Improve Energy', icon: '⚡', color: 'from-yellow-500 to-orange-500', desc: 'Feel more energized' }
+                          { value: 'Lose Weight', icon: '📉', color: 'from-green-500 to-emerald-500' },
+                          { value: 'Gain Muscle', icon: '💪', color: 'from-blue-500 to-purple-500' },
+                          { value: 'Maintain Weight', icon: '⚖️', color: 'from-orange-500 to-yellow-500' },
+                          { value: 'Improve Energy', icon: '⚡', color: 'from-yellow-500 to-orange-500' }
                         ].map((goal) => (
-                          <motion.label
+                          <label
                             key={goal.value}
-                            whileHover={{ scale: 1.02, z: 20 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
+                            className={`relative p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                               formData.goal_type === goal.value
-                                ? 'border-primary bg-primary/5 shadow-lg'
+                                ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50'
                             }`}
-                            style={{ transformStyle: 'preserve-3d' }}
                           >
                             <RadioGroupItem value={goal.value} className="sr-only" />
-                            <div className="flex items-start gap-4">
-                              <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${goal.color} flex items-center justify-center text-3xl shadow-lg`}>
+                            <div className="flex flex-col items-center gap-2 text-center">
+                              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${goal.color} flex items-center justify-center text-2xl`}>
                                 {goal.icon}
                               </div>
-                              <div className="flex-1">
-                                <h3 className="font-bold text-lg mb-1">{goal.value}</h3>
-                                <p className="text-sm text-muted-foreground">{goal.desc}</p>
-                              </div>
+                              <span className="font-semibold text-sm">{goal.value}</span>
                               {formData.goal_type === goal.value && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="absolute top-3 right-3"
-                                >
-                                  <CheckCircle className="w-6 h-6 text-primary" />
-                                </motion.div>
+                                <CheckCircle className="w-4 h-4 text-primary absolute top-2 right-2" />
                               )}
                             </div>
-                          </motion.label>
+                          </label>
                         ))}
                       </div>
                     </RadioGroup>
 
                     {formData.goal_type && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="space-y-4 pt-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-3 pt-2"
                       >
                         <div>
-                          <Label className="text-lg font-semibold mb-2 block">Target Weight (kg)</Label>
+                          <Label className="text-sm font-semibold mb-1 block">Target Weight (kg)</Label>
                           <Input
                             type="number"
                             placeholder="70"
                             value={formData.target_weight_kg}
-                            onChange={(e) => setFormData({ ...formData, target_weight_kg: e.target.value })}
-                            className="text-lg h-14"
+                            onChange={(e) => updateFormData({ target_weight_kg: e.target.value })}
+                            className="h-10"
                           />
                         </div>
 
                         <div>
-                          <Label className="text-lg font-semibold mb-3 block">How Fast?</Label>
-                          <RadioGroup value={formData.goal_aggression} onValueChange={(v) => setFormData({ ...formData, goal_aggression: v })}>
-                            <div className="space-y-3">
+                          <Label className="text-sm font-semibold mb-2 block">Pace</Label>
+                          <RadioGroup value={formData.goal_aggression} onValueChange={(v) => updateFormData({ goal_aggression: v })}>
+                            <div className="space-y-2">
                               {[
-                                { value: 'Slow', icon: '🐢', label: 'Slow & Steady', desc: '0.25kg/week - Sustainable' },
-                                { value: 'Moderate', icon: '⚡', label: 'Moderate', desc: '0.5kg/week - Balanced' },
-                                { value: 'Aggressive', icon: '🔥', label: 'Aggressive', desc: '1kg/week - Fast results' }
+                                { value: 'Slow', icon: '🐢', label: 'Slow', desc: '0.25kg/week' },
+                                { value: 'Moderate', icon: '⚡', label: 'Moderate', desc: '0.5kg/week' },
+                                { value: 'Aggressive', icon: '🔥', label: 'Fast', desc: '1kg/week' }
                               ].map((pace) => (
-                                <motion.label
+                                <label
                                   key={pace.value}
-                                  whileHover={{ x: 5 }}
-                                  className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                     formData.goal_aggression === pace.value
                                       ? 'border-primary bg-primary/5'
                                       : 'border-border hover:border-primary/50'
                                   }`}
                                 >
                                   <RadioGroupItem value={pace.value} />
-                                  <span className="text-2xl">{pace.icon}</span>
+                                  <span className="text-xl">{pace.icon}</span>
                                   <div className="flex-1">
-                                    <p className="font-semibold">{pace.label}</p>
-                                    <p className="text-sm text-muted-foreground">{pace.desc}</p>
+                                    <p className="font-semibold text-sm">{pace.label}</p>
+                                    <p className="text-xs text-muted-foreground">{pace.desc}</p>
                                   </div>
-                                </motion.label>
+                                </label>
                               ))}
                             </div>
                           </RadioGroup>
@@ -481,50 +472,48 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                       <FloatingElement>
-                        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-5xl mb-4 shadow-2xl">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl shadow-xl">
                           👤
                         </div>
                       </FloatingElement>
-                      <h2 className="text-3xl font-bold mb-2">Tell Us About Yourself</h2>
-                      <p className="text-muted-foreground">This helps us personalize your plan</p>
+                      <h2 className="text-2xl font-bold mt-3 mb-1">About You</h2>
+                      <p className="text-sm text-muted-foreground">Help us personalize your plan</p>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div>
-                        <Label>Full Name</Label>
+                        <Label className="text-sm">Full Name</Label>
                         <Input
                           placeholder="John Doe"
                           value={formData.full_name}
-                          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                          className="h-12"
+                          onChange={(e) => updateFormData({ full_name: e.target.value })}
+                          className="h-10 mt-1"
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label>Age</Label>
+                          <Label className="text-sm">Age</Label>
                           <Input
                             type="number"
                             placeholder="25"
                             value={formData.age}
-                            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                            className="h-12"
+                            onChange={(e) => updateFormData({ age: e.target.value })}
+                            className="h-10 mt-1"
                           />
                         </div>
                         <div>
-                          <Label>Sex</Label>
-                          <RadioGroup value={formData.sex} onValueChange={(v) => setFormData({ ...formData, sex: v })}>
-                            <div className="flex gap-3">
+                          <Label className="text-sm">Sex</Label>
+                          <RadioGroup value={formData.sex} onValueChange={(v) => updateFormData({ sex: v })}>
+                            <div className="flex gap-2 mt-1">
                               {['Male', 'Female', 'Other'].map((sex) => (
-                                <motion.label
+                                <label
                                   key={sex}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  className={`flex-1 p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${
+                                  className={`flex-1 p-2 rounded-lg border-2 cursor-pointer text-center transition-colors text-sm ${
                                     formData.sex === sex
                                       ? 'border-primary bg-primary/5'
                                       : 'border-border'
@@ -532,45 +521,45 @@ export default function Onboarding() {
                                 >
                                   <RadioGroupItem value={sex} className="sr-only" />
                                   <span className="font-medium">{sex}</span>
-                                </motion.label>
+                                </label>
                               ))}
                             </div>
                           </RadioGroup>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label>Height (cm)</Label>
+                          <Label className="text-sm">Height (cm)</Label>
                           <Input
                             type="number"
                             placeholder="175"
                             value={formData.height_cm}
-                            onChange={(e) => setFormData({ ...formData, height_cm: e.target.value })}
-                            className="h-12"
+                            onChange={(e) => updateFormData({ height_cm: e.target.value })}
+                            className="h-10 mt-1"
                           />
                         </div>
                         <div>
-                          <Label>Current Weight (kg)</Label>
+                          <Label className="text-sm">Current Weight (kg)</Label>
                           <Input
                             type="number"
                             placeholder="80"
                             value={formData.current_weight_kg}
-                            onChange={(e) => setFormData({ ...formData, current_weight_kg: e.target.value })}
-                            className="h-12"
+                            onChange={(e) => updateFormData({ current_weight_kg: e.target.value })}
+                            className="h-10 mt-1"
                           />
                         </div>
                       </div>
 
                       {formData.current_weight_kg && formData.target_weight_kg && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 text-sm"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-semibold">Weight to {formData.goal_type === 'Lose Weight' ? 'lose' : 'gain'}:</span>
-                            <span className="text-2xl font-bold">
+                            <span className="text-xl font-bold">
                               {Math.abs(parseFloat(formData.current_weight_kg) - parseFloat(formData.target_weight_kg)).toFixed(1)} kg
                             </span>
                           </div>
@@ -585,44 +574,43 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                       <FloatingElement>
-                        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-5xl mb-4 shadow-2xl">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-3xl shadow-xl">
                           🏃
                         </div>
                       </FloatingElement>
-                      <h2 className="text-3xl font-bold mb-2">How Active Are You?</h2>
-                      <p className="text-muted-foreground">Outside of planned workouts</p>
+                      <h2 className="text-2xl font-bold mt-3 mb-1">Activity Level</h2>
+                      <p className="text-sm text-muted-foreground">Outside of planned workouts</p>
                     </div>
 
-                    <RadioGroup value={formData.activity_level} onValueChange={(v) => setFormData({ ...formData, activity_level: v })}>
-                      <div className="space-y-4">
+                    <RadioGroup value={formData.activity_level} onValueChange={(v) => updateFormData({ activity_level: v })}>
+                      <div className="space-y-2">
                         {[
-                          { value: 'Sedentary', icon: '🪑', desc: 'Desk job, little/no exercise', multiplier: '1.2x' },
+                          { value: 'Sedentary', icon: '🪑', desc: 'Desk job, little exercise', multiplier: '1.2x' },
                           { value: 'Light', icon: '🚶', desc: 'Light exercise 1-3 days/week', multiplier: '1.375x' },
-                          { value: 'Moderate', icon: '🏃', desc: 'Moderate exercise 3-5 days/week', multiplier: '1.55x' },
-                          { value: 'Active', icon: '🚴', desc: 'Heavy exercise 6-7 days/week', multiplier: '1.725x' },
+                          { value: 'Moderate', icon: '🏃', desc: 'Moderate 3-5 days/week', multiplier: '1.55x' },
+                          { value: 'Active', icon: '🚴', desc: 'Heavy 6-7 days/week', multiplier: '1.725x' },
                           { value: 'Very Active', icon: '🏋️', desc: 'Very heavy/physical job', multiplier: '1.9x' }
                         ].map((level) => (
-                          <motion.label
+                          <label
                             key={level.value}
-                            whileHover={{ x: 5 }}
-                            className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                            className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                               formData.activity_level === level.value
-                                ? 'border-primary bg-primary/5 shadow-md'
+                                ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50'
                             }`}
                           >
                             <RadioGroupItem value={level.value} />
-                            <span className="text-3xl">{level.icon}</span>
-                            <div className="flex-1">
-                              <p className="font-semibold text-lg">{level.value}</p>
-                              <p className="text-sm text-muted-foreground">{level.desc}</p>
+                            <span className="text-2xl">{level.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm">{level.value}</p>
+                              <p className="text-xs text-muted-foreground truncate">{level.desc}</p>
                             </div>
-                            <span className="text-sm font-medium text-muted-foreground">{level.multiplier}</span>
-                          </motion.label>
+                            <span className="text-xs font-medium text-muted-foreground flex-shrink-0">{level.multiplier}</span>
+                          </label>
                         ))}
                       </div>
                     </RadioGroup>
@@ -634,116 +622,109 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                       <FloatingElement>
-                        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-5xl mb-4 shadow-2xl">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-3xl shadow-xl">
                           💪
                         </div>
                       </FloatingElement>
-                      <h2 className="text-3xl font-bold mb-2">Your Workout Style</h2>
-                      <p className="text-muted-foreground">Let's plan your training</p>
+                      <h2 className="text-2xl font-bold mt-3 mb-1">Workout Style</h2>
+                      <p className="text-sm text-muted-foreground">Plan your training</p>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <div>
-                        <Label className="text-lg font-semibold mb-3 block">Preferred Split</Label>
-                        <RadioGroup value={formData.workout_preference} onValueChange={(v) => setFormData({ ...formData, workout_preference: v })}>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Label className="text-sm font-semibold mb-2 block">Preferred Split</Label>
+                        <RadioGroup value={formData.workout_preference} onValueChange={(v) => updateFormData({ workout_preference: v })}>
+                          <div className="grid grid-cols-2 gap-2">
                             {[
                               { value: 'Push/Pull/Legs', icon: '🔄' },
                               { value: 'Upper/Lower', icon: '⬆️' },
                               { value: 'Full Body', icon: '💪' },
                               { value: 'Bro Split', icon: '🏋️' }
                             ].map((split) => (
-                              <motion.label
+                              <label
                                 key={split.value}
-                                whileHover={{ scale: 1.03 }}
-                                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                className={`p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                   formData.workout_preference === split.value
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border'
                                 }`}
                               >
                                 <RadioGroupItem value={split.value} className="sr-only" />
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">{split.icon}</span>
-                                  <span className="font-medium">{split.value}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl">{split.icon}</span>
+                                  <span className="font-medium text-sm">{split.value}</span>
                                 </div>
-                              </motion.label>
+                              </label>
                             ))}
                           </div>
                         </RadioGroup>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Frequency (days/week)</Label>
-                          <div className="flex gap-2 mt-2">
-                            {[3, 4, 5, 6].map((days) => (
-                              <motion.button
-                                key={days}
-                                type="button"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setFormData({ ...formData, workout_frequency: days.toString() })}
-                                className={`flex-1 h-12 rounded-lg border-2 font-semibold transition-all ${
-                                  formData.workout_frequency === days.toString()
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-border hover:border-primary'
-                                }`}
-                              >
-                                {days}
-                              </motion.button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label>Location</Label>
-                          <RadioGroup value={formData.workout_location} onValueChange={(v) => setFormData({ ...formData, workout_location: v })}>
-                            <div className="flex gap-2 mt-2">
-                              {[
-                                { value: 'Gym', icon: '🏋️' },
-                                { value: 'Home', icon: '🏠' }
-                              ].map((loc) => (
-                                <motion.label
-                                  key={loc.value}
-                                  whileHover={{ scale: 1.05 }}
-                                  className={`flex-1 h-12 rounded-lg border-2 cursor-pointer transition-all flex items-center justify-center gap-2 ${
-                                    formData.workout_location === loc.value
-                                      ? 'border-primary bg-primary/5'
-                                      : 'border-border'
-                                  }`}
-                                >
-                                  <RadioGroupItem value={loc.value} className="sr-only" />
-                                  <span className="text-xl">{loc.icon}</span>
-                                  <span className="font-medium">{loc.value}</span>
-                                </motion.label>
-                              ))}
-                            </div>
-                          </RadioGroup>
+                      <div>
+                        <Label className="text-sm font-semibold mb-2 block">Frequency (days/week)</Label>
+                        <div className="flex gap-2">
+                          {[3, 4, 5, 6].map((days) => (
+                            <button
+                              key={days}
+                              type="button"
+                              onClick={() => updateFormData({ workout_frequency: days.toString() })}
+                              className={`flex-1 h-10 rounded-lg border-2 font-semibold transition-colors text-sm ${
+                                formData.workout_frequency === days.toString()
+                                  ? 'border-primary bg-primary text-primary-foreground'
+                                  : 'border-border hover:border-primary'
+                              }`}
+                            >
+                              {days}
+                            </button>
+                          ))}
                         </div>
                       </div>
 
                       <div>
-                        <Label>Experience Level</Label>
-                        <RadioGroup value={formData.workout_experience} onValueChange={(v) => setFormData({ ...formData, workout_experience: v })}>
-                          <div className="grid grid-cols-3 gap-3 mt-2">
+                        <Label className="text-sm font-semibold mb-2 block">Location</Label>
+                        <RadioGroup value={formData.workout_location} onValueChange={(v) => updateFormData({ workout_location: v })}>
+                          <div className="flex gap-2">
+                            {[
+                              { value: 'Gym', icon: '🏋️' },
+                              { value: 'Home', icon: '🏠' }
+                            ].map((loc) => (
+                              <label
+                                key={loc.value}
+                                className={`flex-1 h-10 rounded-lg border-2 cursor-pointer transition-colors flex items-center justify-center gap-2 ${
+                                  formData.workout_location === loc.value
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border'
+                                }`}
+                              >
+                                <RadioGroupItem value={loc.value} className="sr-only" />
+                                <span className="text-lg">{loc.icon}</span>
+                                <span className="font-medium text-sm">{loc.value}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      <div>
+                        <Label className="text-sm font-semibold mb-2 block">Experience Level</Label>
+                        <RadioGroup value={formData.workout_experience} onValueChange={(v) => updateFormData({ workout_experience: v })}>
+                          <div className="grid grid-cols-3 gap-2">
                             {['Beginner', 'Intermediate', 'Advanced'].map((level) => (
-                              <motion.label
+                              <label
                                 key={level}
-                                whileHover={{ scale: 1.05 }}
-                                className={`p-4 rounded-lg border-2 cursor-pointer text-center transition-all ${
+                                className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-colors ${
                                   formData.workout_experience === level
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border'
                                 }`}
                               >
                                 <RadioGroupItem value={level} className="sr-only" />
-                                <span className="font-medium">{level}</span>
-                              </motion.label>
+                                <span className="font-medium text-sm block">{level}</span>
+                              </label>
                             ))}
                           </div>
                         </RadioGroup>
@@ -757,27 +738,26 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-4">
                       <FloatingElement>
-                        <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-5xl mb-4 shadow-2xl">
+                        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-3xl shadow-xl">
                           🍎
                         </div>
                       </FloatingElement>
-                      <h2 className="text-3xl font-bold mb-2">Nutrition Preferences</h2>
-                      <p className="text-muted-foreground">Customize your meal plans</p>
+                      <h2 className="text-2xl font-bold mt-3 mb-1">Nutrition</h2>
+                      <p className="text-sm text-muted-foreground">Your meal preferences</p>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <div>
-                        <Label className="text-lg font-semibold mb-3 block">Dietary Restrictions</Label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <Label className="text-sm font-semibold mb-2 block">Dietary Restrictions</Label>
+                        <div className="grid grid-cols-3 gap-2">
                           {['Vegetarian', 'Vegan', 'Gluten Free', 'Dairy Free', 'Keto', 'Paleo'].map((diet) => (
-                            <motion.label
+                            <label
                               key={diet}
-                              whileHover={{ scale: 1.03 }}
-                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              className={`p-2 rounded-lg border-2 cursor-pointer transition-colors ${
                                 formData.dietary_restrictions.includes(diet)
                                   ? 'border-primary bg-primary/5'
                                   : 'border-border'
@@ -788,67 +768,65 @@ export default function Onboarding() {
                                   checked={formData.dietary_restrictions.includes(diet)}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      setFormData({ ...formData, dietary_restrictions: [...formData.dietary_restrictions, diet] });
+                                      updateFormData({ dietary_restrictions: [...formData.dietary_restrictions, diet] });
                                     } else {
-                                      setFormData({ ...formData, dietary_restrictions: formData.dietary_restrictions.filter(d => d !== diet) });
+                                      updateFormData({ dietary_restrictions: formData.dietary_restrictions.filter(d => d !== diet) });
                                     }
                                   }}
                                 />
-                                <span className="font-medium">{diet}</span>
+                                <span className="font-medium text-xs">{diet}</span>
                               </div>
-                            </motion.label>
+                            </label>
                           ))}
                         </div>
                       </div>
 
                       <div>
-                        <Label className="text-lg font-semibold mb-3 block">Meal Prep Style</Label>
-                        <RadioGroup value={formData.meal_prep_preference} onValueChange={(v) => setFormData({ ...formData, meal_prep_preference: v })}>
-                          <div className="space-y-3">
+                        <Label className="text-sm font-semibold mb-2 block">Meal Prep Style</Label>
+                        <RadioGroup value={formData.meal_prep_preference} onValueChange={(v) => updateFormData({ meal_prep_preference: v })}>
+                          <div className="space-y-2">
                             {[
-                              { value: 'Daily', icon: '☀️', desc: 'Cook fresh every day' },
-                              { value: 'Weekly', icon: '📦', desc: 'Batch prep for the week' },
-                              { value: 'Mixed', icon: '🔄', desc: 'Combination of both' }
+                              { value: 'Daily', icon: '☀️', desc: 'Cook fresh daily' },
+                              { value: 'Weekly', icon: '📦', desc: 'Batch prep weekly' },
+                              { value: 'Mixed', icon: '🔄', desc: 'Combination' }
                             ].map((prep) => (
-                              <motion.label
+                              <label
                                 key={prep.value}
-                                whileHover={{ x: 5 }}
-                                className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                   formData.meal_prep_preference === prep.value
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border'
                                 }`}
                               >
                                 <RadioGroupItem value={prep.value} />
-                                <span className="text-2xl">{prep.icon}</span>
-                                <div>
-                                  <p className="font-semibold">{prep.value}</p>
-                                  <p className="text-sm text-muted-foreground">{prep.desc}</p>
+                                <span className="text-xl">{prep.icon}</span>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-sm">{prep.value}</p>
+                                  <p className="text-xs text-muted-foreground">{prep.desc}</p>
                                 </div>
-                              </motion.label>
+                              </label>
                             ))}
                           </div>
                         </RadioGroup>
                       </div>
 
                       <div>
-                        <Label className="text-lg font-semibold mb-3 block">Cooking Experience</Label>
-                        <RadioGroup value={formData.cooking_skill} onValueChange={(v) => setFormData({ ...formData, cooking_skill: v })}>
-                          <div className="grid grid-cols-3 gap-3">
+                        <Label className="text-sm font-semibold mb-2 block">Cooking Experience</Label>
+                        <RadioGroup value={formData.cooking_skill} onValueChange={(v) => updateFormData({ cooking_skill: v })}>
+                          <div className="grid grid-cols-3 gap-2">
                             {['Beginner', 'Intermediate', 'Expert'].map((skill) => (
-                              <motion.label
+                              <label
                                 key={skill}
-                                whileHover={{ scale: 1.05 }}
-                                className={`p-4 rounded-lg border-2 cursor-pointer text-center transition-all ${
+                                className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-colors ${
                                   formData.cooking_skill === skill
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border'
                                 }`}
                               >
                                 <RadioGroupItem value={skill} className="sr-only" />
-                                <ChefHat className="w-6 h-6 mx-auto mb-2" />
-                                <span className="font-medium block">{skill}</span>
-                              </motion.label>
+                                <ChefHat className="w-5 h-5 mx-auto mb-1" />
+                                <span className="font-medium text-xs block break-words">{skill}</span>
+                              </label>
                             ))}
                           </div>
                         </RadioGroup>
@@ -862,75 +840,64 @@ export default function Onboarding() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center space-y-6"
+                    className="text-center space-y-4"
                   >
-                    <FloatingElement>
-                      <motion.div
-                        className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-6xl shadow-2xl mb-6"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      >
-                        🏆
-                      </motion.div>
-                    </FloatingElement>
+                    <motion.div
+                      className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-5xl shadow-xl mb-4"
+                      animate={{ 
+                        scale: [1, 1.05, 1],
+                        y: [0, -5, 0]
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      🏆
+                    </motion.div>
 
                     <div>
-                      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                      <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                         You're All Set!
                       </h1>
-                      <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                        Your personalized health plan is ready. Let's crush those goals! 💪
+                      <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                        Your personalized health plan is ready 💪
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Target className="w-10 h-10 text-blue-500 mb-3 mx-auto" />
-                        <h3 className="font-bold text-lg mb-2">Goal: {formData.goal_type}</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto text-left">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+                        <Target className="w-8 h-8 text-blue-500 mb-2" />
+                        <h3 className="font-bold text-sm mb-1">Goal: {formData.goal_type}</h3>
+                        <p className="text-xs text-muted-foreground">
                           Target: {formData.target_weight_kg}kg
                         </p>
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Dumbbell className="w-10 h-10 text-green-500 mb-3 mx-auto" />
-                        <h3 className="font-bold text-lg mb-2">{formData.workout_frequency}x per week</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                        <Dumbbell className="w-8 h-8 text-green-500 mb-2" />
+                        <h3 className="font-bold text-sm mb-1">{formData.workout_frequency}x/week</h3>
+                        <p className="text-xs text-muted-foreground">
                           {formData.workout_preference}
                         </p>
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Apple className="w-10 h-10 text-orange-500 mb-3 mx-auto" />
-                        <h3 className="font-bold text-lg mb-2">Meal Prep: {formData.meal_prep_preference}</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
+                        <Apple className="w-8 h-8 text-orange-500 mb-2" />
+                        <h3 className="font-bold text-sm mb-1">{formData.meal_prep_preference}</h3>
+                        <p className="text-xs text-muted-foreground">
                           {formData.dietary_restrictions.length} restrictions
                         </p>
-                      </motion.div>
+                      </div>
 
-                      <motion.div
-                        whileHover={{ scale: 1.05, rotateY: 5 }}
-                        className="p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20"
-                        style={{ transformStyle: 'preserve-3d' }}
-                      >
-                        <Activity className="w-10 h-10 text-purple-500 mb-3 mx-auto" />
-                        <h3 className="font-bold text-lg mb-2">{formData.activity_level}</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                        <Activity className="w-8 h-8 text-purple-500 mb-2" />
+                        <h3 className="font-bold text-sm mb-1">{formData.activity_level}</h3>
+                        <p className="text-xs text-muted-foreground">
                           Activity Level
                         </p>
-                      </motion.div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -943,7 +910,7 @@ export default function Onboarding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mt-8"
+          className="flex items-center justify-between mt-4 pt-4 border-t sticky bottom-0 bg-background"
         >
           <Button
             variant="outline"
