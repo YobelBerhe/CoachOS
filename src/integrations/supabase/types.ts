@@ -2880,6 +2880,45 @@ export type Database = {
       }
     }
     Views: {
+      daily_summary: {
+        Row: {
+          calories_consumed: number | null
+          created_at: string | null
+          entry_date: string | null
+          evening_energy: number | null
+          evening_mood: number | null
+          morning_energy: number | null
+          morning_mood: number | null
+          sleep_hours: number | null
+          user_id: string | null
+          water_intake_ml: number | null
+        }
+        Insert: {
+          calories_consumed?: never
+          created_at?: string | null
+          entry_date?: string | null
+          evening_energy?: never
+          evening_mood?: never
+          morning_energy?: number | null
+          morning_mood?: number | null
+          sleep_hours?: never
+          user_id?: string | null
+          water_intake_ml?: never
+        }
+        Update: {
+          calories_consumed?: never
+          created_at?: string | null
+          entry_date?: string | null
+          evening_energy?: never
+          evening_mood?: never
+          morning_energy?: number | null
+          morning_mood?: number | null
+          sleep_hours?: never
+          user_id?: string | null
+          water_intake_ml?: never
+        }
+        Relationships: []
+      }
       journal_stats: {
         Row: {
           avg_energy: number | null
