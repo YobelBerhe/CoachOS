@@ -41,13 +41,14 @@ export default function DashboardClean() {
       if (!user) return;
 
       // Load user preferences and today's data
-      const { data: preferences } = await supabase
-        .from('user_preferences')
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .eq('id', user.id)
+        .maybeSingle();
 
-      setUserData(preferences);
+      if (profileError) console.error('Profile fetch error:', profileError);
+      setUserData(profile);
 
       // Load today's progress (mocked for now)
       setTodayProgress({
@@ -120,7 +121,7 @@ export default function DashboardClean() {
               <Avatar className="w-10 h-10 cursor-pointer">
                 <AvatarImage src="/avatar.jpg" />
                 <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                  {userData?.name?.[0] || 'U'}
+                  {userData?.full_name?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -133,7 +134,7 @@ export default function DashboardClean() {
         {/* Greeting Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            {getGreeting()}, {userData?.name || 'Champion'}!
+            {getGreeting()}, {userData?.full_name || 'Champion'}!
           </h1>
           <p className="text-gray-600 flex items-center gap-2">
             <Clock className="w-4 h-4" />
