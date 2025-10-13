@@ -5,7 +5,7 @@ import {
   Droplet, Heart, Activity, BookOpen, BedDouble,
   Apple, Smartphone, ArrowRight, Check, Star, Clock, Zap,
   Pill, NotebookPen, CircleDot, Footprints, RotateCcw, Users, Utensils,
-  PhoneOff, FileText
+  PhoneOff, FileText, X, Menu
 } from 'lucide-react';
 import appStoreBadge from '@/assets/app-store-badge.svg';
 import googlePlayBadge from '@/assets/google-play-badge.png';
@@ -223,6 +223,8 @@ const userAvatars = [
 export default function Landing() {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState({ hours: 12, minutes: 30, seconds: 35 });
+  const [showBanner, setShowBanner] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -247,14 +249,22 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white text-black overflow-x-hidden">
       {/* Flash Sale Banner */}
-      <div className="bg-red-600 py-3 px-4 text-center text-sm font-medium relative text-white">
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span>⏰ LIMITED TIME: START FREE FOREVER</span>
-          <span className="line-through opacity-75">$49</span>
-          <span className="font-bold">$0/month</span>
-          <span>{timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</span>
+      {showBanner && (
+        <div className="bg-red-600 py-3 px-4 text-center text-sm font-medium relative text-white">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span>⏰ LIMITED TIME: START FREE FOREVER</span>
+            <span className="line-through opacity-75">$49</span>
+            <span className="font-bold">$0/month</span>
+            <span>{timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</span>
+          </div>
+          <button
+            onClick={() => setShowBanner(false)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-white/20 rounded p-1 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Header */}
       <header className="border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-lg z-50">
@@ -263,13 +273,14 @@ export default function Landing() {
             <img src={dayaiLogo} alt="DayAI" className="w-12 h-12 md:w-10 md:h-10" />
             <span className="font-bold text-lg hidden md:block">DayAI</span>
           </div>
+          
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm text-gray-700 hover:text-gray-900 flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            <a href="#features" className="text-sm text-gray-700 hover:text-gray-900">
               Features
             </a>
             <a href="#pricing" className="text-sm text-gray-700 hover:text-gray-900">Pricing</a>
-            <a href="#testimonials" className="text-sm text-gray-700 hover:text-gray-900">Reviews</a>
+            <a href="#affiliate" className="text-sm text-gray-700 hover:text-gray-900">Affiliate 💸</a>
             <button 
               onClick={() => navigate('/auth')}
               className="text-sm text-gray-700 hover:text-gray-900"
@@ -283,7 +294,44 @@ export default function Landing() {
               Get started for free
             </button>
           </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 bg-white">
+            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-4">
+              <a 
+                href="#features" 
+                className="text-sm text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a 
+                href="#pricing" 
+                className="text-sm text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              <a 
+                href="#affiliate" 
+                className="text-sm text-gray-700 hover:text-gray-900 py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Affiliate 💸
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
