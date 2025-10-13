@@ -11,6 +11,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { PageTransition } from "@/components/PageTransition";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { registerServiceWorker, requestNotificationPermission } from "@/lib/pwa";
+import Landing from "./pages/Landing";
 import FinalHomepage from "./pages/FinalHomepage";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -71,7 +72,8 @@ function AppRoutes() {
   
   return (
     <Routes>
-          <Route path="/" element={<FinalHomepage />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/home" element={<FinalHomepage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding-extended" element={<OnboardingExtended />} />
