@@ -340,9 +340,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-white" />
-              </div>
+              <img 
+                src="/dayai-logo.webp" 
+                alt="DayAI" 
+                className="w-10 h-10 rounded-xl"
+              />
               <span className="text-xl font-bold text-gray-900">DayAI</span>
             </div>
 
