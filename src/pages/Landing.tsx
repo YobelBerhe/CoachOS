@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import appStoreBadge from '@/assets/app-store-badge.svg';
 import googlePlayBadge from '@/assets/google-play-badge.png';
+import ratedBadge from '@/assets/rated-badge.png';
 
 const dailyTools = [
   { 
@@ -182,11 +183,7 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 text-center">
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
-            <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
-            <span className="text-sm text-gray-900">Rated #1 Daily Optimization Platform</span>
-            <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
-          </div>
+          <img src={ratedBadge} alt="#1 All-in-One AI Platform" className="h-16 mx-auto" />
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold mb-4 text-gray-900">
