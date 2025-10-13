@@ -94,10 +94,10 @@ const Auth = () => {
             <Activity className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            CoachOS
+            DayAI
           </h1>
           <p className="text-muted-foreground mt-2">
-            Your unified health accountability platform
+            Your AI for an intentional day
           </p>
         </div>
 
@@ -106,8 +106,8 @@ const Auth = () => {
             <CardTitle>{isLogin ? "Welcome back" : "Create account"}</CardTitle>
             <CardDescription>
               {isLogin 
-                ? "Sign in to continue your health journey" 
-                : "Start tracking your wellness goals"}
+                ? "Continue your journey to intentional living" 
+                : "Join thousands optimizing their lives with AI"}
             </CardDescription>
           </CardHeader>
           <CardContent>

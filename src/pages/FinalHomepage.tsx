@@ -617,9 +617,9 @@ export default function FinalHomepage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-xl mb-4">FitFlow</h3>
+              <h3 className="font-bold text-xl mb-4">DayAI</h3>
               <p className="text-gray-400 text-sm">
-                Your all-in-one health & sustainability companion
+                Your AI for an intentional day. Optimize every hour from wake to sleep.
               </p>
             </div>
             <div>
@@ -648,7 +648,7 @@ export default function FinalHomepage() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-sm">
-            <p>© 2025 FitFlow. All rights reserved.</p>
+            <p>© 2025 DayAI. All rights reserved. Built for intentional living.</p>
           </div>
         </div>
       </footer>

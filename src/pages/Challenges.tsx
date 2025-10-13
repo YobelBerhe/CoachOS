@@ -173,7 +173,7 @@ const SAMPLE_CHALLENGES: Challenge[] = [
     participants: 5421,
     creator: {
       id: '2',
-      name: 'FitTrack Team',
+      name: 'DayAI Team',
       avatar: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop',
       username: 'fittrack'
     },

@@ -1,8 +1,8 @@
 {
-  "name": "FitTrack Pro - All-in-One Fitness App",
-  "short_name": "FitTrack",
-  "description": "Revolutionary fitness app with AI menu scanning, food waste tracking, and meal swap marketplace",
-  "theme_color": "#6366f1",
+  "name": "DayAI - Your AI for an Intentional Day",
+  "short_name": "DayAI",
+  "description": "AI-powered daily operating system that optimizes every hour from wake to sleep",
+  "theme_color": "#3B82F6",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",

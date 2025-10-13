@@ -736,21 +736,21 @@ export default function Onboarding() {
                     </motion.h2>
                     
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                      Your personalized plan is ready. Let's start your journey to a healthier, happier you!
+                      Your personalized DayAI is ready. Let's optimize every hour from wake to sleep!
                     </p>
 
                     <div className="space-y-2 max-w-sm mx-auto">
                       <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                         <Sparkles className="w-5 h-5 text-green-600" />
-                        <span className="text-sm font-medium">Personalized Dashboard</span>
+                        <span className="text-sm font-medium">AI-Powered Dashboard</span>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
                         <Target className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium">Custom Workout Plans</span>
+                        <span className="text-sm font-medium">Smart Daily Planning</span>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
                         <Apple className="w-5 h-5 text-purple-600" />
-                        <span className="text-sm font-medium">Nutrition Tracking</span>
+                        <span className="text-sm font-medium">Complete Life Tracking</span>
                       </div>
                     </div>
                   </motion.div>

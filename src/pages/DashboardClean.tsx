@@ -91,7 +91,7 @@ export default function DashboardClean() {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
                 <Target className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">FitFlow</span>
+              <span className="text-xl font-bold text-gray-900">DayAI</span>
             </div>
 
             {/* Search Bar */}

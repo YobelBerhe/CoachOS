@@ -5,7 +5,7 @@
 
 export const config = {
   app: {
-    name: 'CoachOS',
+    name: 'DayAI',
     url: import.meta.env.VITE_SUPABASE_URL?.replace('//', '//app.') || 'http://localhost:5173',
     version: '1.0.0',
   },

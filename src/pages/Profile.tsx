@@ -361,7 +361,7 @@ export default function Profile() {
 
   async function handleShare(platform?: string) {
     const url = `${window.location.origin}/profile/${profile.username}`;
-    const text = `Check out ${profile.name}'s profile on FitTrack!`;
+    const text = `Check out ${profile.name}'s profile on DayAI!`;
 
     if (platform === 'facebook') {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
