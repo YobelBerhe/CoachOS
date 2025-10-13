@@ -46,18 +46,18 @@ const dailyTools = [
 ];
 
 const appLogos = [
-  { name: 'Notion', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png' },
-  { name: 'Todoist', logo: 'https://cdn.worldvectorlogo.com/logos/todoist.svg' },
-  { name: 'MyFitnessPal', logo: 'https://cdn.worldvectorlogo.com/logos/myfitnesspal.svg' },
-  { name: 'Headspace', logo: 'https://cdn.worldvectorlogo.com/logos/headspace.svg' },
-  { name: 'Calm', logo: 'https://cdn.worldvectorlogo.com/logos/calm.svg' },
-  { name: 'Sleep Cycle', logo: 'https://sleepcycle.com/wp-content/themes/sleepcycle/assets/images/sc-icon.png' },
-  { name: 'Strava', logo: 'https://cdn.worldvectorlogo.com/logos/strava-1.svg' },
-  { name: 'Oura', logo: 'https://ouraring.com/blog/content/images/size/w256h256/2023/06/Oura_O_Icon_Gold_RGB.png' },
-  { name: 'RescueTime', logo: 'https://www.rescuetime.com/images/rescuetime-icon.png' },
-  { name: 'Forest', logo: 'https://forestapp.cc/images/logo.png' },
-  { name: 'Habitica', logo: 'https://habitica.com/static/img/favicon.ico' },
-  { name: 'Streaks', logo: 'https://streaksapp.com/icon.png' },
+  { name: 'Notion', logo: 'https://logo.clearbit.com/notion.so' },
+  { name: 'Todoist', logo: 'https://logo.clearbit.com/todoist.com' },
+  { name: 'MyFitnessPal', logo: 'https://logo.clearbit.com/myfitnesspal.com' },
+  { name: 'Headspace', logo: 'https://logo.clearbit.com/headspace.com' },
+  { name: 'Calm', logo: 'https://logo.clearbit.com/calm.com' },
+  { name: 'Sleep Cycle', logo: 'https://logo.clearbit.com/sleepcycle.com' },
+  { name: 'Strava', logo: 'https://logo.clearbit.com/strava.com' },
+  { name: 'Oura', logo: 'https://logo.clearbit.com/ouraring.com' },
+  { name: 'RescueTime', logo: 'https://logo.clearbit.com/rescuetime.com' },
+  { name: 'Forest', logo: 'https://logo.clearbit.com/forestapp.cc' },
+  { name: 'Habitica', logo: 'https://logo.clearbit.com/habitica.com' },
+  { name: 'Streaks', logo: 'https://logo.clearbit.com/streaksapp.com' },
 ];
 
 const testimonials = [
