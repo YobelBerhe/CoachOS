@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,6 +57,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme } = useTheme();
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -987,20 +989,20 @@ export default function Settings() {
                     <Label>Theme</Label>
                     <div className="grid grid-cols-3 gap-3 mt-2">
                       <Button
-                        variant={settings.theme === 'light' ? 'default' : 'outline'}
-                        onClick={() => setSettings({ ...settings, theme: 'light' })}
+                        variant={currentTheme === 'light' ? 'default' : 'outline'}
+                        onClick={() => setTheme('light')}
                       >
                         ☀️ Light
                       </Button>
                       <Button
-                        variant={settings.theme === 'dark' ? 'default' : 'outline'}
-                        onClick={() => setSettings({ ...settings, theme: 'dark' })}
+                        variant={currentTheme === 'dark' ? 'default' : 'outline'}
+                        onClick={() => setTheme('dark')}
                       >
                         🌙 Dark
                       </Button>
                       <Button
-                        variant={settings.theme === 'system' ? 'default' : 'outline'}
-                        onClick={() => setSettings({ ...settings, theme: 'system' })}
+                        variant={currentTheme === 'system' ? 'default' : 'outline'}
+                        onClick={() => setTheme('system')}
                       >
                         💻 System
                       </Button>

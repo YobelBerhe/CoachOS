@@ -333,73 +333,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <img 
-                src="/dayai-logo.webp" 
-                alt="DayAI Logo" 
-                className="w-12 h-12 md:w-14 md:h-14"
-              />
-              <span className="hidden md:inline text-2xl font-bold text-gray-900 tracking-tight">DayAI</span>
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Ask DayAI anything..."
-                  className="w-full h-12 pl-12 pr-4 bg-gray-50 border-0 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="rounded-full relative">
-                <Bell className="w-5 h-5 text-gray-700" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </Button>
-              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/settings')}>
-                <Settings className="w-5 h-5 text-gray-700" />
-              </Button>
-              <Avatar className="w-10 h-10 cursor-pointer" onClick={() => navigate('/profile')}>
-                <AvatarImage src="/avatar.jpg" />
-                <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                  {userData?.full_name?.[0] || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-background">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Greeting Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-3xl font-bold text-foreground mb-1">
             {getGreeting()}, {userData?.full_name?.split(' ')[0] || 'Champion'}!
           </h1>
-          <p className="text-gray-600 flex items-center gap-2">
+          <p className="text-muted-foreground flex items-center gap-2">
             <Clock className="w-4 h-4" />
             {currentTime} • Let's optimize your day
           </p>
         </div>
 
         {/* Today's Progress */}
-        <Card className="border border-gray-200 shadow-sm mb-8 overflow-hidden">
+        <Card className="border border-border shadow-md mb-8 overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Today's Progress</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-xl font-bold text-foreground mb-1">Today's Progress</h2>
+                <p className="text-sm text-muted-foreground">
                   {getCompletionRate()}% of your daily goals complete
                 </p>
               </div>
@@ -413,7 +367,7 @@ export default function Dashboard() {
                       stroke="currentColor"
                       strokeWidth="8"
                       fill="none"
-                      className="text-gray-200"
+                      className="text-muted"
                     />
                     <circle
                       cx="40"
@@ -424,11 +378,11 @@ export default function Dashboard() {
                       fill="none"
                       strokeDasharray={`${2 * Math.PI * 36}`}
                       strokeDashoffset={`${2 * Math.PI * 36 * (1 - getCompletionRate() / 100)}`}
-                      className="text-blue-600 transition-all duration-500"
+                      className="text-primary transition-all duration-500"
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="absolute text-xl font-bold text-gray-900">
+                  <span className="absolute text-xl font-bold text-foreground">
                     {getCompletionRate()}%
                   </span>
                 </div>

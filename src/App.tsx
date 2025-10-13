@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { SEO } from "@/components/SEO";
 import { trackPageView, identifyUser } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
@@ -187,19 +188,21 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <SEO />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PageTransition>
-              <AppRoutes />
-            </PageTransition>
-            <InstallPrompt />
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <SEO />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <PageTransition>
+                <AppRoutes />
+              </PageTransition>
+              <InstallPrompt />
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };
