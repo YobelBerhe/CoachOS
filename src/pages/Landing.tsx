@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Sunrise, Moon, Target, Dumbbell, Coffee, Brain, 
   Droplet, Heart, Activity, BookOpen, BedDouble,
-  Apple, Smartphone, ArrowRight, Check, Star, Clock, Zap
+  Apple, Smartphone, ArrowRight, Check, Star, Clock, Zap,
+  Pill, NotebookPen, CircleDot, Footprints, RotateCcw, Users, Utensils
 } from 'lucide-react';
 import appStoreBadge from '@/assets/app-store-badge.svg';
 import googlePlayBadge from '@/assets/google-play-badge.png';
@@ -18,40 +19,116 @@ import meta from '@/assets/logos/meta.svg';
 
 const dailyTools = [
   { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/3209/3209265.png',
+    icon: Sunrise,
+    time: '5:00 AM',
     title: 'Morning Optimization', 
     description: 'Wake with intention. AI-powered routines that adapt to your energy. 90% of executives win before 9 AM.', 
-    gradient: 'from-orange-500/20 to-pink-500/20'
+    gradient: 'from-orange-500 to-pink-500'
   },
   { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/2936/2936886.png',
-    title: 'Sleep Tracking', 
-    description: '7-8 hours tracked and optimized. Sleep is the ultimate performance enhancer, not a luxury.', 
-    gradient: 'from-indigo-500/20 to-purple-500/20'
+    icon: Droplet,
+    time: '6:00 AM',
+    title: 'Hydration Tracking', 
+    description: '16-20oz water upon waking improves cognition by 14%. Your brain is 73% water—fuel it first.', 
+    gradient: 'from-cyan-500 to-blue-500'
   },
   { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    title: 'Intelligent Fitness', 
-    description: 'Exercise when your body is primed. Morning workouts have 50% better adherence.', 
-    gradient: 'from-red-500/20 to-orange-500/20'
+    icon: Dumbbell,
+    time: '6:30 AM',
+    title: 'Morning Exercise', 
+    description: 'Morning workouts have 50% better adherence. Exercise before breakfast burns 20% more fat.', 
+    gradient: 'from-red-500 to-orange-500'
   },
   { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
-    title: 'Nutrition Optimization', 
-    description: 'Smart meal tracking with AI insights. High-protein breakfast = 135 fewer calories later.', 
-    gradient: 'from-green-500/20 to-emerald-500/20'
-  },
-  { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/2920/2920349.png',
+    icon: Brain,
+    time: '7:00 AM',
     title: 'Meditation & Mindfulness', 
-    description: '10 minutes daily increases focus by 11% and reduces stress by 22% in 8 weeks.', 
-    gradient: 'from-purple-500/20 to-pink-500/20'
+    description: '10 minutes daily increases focus by 11%. Ray Dalio: 20min 2x/day for 40+ years.', 
+    gradient: 'from-purple-500 to-indigo-600'
   },
   { 
-    icon: 'https://cdn-icons-png.flaticon.com/512/3874/3874845.png',
+    icon: NotebookPen,
+    time: '7:30 AM',
+    title: 'Morning Pages', 
+    description: 'Stream of consciousness journaling. Improves working memory by 13%. Tim Ferriss: 3 pages daily.', 
+    gradient: 'from-orange-500 to-amber-500'
+  },
+  { 
+    icon: Coffee,
+    time: '8:00 AM',
+    title: 'Nutritious Breakfast', 
+    description: 'High-protein breakfast = 135 fewer calories later. Breakfast eaters earn $5k+ more annually.', 
+    gradient: 'from-amber-500 to-orange-500'
+  },
+  { 
+    icon: CircleDot,
+    time: '9:00 AM',
+    title: 'Eat the Frog First', 
+    description: 'Tackle hardest task when willpower is highest. Peak performance 2-4 hours after waking.', 
+    gradient: 'from-blue-500 to-cyan-500'
+  },
+  { 
+    icon: Target,
+    time: '9:00 AM - 12:00 PM',
+    title: 'Deep Work Blocks', 
+    description: 'Uninterrupted 90-min focus sessions. Single-tasking is 40% more productive than multitasking.', 
+    gradient: 'from-blue-500 to-indigo-600'
+  },
+  { 
+    icon: Footprints,
+    time: '12:00 PM',
+    title: 'Lunch Away from Desk', 
+    description: 'Walking lunch increases creative ideas by 30%. Steve Jobs: Famous walking meetings.', 
+    gradient: 'from-green-500 to-emerald-500'
+  },
+  { 
+    icon: RotateCcw,
+    time: '2:00 PM',
+    title: 'Power Nap', 
+    description: '20-min nap = 34% performance boost. Churchill, LeBron, Jeff Bezos all nap strategically.', 
+    gradient: 'from-teal-500 to-cyan-500'
+  },
+  { 
+    icon: Users,
+    time: '3:00 PM',
+    title: 'Meetings & Collaboration', 
+    description: 'Best meeting time: 2:30-3 PM. Stand-up meetings 34% shorter with same effectiveness.', 
+    gradient: 'from-green-500 to-emerald-600'
+  },
+  { 
+    icon: Utensils,
+    time: '6:00 PM',
+    title: 'Mindful Dinner', 
+    description: 'Quality family time reduces burnout. Obama: Family dinner at 6:30 PM when possible.', 
+    gradient: 'from-orange-500 to-amber-600'
+  },
+  { 
+    icon: BookOpen,
+    time: '7:00 PM',
+    title: 'Learning Time', 
+    description: '30 min/day = 23 books/year. Warren Buffett: 500 pages daily. Leaders are readers.', 
+    gradient: 'from-blue-500 to-indigo-600'
+  },
+  { 
+    icon: Moon,
+    time: '9:00 PM',
     title: 'Evening Reflection', 
-    description: 'Close with gratitude. Reflection increases performance by 23%. Build your best self.', 
-    gradient: 'from-blue-500/20 to-cyan-500/20'
+    description: 'Reflection increases performance by 23%. Ben Franklin, Oprah, Ray Dalio: Daily reflection.', 
+    gradient: 'from-purple-500 to-indigo-600'
+  },
+  { 
+    icon: Heart,
+    time: '9:30 PM',
+    title: 'Gratitude Practice', 
+    description: 'Daily gratitude increases happiness by 25%. Oprah: Gratitude journal before bed.', 
+    gradient: 'from-pink-500 to-rose-500'
+  },
+  { 
+    icon: BedDouble,
+    time: '10:00 PM',
+    title: 'Sleep Optimization', 
+    description: '7-8 hours = ultimate performance enhancer. Jeff Bezos: 8 hours = better decisions.', 
+    gradient: 'from-purple-500 to-violet-600'
   },
 ];
 
@@ -271,18 +348,22 @@ export default function Landing() {
 
         {/* Feature Grid with Icons */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {dailyTools.map((tool, idx) => (
-            <div 
-              key={idx} 
-              className={`bg-gradient-to-br ${tool.gradient} backdrop-blur-sm rounded-2xl p-8 border border-gray-200 hover:scale-105 transition-transform duration-300 cursor-pointer`}
-            >
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                <img src={tool.icon} alt={tool.title} className="w-10 h-10 object-contain" />
+          {dailyTools.map((tool, idx) => {
+            const IconComponent = tool.icon;
+            return (
+              <div 
+                key={idx} 
+                className="bg-white rounded-2xl p-6 border border-gray-200 hover:scale-105 transition-transform duration-300 cursor-pointer shadow-sm hover:shadow-md"
+              >
+                <div className={`w-14 h-14 bg-gradient-to-br ${tool.gradient} rounded-2xl flex items-center justify-center mb-4`}>
+                  <IconComponent className="w-7 h-7 text-white stroke-[2.5]" />
+                </div>
+                <div className="text-xs font-medium text-gray-500 mb-2">{tool.time}</div>
+                <h3 className="text-lg font-bold mb-2 text-gray-900">{tool.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{tool.description}</p>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-gray-900">{tool.title}</h3>
-              <p className="text-sm text-gray-700">{tool.description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
