@@ -5,6 +5,8 @@ import {
   Droplet, Heart, Activity, BookOpen, BedDouble,
   Apple, Smartphone, ArrowRight, Check, Star, Clock, Zap
 } from 'lucide-react';
+import appStoreBadge from '@/assets/app-store-badge.svg';
+import googlePlayBadge from '@/assets/google-play-badge.png';
 
 const dailyTools = [
   { 
@@ -205,22 +207,10 @@ export default function Landing() {
 
         <div className="flex justify-center gap-4 mb-8">
           <a href="#" className="hover:opacity-80 transition">
-            <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-white">
-              <Apple className="w-6 h-6" />
-              <div className="text-left text-xs">
-                <div>Download on the</div>
-                <div className="font-semibold">App Store</div>
-              </div>
-            </div>
+            <img src={appStoreBadge} alt="Download on the App Store" className="h-10" />
           </a>
           <a href="#" className="hover:opacity-80 transition">
-            <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-white">
-              <Smartphone className="w-6 h-6" />
-              <div className="text-left text-xs">
-                <div>GET IT ON</div>
-                <div className="font-semibold">Google Play</div>
-              </div>
-            </div>
+            <img src={googlePlayBadge} alt="Get it on Google Play" className="h-10" />
           </a>
         </div>
 
@@ -553,16 +543,10 @@ export default function Landing() {
               <p className="text-sm text-gray-600 mb-4">The Most Powerful Daily Optimization Platform on the Planet</p>
               <div className="flex gap-4">
                 <a href="#" className="hover:opacity-80 transition">
-                  <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white">
-                    <Apple className="w-4 h-4" />
-                    <div>App Store</div>
-                  </div>
+                  <img src={appStoreBadge} alt="Download on the App Store" className="h-8" />
                 </a>
                 <a href="#" className="hover:opacity-80 transition">
-                  <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white">
-                    <Smartphone className="w-4 h-4" />
-                    <div>Google Play</div>
-                  </div>
+                  <img src={googlePlayBadge} alt="Get it on Google Play" className="h-8" />
                 </a>
               </div>
             </div>
