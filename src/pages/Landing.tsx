@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BRAND } from '@/lib/constants';
 import {
   ArrowRight,
-  CheckCircle2,
   Target,
   Moon,
   Sun,
@@ -14,17 +13,200 @@ import {
   Menu,
   X,
   Sunrise,
+  BookOpen,
   Dumbbell,
   Coffee,
   Heart,
   Zap,
-  Brain
+  Brain,
+  Droplet,
+  NotebookPen,
+  Smartphone,
+  Footprints,
+  GraduationCap,
+  Battery,
+  Target as Focus,
+  RefreshCw,
+  Utensils,
+  BedDouble,
+  Timer
 } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Landing() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const features = [
+    {
+      icon: Sunrise,
+      title: 'Morning Optimization',
+      description: 'AI-powered morning routines that adapt to your energy levels. 90% of executives win their day before 9 AM.',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50',
+      research: '90% of executives wake before 6 AM (Harvard Business Review)'
+    },
+    {
+      icon: Target,
+      title: 'Eat the Frog First',
+      description: 'Tackle your hardest task when willpower is highest. Peak cognitive performance is 2-4 hours after waking.',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      research: 'Deep work before lunch = 3x more productive (Cal Newport)'
+    },
+    {
+      icon: Dumbbell,
+      title: 'Intelligent Fitness',
+      description: 'Exercise when your body is primed. Morning workouts have 50% better adherence and improve mood all day.',
+      color: 'text-red-500',
+      bgColor: 'bg-red-50',
+      research: 'Obama: 45min workout 6x/week. Anna Wintour: Tennis at 5:45 AM'
+    },
+    {
+      icon: Coffee,
+      title: 'Nutrition Optimization',
+      description: 'Smart meal tracking with insights. High-protein breakfast = 135 fewer calories consumed later.',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      research: 'Breakfast eaters earn $5K+ more annually (Cornell Study)'
+    },
+    {
+      icon: Moon,
+      title: 'Evening Reflection',
+      description: 'Close your day with structured reflection. Reflection increases performance by 23%.',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      research: 'Ben Franklin, Oprah, Ray Dalio: Daily reflection practice'
+    },
+    {
+      icon: BedDouble,
+      title: 'Sleep Tracking',
+      description: '7-8 hours tracked and optimized. Sleep is the ultimate performance enhancer, not a luxury.',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      research: 'Jeff Bezos: 8 hours = better decisions. LeBron: 12 hours daily'
+    },
+    {
+      icon: Droplet,
+      title: 'Hydration Tracking',
+      description: '16-20oz water upon waking improves cognition by 14%. Your brain is 73% water—fuel it first.',
+      color: 'text-cyan-500',
+      bgColor: 'bg-cyan-50',
+      research: 'Tony Robbins: 20oz water + breathing. The Rock: Gallon system'
+    },
+    {
+      icon: Brain,
+      title: 'Meditation & Mindfulness',
+      description: '10 minutes daily increases focus by 11% and reduces stress by 22% in 8 weeks.',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50',
+      research: 'Ray Dalio: 20min 2x/day for 40+ years. Oprah: Never misses'
+    },
+    {
+      icon: NotebookPen,
+      title: 'Morning Pages',
+      description: 'Stream of consciousness journaling. Expressive writing improves working memory by 13%.',
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      research: 'Tim Ferriss: 3 pages daily. Richard Branson: Notebooks everywhere'
+    },
+    {
+      icon: Smartphone,
+      title: 'No Phone First Hour',
+      description: 'Protect morning sovereignty. Checking phone first thing spikes cortisol by 23%.',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
+      research: 'Arianna Huffington: Phone in another room. Tim Ferriss: No email before noon'
+    },
+    {
+      icon: Focus,
+      title: 'Deep Work Blocks',
+      description: 'Uninterrupted 90-minute focus sessions. Single-tasking is 40% more productive than multitasking.',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50',
+      research: 'Cal Newport: 4 hours uninterrupted. Bill Gates: "Think weeks"'
+    },
+    {
+      icon: Timer,
+      title: '90-Minute Work Cycles',
+      description: 'Ultradian rhythms for peak performance. Elite performers work in sprints, not marathons.',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      research: 'Tony Schwartz: 90min work + 10min break. LeBron: Training in 90min blocks'
+    },
+    {
+      icon: Footprints,
+      title: 'Walking Meetings',
+      description: 'Lunch walks increase creative ideas by 30%. Movement fuels innovation.',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50',
+      research: 'Steve Jobs: Famous walking meetings. Satya Nadella: Movement = thinking'
+    },
+    {
+      icon: BookOpen,
+      title: 'Daily Reading',
+      description: '30 min/day = 23 additional books/year. Knowledge compounds like interest.',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      research: 'Warren Buffett: 500 pages daily. Bill Gates: 50 books/year. Elon Musk: Self-taught via reading'
+    },
+    {
+      icon: Heart,
+      title: 'Gratitude Practice',
+      description: 'Daily gratitude increases happiness by 25%. Perspective is everything.',
+      color: 'text-pink-500',
+      bgColor: 'bg-pink-50',
+      research: 'Oprah: Gratitude journal before bed. Research: UC Davis study'
+    },
+    {
+      icon: Battery,
+      title: 'Energy Management',
+      description: 'Manage energy, not just time. Top performers work 40-50 hours, not 80.',
+      color: 'text-yellow-500',
+      bgColor: 'bg-yellow-50',
+      research: 'Stanford Study 2024: Elite performers focus on leverage, not effort'
+    },
+    {
+      icon: Users,
+      title: 'Social Connection',
+      description: '15 minutes of social interaction boosts productivity. Loneliness is as deadly as smoking 15 cigarettes/day.',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      research: 'Harvard Grant Study: #1 predictor of happiness. Warren Buffett: 80% time with admired people'
+    },
+    {
+      icon: Utensils,
+      title: 'Mindful Meals',
+      description: 'Lunch away from desk = 15% more productive afternoon. Eating is recovery, not a race.',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50',
+      research: 'Tork Study: Desk lunches kill afternoon productivity'
+    },
+    {
+      icon: RefreshCw,
+      title: 'Recovery & Breaks',
+      description: 'Strategic rest enables peak performance. Working 55+ hours = zero productivity gains.',
+      color: 'text-teal-500',
+      bgColor: 'bg-teal-50',
+      research: 'Stanford: Recovery time = performance predictor. Churchill: Daily naps'
+    },
+    {
+      icon: GraduationCap,
+      title: 'Continuous Learning',
+      description: 'Lifelong learners earn 20% more. Leaders are readers, always.',
+      color: 'text-indigo-500',
+      bgColor: 'bg-indigo-50',
+      research: 'OECD Study: Learning premium. Elon Musk: Taught himself rocket science'
+    },
+    {
+      icon: TrendingUp,
+      title: 'AI-Powered Insights',
+      description: 'Turn data into decisions. Pattern recognition that compounds over time.',
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      research: 'AI analyzes when you\'re most productive, energetic, and focused'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -139,24 +321,39 @@ export default function Landing() {
               </Button>
             </div>
 
-            {/* Social Proof */}
+            {/* Social Proof - Updated to 2.1M users with 9 faces */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
-                    A
+                <div className="flex -space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    JD
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
-                    M
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    SK
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600">
-                    S
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    AL
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white">
-                    E
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    MC
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    TR
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 to-red-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    LW
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    EP
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    RG
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white shadow-md">
+                    NH
                   </div>
                 </div>
-                <span className="text-gray-600">2,847+ users optimizing daily</span>
+                <span className="text-gray-600 font-medium">2.1+ Million users optimizing daily</span>
               </div>
             </div>
           </div>
@@ -191,22 +388,22 @@ export default function Landing() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <Moon className="w-5 h-5 text-gray-700 mb-2" />
+                        <Moon className="w-5 h-5 text-indigo-600 mb-2" />
                         <p className="text-lg font-semibold text-gray-900">7.5h</p>
                         <p className="text-sm text-gray-600">Sleep quality</p>
                       </div>
                       <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <Target className="w-5 h-5 text-gray-700 mb-2" />
+                        <Target className="w-5 h-5 text-blue-600 mb-2" />
                         <p className="text-lg font-semibold text-gray-900">3/3</p>
                         <p className="text-sm text-gray-600">Tasks complete</p>
                       </div>
                       <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <Activity className="w-5 h-5 text-gray-700 mb-2" />
+                        <Activity className="w-5 h-5 text-red-500 mb-2" />
                         <p className="text-lg font-semibold text-gray-900">45min</p>
                         <p className="text-sm text-gray-600">Active time</p>
                       </div>
                       <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <Zap className="w-5 h-5 text-gray-700 mb-2" />
+                        <Zap className="w-5 h-5 text-yellow-500 mb-2" />
                         <p className="text-lg font-semibold text-gray-900">15🔥</p>
                         <p className="text-sm text-gray-600">Day streak</p>
                       </div>
@@ -231,7 +428,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section - Expanded to 21 features with colored icons */}
       <section id="features" className="py-32 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-20">
@@ -239,51 +436,25 @@ export default function Landing() {
               Everything you need to master your day
             </h2>
             <p className="text-xl text-gray-600 leading-relaxed">
-              From morning optimization to evening reflection, DayAI provides intelligent guidance across every aspect of your daily life.
+              From morning optimization to evening reflection, DayAI provides intelligent guidance across every aspect of your daily life. Backed by research and proven by high-performers.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Sunrise,
-                title: 'Morning Optimization',
-                description: 'Start your day with AI-powered routines. Set intentions, prioritize tasks, and build momentum from the moment you wake.'
-              },
-              {
-                icon: Target,
-                title: 'Smart Task Prioritization',
-                description: 'AI analyzes your patterns to schedule tasks at peak performance times. Focus on what matters most when you\'re most capable.'
-              },
-              {
-                icon: Dumbbell,
-                title: 'Intelligent Fitness',
-                description: 'Track workouts, optimize timing based on energy levels, and receive personalized coaching that adapts to your progress.'
-              },
-              {
-                icon: Coffee,
-                title: 'Nutrition Tracking',
-                description: 'Smart meal logging with barcode scanning. Get insights on how nutrition affects your performance and energy.'
-              },
-              {
-                icon: Moon,
-                title: 'Evening Reflection',
-                description: 'Close your day with structured reflection. Learn from today, celebrate wins, and prepare for tomorrow.'
-              },
-              {
-                icon: TrendingUp,
-                title: 'Continuous Learning',
-                description: 'AI identifies patterns and provides actionable insights. Turn data into decisions that compound over time.'
-              }
-            ].map((feature, idx) => (
-              <Card key={idx} className="border border-gray-200 bg-white hover:shadow-lg transition-all">
+            {features.map((feature, idx) => (
+              <Card key={idx} className="border border-gray-200 bg-white hover:shadow-lg transition-all group">
                 <CardContent className="p-6">
-                  <feature.icon className="w-6 h-6 text-gray-900 mb-4" />
+                  <div className={`w-12 h-12 rounded-lg ${feature.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                  </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed text-sm">
+                  <p className="text-gray-600 leading-relaxed text-sm mb-3">
                     {feature.description}
+                  </p>
+                  <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-3">
+                    {feature.research}
                   </p>
                 </CardContent>
               </Card>
@@ -312,19 +483,22 @@ export default function Landing() {
                 number: '01',
                 icon: Users,
                 title: 'Set your goals',
-                description: 'Tell DayAI what you want to achieve. Better sleep, higher productivity, improved fitness—we optimize for your unique objectives.'
+                description: 'Tell DayAI what you want to achieve. Better sleep, higher productivity, improved fitness—we optimize for your unique objectives.',
+                color: 'text-green-600'
               },
               {
                 number: '02',
                 icon: Brain,
                 title: 'AI learns your patterns',
-                description: 'Track your daily activities. Our AI analyzes when you\'re most productive, energetic, and focused to provide personalized guidance.'
+                description: 'Track your daily activities. Our AI analyzes when you\'re most productive, energetic, and focused to provide personalized guidance.',
+                color: 'text-purple-500'
               },
               {
                 number: '03',
                 icon: TrendingUp,
                 title: 'Continuously improve',
-                description: 'Receive intelligent recommendations that adapt to your life. Small optimizations compound into extraordinary results.'
+                description: 'Receive intelligent recommendations that adapt to your life. Small optimizations compound into extraordinary results.',
+                color: 'text-emerald-600'
               }
             ].map((item, idx) => (
               <div key={idx} className="relative">
@@ -333,7 +507,7 @@ export default function Landing() {
                     {item.number}
                   </span>
                 </div>
-                <item.icon className="w-8 h-8 text-gray-900 mb-4" />
+                <item.icon className={`w-8 h-8 ${item.color} mb-4`} />
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   {item.title}
                 </h3>
@@ -366,38 +540,48 @@ export default function Landing() {
                 time: '6:00 AM',
                 icon: Sun,
                 title: 'Morning optimization',
-                description: 'Wake with intention. Log sleep, set goals, receive AI-powered prioritization.'
+                description: 'Wake with intention. Log sleep, set goals, receive AI-powered prioritization.',
+                color: 'text-orange-500',
+                bgColor: 'bg-orange-100'
               },
               {
                 time: '9:00 AM',
                 icon: Target,
                 title: 'Peak productivity',
-                description: 'Tackle MITs when willpower is highest. AI schedules deep work optimally.'
+                description: 'Tackle MITs when willpower is highest. AI schedules deep work optimally.',
+                color: 'text-blue-600',
+                bgColor: 'bg-blue-100'
               },
               {
                 time: '3:00 PM',
                 icon: Activity,
                 title: 'Workout time',
-                description: 'Exercise when your body is primed. Track performance and recovery.'
+                description: 'Exercise when your body is primed. Track performance and recovery.',
+                color: 'text-red-500',
+                bgColor: 'bg-red-100'
               },
               {
                 time: '6:00 PM',
                 icon: Heart,
                 title: 'Nutrition & recovery',
-                description: 'Smart meal tracking with insights. Optimize nutrition for performance.'
+                description: 'Smart meal tracking with insights. Optimize nutrition for performance.',
+                color: 'text-pink-500',
+                bgColor: 'bg-pink-100'
               },
               {
                 time: '9:00 PM',
                 icon: Moon,
                 title: 'Evening reflection',
-                description: 'Close with gratitude. AI analyzes patterns for continuous improvement.'
+                description: 'Close with gratitude. AI analyzes patterns for continuous improvement.',
+                color: 'text-indigo-600',
+                bgColor: 'bg-indigo-100'
               }
             ].map((phase, idx) => (
               <Card key={idx} className="border border-gray-200 bg-white hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <phase.icon className="w-6 h-6 text-gray-900" />
+                    <div className={`w-12 h-12 rounded-lg ${phase.bgColor} flex items-center justify-center flex-shrink-0`}>
+                      <phase.icon className={`w-6 h-6 ${phase.color}`} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -428,7 +612,7 @@ export default function Landing() {
               Loved by high-performers
             </h2>
             <p className="text-xl text-gray-600 leading-relaxed">
-              Join thousands who've transformed their daily routines.
+              Join millions who've transformed their daily routines.
             </p>
           </div>
 
@@ -473,7 +657,7 @@ export default function Landing() {
             Start optimizing today
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join 2,847+ high-performers using DayAI. Free to start, upgrade anytime.
+            Join 2.1+ million high-performers using DayAI. Free to start, upgrade anytime.
           </p>
           
           <Button 
