@@ -339,13 +339,13 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <img 
                 src="/dayai-logo.webp" 
                 alt="DayAI Logo" 
-                className="w-9 h-9"
+                className="w-12 h-12 md:w-14 md:h-14"
               />
-              <span className="text-xl font-bold text-gray-900 tracking-tight">DayAI</span>
+              <span className="hidden md:inline text-2xl font-bold text-gray-900 tracking-tight">DayAI</span>
             </div>
 
             {/* Search Bar */}
