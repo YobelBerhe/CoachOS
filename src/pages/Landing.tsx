@@ -4,7 +4,8 @@ import {
   Sunrise, Moon, Target, Dumbbell, Coffee, Brain, 
   Droplet, Heart, Activity, BookOpen, BedDouble,
   Apple, Smartphone, ArrowRight, Check, Star, Clock, Zap,
-  Pill, NotebookPen, CircleDot, Footprints, RotateCcw, Users, Utensils
+  Pill, NotebookPen, CircleDot, Footprints, RotateCcw, Users, Utensils,
+  PhoneOff, FileText
 } from 'lucide-react';
 import appStoreBadge from '@/assets/app-store-badge.svg';
 import googlePlayBadge from '@/assets/google-play-badge.png';
@@ -24,6 +25,13 @@ const dailyTools = [
     title: 'Morning Optimization', 
     description: 'Wake with intention. AI-powered routines that adapt to your energy. 90% of executives win before 9 AM.', 
     gradient: 'from-orange-500 to-pink-500'
+  },
+  { 
+    icon: PhoneOff,
+    time: '5:30 AM',
+    title: 'No Phone for First Hour', 
+    description: 'Checking phone first thing spikes cortisol 23% (UCI Study). Morning screen time linked to higher anxiety (Journal of Behavioral Addictions).', 
+    gradient: 'from-slate-500 to-gray-600'
   },
   { 
     icon: Droplet,
@@ -82,6 +90,13 @@ const dailyTools = [
     gradient: 'from-green-500 to-emerald-500'
   },
   { 
+    icon: Users,
+    time: '1:00 PM',
+    title: 'Social Connection', 
+    description: 'Loneliness as deadly as smoking 15 cigarettes/day (Harvard Study, 80 years). Strong relationships = #1 predictor of happiness (Harvard Grant Study). 15 minutes social interaction = productivity boost (MIT).', 
+    gradient: 'from-pink-500 to-purple-500'
+  },
+  { 
     icon: RotateCcw,
     time: '2:00 PM',
     title: 'Power Nap', 
@@ -94,6 +109,13 @@ const dailyTools = [
     title: 'Meetings & Collaboration', 
     description: 'Best meeting time: 2:30-3 PM. Stand-up meetings 34% shorter with same effectiveness.', 
     gradient: 'from-green-500 to-emerald-600'
+  },
+  { 
+    icon: FileText,
+    time: '5:00 PM',
+    title: 'Admin & Shallow Work', 
+    description: 'Email checking = 3 hours lost daily (McKinsey). Batch processing = 40% time savings (MIT).', 
+    gradient: 'from-yellow-500 to-amber-500'
   },
   { 
     icon: Utensils,
