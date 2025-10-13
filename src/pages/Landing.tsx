@@ -8,6 +8,13 @@ import {
 import appStoreBadge from '@/assets/app-store-badge.svg';
 import googlePlayBadge from '@/assets/google-play-badge.png';
 import ratedBadge from '@/assets/rated-badge.png';
+import dayaiLogo from '@/assets/dayai-icon.png';
+import businessInsider from '@/assets/logos/business-insider.svg';
+import forbes from '@/assets/logos/forbes.svg';
+import logitech from '@/assets/logos/logitech.svg';
+import techcrunch from '@/assets/logos/techcrunch.svg';
+import tiktok from '@/assets/logos/tiktok.svg';
+import meta from '@/assets/logos/meta.svg';
 
 const dailyTools = [
   { 
@@ -153,9 +160,9 @@ export default function Landing() {
       {/* Header */}
       <header className="border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-lg z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/dayai-icon-64.png" alt="DayAI" className="w-8 h-8 rounded-full" />
-            <span className="font-bold text-lg">DayAI</span>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+            <img src={dayaiLogo} alt="DayAI" className="w-12 h-12 md:w-10 md:h-10" />
+            <span className="font-bold text-lg hidden md:block">DayAI</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm text-gray-700 hover:text-gray-900 flex items-center gap-1">
@@ -251,11 +258,15 @@ export default function Landing() {
           DayAI powers millions of high-performers, entrepreneurs, and everyday people.
         </p>
 
-        {/* Brand Logos Placeholder */}
-        <div className="flex flex-wrap justify-center items-center gap-8 mb-20 opacity-40">
-          {['Forbes', 'TechCrunch', 'Business Insider', 'ProductHunt', 'Wired', 'The Verge'].map((brand) => (
-            <div key={brand} className="text-2xl font-bold text-gray-400">{brand}</div>
-          ))}
+        {/* Brand Logos Carousel */}
+        <div className="overflow-hidden mb-20 relative">
+          <div className="flex gap-12 items-center animate-scroll">
+            {[businessInsider, forbes, logitech, techcrunch, tiktok, meta, businessInsider, forbes, logitech, techcrunch, tiktok, meta].map((logo, idx) => (
+              <div key={idx} className="flex-shrink-0 h-10 opacity-40 hover:opacity-60 transition-opacity">
+                <img src={logo} alt="Company Logo" className="h-full w-auto object-contain" />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Feature Grid with Icons */}
