@@ -47,7 +47,7 @@ export default function WorkoutInProgress() {
     setCurrentSet(prev => prev + 1);
     setIsResting(true);
     setRestTime(90);
-    toast({ title: "Set logged! 💪", description: `${w} lbs × ${r} reps` });
+    toast({ title: "Set logged! 💪", description: "Your strength is increasing!" });
 
     if (currentSet >= 3) {
       setTimeout(() => {
@@ -64,7 +64,7 @@ export default function WorkoutInProgress() {
       duration_min: Math.floor(elapsedTime / 60),
       total_volume_lbs: totalVolume
     }).eq('id', workoutId);
-    toast({ title: "Workout Complete! 🎉" });
+    toast({ title: "Workout complete! 🎉", description: "DayAI noticed you're most energetic at this time" });
     navigate('/train');
   }
 

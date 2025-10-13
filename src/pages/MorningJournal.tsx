@@ -209,8 +209,8 @@ export default function MorningJournal() {
       }
 
       toast({
-        title: todayEntry ? "Journal updated! 📝" : "Morning entry complete! 🌅",
-        description: "Your day is set with intention"
+        title: "Morning journal complete! 🌅",
+        description: "DayAI is analyzing your patterns..."
       });
 
       await loadJournalData();

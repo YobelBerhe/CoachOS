@@ -191,7 +191,7 @@ export default function EveningReflection() {
 
       toast({
         title: "Day complete! 🌙✨",
-        description: "Your reflection has been saved"
+        description: "DayAI learned from today. Tomorrow will be even better!"
       });
 
       await loadEveningData();
@@ -242,7 +242,7 @@ export default function EveningReflection() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold">Evening Reflection</h1>
-                  <p className="text-sm text-muted-foreground">Close your day with gratitude</p>
+                  <p className="text-sm text-muted-foreground">Powered by DayAI</p>
                 </div>
               </div>
             </div>

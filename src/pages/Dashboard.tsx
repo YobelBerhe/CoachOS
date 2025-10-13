@@ -351,7 +351,7 @@ export default function Dashboard() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search workouts, meals, tasks..."
+                  placeholder="Ask DayAI anything..."
                   className="w-full h-12 pl-12 pr-4 bg-gray-50 border-0 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
