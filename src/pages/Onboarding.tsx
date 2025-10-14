@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { useArchetypeTheme } from '@/contexts/ArchetypeThemeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -142,6 +143,7 @@ const COMMON_ALLERGENS = [
 export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setArchetype } = useArchetypeTheme();
   const [currentStep, setCurrentStep] = useState(0);
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -565,7 +567,7 @@ export default function Onboarding() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {ARCHETYPES.map((archetype) => (
-                    <motion.button
+                     <motion.button
                       key={archetype.id}
                       onClick={() => {
                         updateFormData({ 
@@ -573,6 +575,7 @@ export default function Onboarding() {
                           wake_time: archetype.wakeTime,
                           sleep_time: archetype.sleepTime
                         });
+                        setArchetype(archetype.id as any); // Apply theme instantly
                       }}
                       className={`relative p-6 rounded-2xl border-2 transition-all ${
                         formData.archetype === archetype.id
