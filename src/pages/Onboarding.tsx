@@ -31,7 +31,7 @@ import {
   DollarSign, Wallet, PiggyBank, TrendingDown, BarChart,
   PieChart, Calendar, MapPin, Map, Compass, Globe,
   Send, Mail, Phone, Video, Wifi, Bluetooth, Battery,
-  Settings, Tool, Sliders, ToggleLeft, Lock, Unlock,
+  Settings, Sliders, ToggleLeft, Lock, Unlock,
   Key, Shield as ShieldIcon, AlertCircle, Info, HelpCircle,
   Plus, Minus, X, Check, Search, Filter, Maximize2
 } from 'lucide-react';
@@ -2358,7 +2358,171 @@ export default function Onboarding() {
               </motion.div>
             )}
 
-            {/* Continue to next message for remaining steps... */}
+            {/* STEP 17: YOUR VISION */}
+            {currentStep === 17 && (
+              <motion.div
+                key="step17"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8 space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="text-4xl md:text-5xl font-black mb-3 bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 bg-clip-text text-transparent">
+                        Your Vision
+                      </h2>
+                      <p className="text-xl text-gray-400">Where are you headed?</p>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-3 block">Life Goals (Select all that resonate)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: 'Financial freedom', icon: DollarSign },
+                          { value: 'Career success', icon: Briefcase },
+                          { value: 'Health & fitness', icon: Heart },
+                          { value: 'Strong relationships', icon: Users },
+                          { value: 'Personal growth', icon: TrendingUp },
+                          { value: 'Creative expression', icon: Paintbrush },
+                          { value: 'Adventure & travel', icon: Plane },
+                          { value: 'Inner peace', icon: Brain },
+                          { value: 'Help others', icon: Heart },
+                          { value: 'Build something', icon: Hammer },
+                          { value: 'Learn & master skills', icon: Book },
+                          { value: 'Leave a legacy', icon: Star }
+                        ].map((goal) => (
+                          <div
+                            key={goal.value}
+                            onClick={() => toggleArrayItem('life_goals', goal.value)}
+                            className={`p-3 rounded-lg border cursor-pointer ${
+                              formData.life_goals.includes(goal.value)
+                                ? 'border-primary bg-primary/10'
+                                : 'border-white/10 hover:border-white/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Checkbox checked={formData.life_goals.includes(goal.value)} />
+                              <goal.icon className="w-4 h-4" />
+                              <span className="text-sm font-medium">{goal.value}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">
+                        🎯 What's your #1 goal for the next 30 days?
+                      </Label>
+                      <Input
+                        placeholder="E.g., Lose 5kg, Run 5K, Read 3 books, Launch side project..."
+                        value={formData.thirty_day_goal}
+                        onChange={(e) => updateFormData({ thirty_day_goal: e.target.value })}
+                        className="bg-white/10 border-white/20 h-12"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">
+                        🚀 What's your 90-day milestone?
+                      </Label>
+                      <Input
+                        placeholder="E.g., Complete marathon training, Hit revenue target, Master a skill..."
+                        value={formData.ninety_day_goal}
+                        onChange={(e) => updateFormData({ ninety_day_goal: e.target.value })}
+                        className="bg-white/10 border-white/20 h-12"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">
+                        ✨ Where do you see yourself in 1 year?
+                      </Label>
+                      <textarea
+                        placeholder="Paint the picture... What does your ideal life look like? How do you feel? What have you accomplished?"
+                        value={formData.one_year_vision}
+                        onChange={(e) => updateFormData({ one_year_vision: e.target.value })}
+                        className="w-full bg-white/10 border-white/20 rounded-lg p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[120px]"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">
+                        💫 What's your life mission? (Optional)
+                      </Label>
+                      <textarea
+                        placeholder="Your deeper purpose... Why do you do what you do? What impact do you want to make?"
+                        value={formData.life_mission}
+                        onChange={(e) => updateFormData({ life_mission: e.target.value })}
+                        className="w-full bg-white/10 border-white/20 rounded-lg p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[100px]"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">
+                        🌟 Who inspires you? (Optional)
+                      </Label>
+                      <Input
+                        placeholder="Role models, mentors, people you admire..."
+                        value={formData.role_models}
+                        onChange={(e) => updateFormData({ role_models: e.target.value })}
+                        className="bg-white/10 border-white/20 h-12"
+                      />
+                    </div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="p-6 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 rounded-2xl border-2 border-purple-500/30 mt-8"
+                    >
+                      <div className="flex items-start gap-4">
+                        <motion.div
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 360]
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          <Sparkles className="w-8 h-8 text-yellow-400" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold mb-2">You're All Set! 🎉</h3>
+                          <p className="text-gray-300 leading-relaxed">
+                            Your personalized DayAI is ready to launch. We've created a custom roadmap based on your unique archetype, goals, and lifestyle. 
+                            Get ready to become the main character of your life!
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+                        <div className="text-center p-3 bg-white/5 rounded-lg">
+                          <Target className="w-6 h-6 mx-auto mb-1 text-blue-400" />
+                          <p className="text-xs font-medium">Smart Goals</p>
+                        </div>
+                        <div className="text-center p-3 bg-white/5 rounded-lg">
+                          <Brain className="w-6 h-6 mx-auto mb-1 text-purple-400" />
+                          <p className="text-xs font-medium">AI Coach</p>
+                        </div>
+                        <div className="text-center p-3 bg-white/5 rounded-lg">
+                          <TrendingUp className="w-6 h-6 mx-auto mb-1 text-green-400" />
+                          <p className="text-xs font-medium">Progress Tracking</p>
+                        </div>
+                        <div className="text-center p-3 bg-white/5 rounded-lg">
+                          <Trophy className="w-6 h-6 mx-auto mb-1 text-yellow-400" />
+                          <p className="text-xs font-medium">Achievements</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
           </AnimatePresence>
 
