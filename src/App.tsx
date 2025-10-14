@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { ArchetypeThemeProvider } from "@/contexts/ArchetypeThemeContext";
 import DynamicBackground from "@/components/DynamicBackground";
+import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 import { SEO } from "@/components/SEO";
 import { trackPageView, identifyUser } from '@/lib/analytics';
 import { supabase } from '@/integrations/supabase/client';
@@ -203,6 +204,7 @@ const App = () => {
                   <AppRoutes />
                 </PageTransition>
                 <InstallPrompt />
+                <ThemeSwitcher />
               </BrowserRouter>
             </TooltipProvider>
           </QueryClientProvider>

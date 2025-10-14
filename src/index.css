@@ -406,3 +406,43 @@ input, select, textarea {
   }
 }
 
+/* ============================================
+   ARCHETYPE THEME SYSTEM
+   ============================================ */
+
+/* Theme CSS Variables - Applied dynamically via JS */
+:root {
+  --color-primary: #FF6B35;
+  --color-secondary: #F7931E;
+  --color-accent: #FFC857;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FFD7C4;
+  --text-muted: #B88B7A;
+  --card-base: rgba(255, 107, 53, 0.05);
+  --card-hover: rgba(255, 107, 53, 0.1);
+  --card-border: rgba(255, 107, 53, 0.2);
+  --shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+  --glow: rgba(255, 107, 53, 0.5);
+}
+
+/* Utility classes for theme */
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-bg-card {
+  background-color: var(--card-base);
+}
+
+.theme-border {
+  border-color: var(--card-border);
+}
+
+.theme-shadow {
+  box-shadow: var(--shadow);
+}
+
